@@ -1,36 +1,104 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TALPA Web Uygulaması (Next.js) Rehberi
 
-## Getting Started
+Bu dizin, TALPA üye doğrulama ve başvuru sistemi için geliştirilen **Next.js 14 (App Router)** tabanlı web uygulamasını içerir.
 
-First, run the development server:
+---
+
+## 1. Klasör Yapısı (Özet)
+
+- `app/`
+  - `page.tsx` – Ana giriş sayfası
+  - `basvuru/` – Üyelik / kampanya başvuru ekranı
+  - `login/` – Kullanıcı giriş akışı
+  - `admin/` – Yönetim paneli kök dizini
+    - `login/` – Admin giriş sayfası
+    - `dashboard/` – Özet ve başvurular
+    - `campaigns/` – Kampanya yönetimi
+    - `whitelist/` – Üye beyaz liste ekranları
+  - `api/` – App Router altında kullanılan API route’ları
+- `lib/` – Yardımcı fonksiyonlar ve e-posta şablonları
+- `public/` – Statik dosyalar (logo, ikonlar vb.)
+- `globals.css` – Global stiller
+
+Detaylı mimari ve backend tarafı için ana `README.md` dosyasına bakabilirsiniz.
+
+---
+
+## 2. Kurulum ve Çalıştırma
+
+Bu adımlar, yalnızca `web/` dizini için geçerlidir.
+
+### 2.1 Bağımlılıkların Yüklenmesi
+
+```bash
+cd member-verification-system/web
+npm install
+```
+
+### 2.2 Çevre Değişkenleri (`.env.local`)
+
+`web/.env.local` dosyasını oluşturup aşağıdaki değerleri ekleyin (demo için örnek):
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGc...your_anon_key...
+
+TCKN_ENCRYPTION_KEY=demo-icin-ornek-bir-anahtar
+SECRET_SALT=DEMO_VEYA_PRODUCTION_SALT
+
+RESEND_API_KEY=re_123...
+ADMIN_EMAIL=admin@talpa.org
+```
+
+Demo için örnek SALT ve test verileri `DEMO_CONFIG.md` içinde anlatılmaktadır.
+
+### 2.3 Geliştirme Sunucusunu Başlatma
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Tarayıcıda `http://localhost:3000` adresini açarak uygulamayı görüntüleyebilirsiniz.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 3. Önemli Sayfalar ve Akışlar
 
-## Learn More
+- `/` – Giriş / yönlendirme ekranı
+- `/basvuru` – TCKN doğrulama + başvuru formu
+- `/login` – Üye giriş / link üzerinden yönlendirme
+- `/admin/login` – Yönetici giriş sayfası
+- `/admin/dashboard` – Admin dashboard ve başvuru listesi
+- `/admin/campaigns` – Kampanya yönetimi
+- `/admin/whitelist` – Üye whitelist görüntüleme
 
-To learn more about Next.js, take a look at the following resources:
+Admin erişimi için gerekli kullanıcı oluşturma adımları: `CREATE_ADMIN_USER.md`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 4. Geliştirme Notları
 
-## Deploy on Vercel
+- Proje **App Router** kullanmaktadır; sayfalar `app/` altında tanımlıdır.
+- Sunucu tarafı işlemler için **Server Actions** ve/veya API Route’lar kullanılmaktadır.
+- Supabase ile iletişim için Supabase JS client ve/veya Edge Functions kullanılabilir.
+- UI katmanında modern, responsive bir tasarım hedeflenmiştir.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 5. Build ve Deploy
+
+Production build almak için:
+
+```bash
+npm run build
+npm start
+```
+
+Veya Vercel/Netlify gibi bir platformda:
+
+- Build komutu: `npm run build`
+- Çalışma komutu: `npm start` veya platformun Next.js için önerdiği ayarlar
+
+Production ortamında gerekli tüm environment değişkenlerini platformunuzun panelinden tanımlamayı unutmayın.
+
+Test yaklaşımı ve uçtan uca senaryolar için: `TESTING_STRATEGY.md` dokümanına göz atabilirsiniz.

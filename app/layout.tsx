@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { ensureConfigValid } from "@/lib/config-validation";
+
+// Konfigürasyon doğrulaması (sadece server-side)
+if (typeof window === 'undefined') {
+  ensureConfigValid();
+}
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

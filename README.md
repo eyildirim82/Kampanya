@@ -17,10 +17,9 @@ Bu dizin, TALPA üye doğrulama ve başvuru sistemi için geliştirilen **Next.j
     - `whitelist/` – Üye beyaz liste ekranları
   - `api/` – App Router altında kullanılan API route’ları
 - `lib/` – Yardımcı fonksiyonlar ve e-posta şablonları
+- `scripts/` – Yönetim ve bakım scriptleri (örn. admin oluşturma)
 - `public/` – Statik dosyalar (logo, ikonlar vb.)
 - `globals.css` – Global stiller
-
-Detaylı mimari ve backend tarafı için ana `README.md` dosyasına bakabilirsiniz.
 
 ---
 
@@ -42,6 +41,7 @@ npm install
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://YOUR_PROJECT.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGc...your_anon_key...
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGc...your_service_role_key... # Admin scriptleri için gereklidir
 
 TCKN_ENCRYPTION_KEY=demo-icin-ornek-bir-anahtar
 SECRET_SALT=DEMO_VEYA_PRODUCTION_SALT
@@ -49,8 +49,6 @@ SECRET_SALT=DEMO_VEYA_PRODUCTION_SALT
 RESEND_API_KEY=re_123...
 ADMIN_EMAIL=admin@talpa.org
 ```
-
-Demo için örnek SALT ve test verileri `DEMO_CONFIG.md` içinde anlatılmaktadır.
 
 ### 2.3 Geliştirme Sunucusunu Başlatma
 
@@ -62,7 +60,22 @@ Tarayıcıda `http://localhost:3000` adresini açarak uygulamayı görüntüleye
 
 ---
 
-## 3. Önemli Sayfalar ve Akışlar
+## 3. Yönetici Kullanıcısı Oluşturma
+
+Sisteme ilk admin kullanıcısını eklemek için proje ile birlikte gelen scripti kullanabilirsiniz. Bu işlem `SUPABASE_SERVICE_ROLE_KEY` gerektirir.
+
+1. `.env.local` dosyanızda `SUPABASE_SERVICE_ROLE_KEY` tanımlı olduğundan emin olun.
+2. Aşağıdaki komutu çalıştırın:
+
+```bash
+node scripts/create-admin-user.js
+```
+
+Bu script varsayılan olarak `admin@talpa.com` / `TalpaAdmin123!` bilgilerine sahip bir kullanıcı oluşturur ve veritabanına admin yetkileriyle ekler.
+
+---
+
+## 4. Önemli Sayfalar ve Akışlar
 
 - `/` – Giriş / yönlendirme ekranı
 - `/basvuru` – TCKN doğrulama + başvuru formu
@@ -72,20 +85,27 @@ Tarayıcıda `http://localhost:3000` adresini açarak uygulamayı görüntüleye
 - `/admin/campaigns` – Kampanya yönetimi
 - `/admin/whitelist` – Üye whitelist görüntüleme
 
-Admin erişimi için gerekli kullanıcı oluşturma adımları: `CREATE_ADMIN_USER.md`
+---
+
+## 5. Testler
+
+Projede E2E testleri için Playwright kullanılmaktadır.
+
+Testleri çalıştırmak için:
+
+```bash
+# Tüm testleri çalıştır
+npm run test:e2e
+
+# UI modunda çalıştır (görsel arayüz ile)
+npm run test:e2e:ui
+```
+
+Detaylı test notları için `e2e/README.md` dosyasına bakabilirsiniz.
 
 ---
 
-## 4. Geliştirme Notları
-
-- Proje **App Router** kullanmaktadır; sayfalar `app/` altında tanımlıdır.
-- Sunucu tarafı işlemler için **Server Actions** ve/veya API Route’lar kullanılmaktadır.
-- Supabase ile iletişim için Supabase JS client ve/veya Edge Functions kullanılabilir.
-- UI katmanında modern, responsive bir tasarım hedeflenmiştir.
-
----
-
-## 5. Build ve Deploy
+## 6. Build ve Deploy
 
 Production build almak için:
 
@@ -100,5 +120,3 @@ Veya Vercel/Netlify gibi bir platformda:
 - Çalışma komutu: `npm start` veya platformun Next.js için önerdiği ayarlar
 
 Production ortamında gerekli tüm environment değişkenlerini platformunuzun panelinden tanımlamayı unutmayın.
-
-Test yaklaşımı ve uçtan uca senaryolar için: `TESTING_STRATEGY.md` dokümanına göz atabilirsiniz.

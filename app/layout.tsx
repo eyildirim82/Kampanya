@@ -23,11 +23,11 @@ export const metadata: Metadata = {
   description: "TALPA ve DenizBank işbirliği ile sunulan Private Kart avantajları: IGA Lounge, TAV Passport, restoran ve otel indirimleri. Yıllık kart ücreti yok!",
   icons: {
     icon: [
-      { url: '/icon.webp?v=2' },
-      { url: '/icon.webp?v=2', type: 'image/webp' },
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/icon.webp?v=3', type: 'image/webp' },
     ],
     apple: [
-      { url: '/icon.webp?v=2' },
+      { url: '/icon.webp?v=3' },
     ],
   },
 };

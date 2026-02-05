@@ -1,12 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 
 export default function LoginForm() {
-    const { executeRecaptcha } = useGoogleReCaptcha();
     const router = useRouter();
 
     const [tckn, setTckn] = useState('');
@@ -28,24 +26,14 @@ export default function LoginForm() {
         }
 
         try {
-            if (!executeRecaptcha) {
-                setError('Captcha yüklenemedi');
-                setLoading(false);
-                return;
-            }
-
-            const token = await executeRecaptcha('login');
-
             const res = await axios.post('/api/auth/check', {
                 tckn,
-                captchaToken: token,
             });
 
             if (res.data.status === 'OTP_SENT') {
                 setMaskedEmail(res.data.emailMasked);
                 setStep('OTP');
             } else if (res.data.status === 'REDIRECT_FORM') {
-                // Redirect to form
                 router.push(`/basvuru?tckn=${tckn}`);
             }
 
@@ -69,9 +57,6 @@ export default function LoginForm() {
             });
 
             if (res.data.success) {
-                // Success - Redirect to Edit Form
-                // Ideally store session in cookie or localStorage if needed for client-side queries
-                // But our goal is just redirection for now.
                 router.push(`/basvuru?tckn=${tckn}`);
             }
 

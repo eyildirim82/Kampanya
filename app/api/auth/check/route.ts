@@ -1,6 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
-import axios from 'axios';
 
 // Initialize with ANON KEY - Privileged operations are handled by RPC SECURITY DEFINER functions
 const supabase = createClient(
@@ -10,18 +9,7 @@ const supabase = createClient(
 
 export async function POST(request: Request) {
     try {
-        const { tckn, captchaToken } = await request.json();
-
-        // 1. Verify ReCaptcha
-        if (captchaToken !== 'TEST_TOKEN') {
-            const recaptchaRes = await axios.post(
-                `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${captchaToken}`
-            );
-
-            if (!recaptchaRes.data.success || recaptchaRes.data.score < 0.5) {
-                return NextResponse.json({ error: 'Captcha doğrulaması başarısız' }, { status: 400 });
-            }
-        }
+        const { tckn } = await request.json();
 
         // 2. Check Member Status using RPC
         // This function is SECURITY DEFINER, so it can see data that Anon Key cannot directly select.

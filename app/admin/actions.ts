@@ -480,9 +480,11 @@ export async function getCampaigns() {
 
 export async function toggleCampaignStatus(id: string, isActive: boolean) {
     const adminSupabase = await getAdminClient();
-    if (!adminSupabase) return { success: false };
-    await adminSupabase.from('campaigns').update({ is_active: isActive }).eq('id', id);
-    return { success: true };
+    if (!adminSupabase) return { success: false, message: 'Auth error' };
+
+    const { error } = await adminSupabase.from('campaigns').update({ is_active: isActive }).eq('id', id);
+    if (error) return { success: false, message: error.message };
+    return { success: true, message: '' };
 }
 
 export async function deleteCampaign(id: string) {

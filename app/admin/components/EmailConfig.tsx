@@ -147,6 +147,8 @@ export default function EmailConfig() {
                                     type="button"
                                     onClick={() => setEditing(prev => ({
                                         ...prev,
+                                        recipient_type: 'custom',
+                                        recipient_email: 'talpa-basvuru@denizbank.com',
                                         subject_template: 'Yeni Müşteri Adayı - {{name}}',
                                         body_template: `<p>Sayın Yetkili,</p>
 

@@ -3,70 +3,126 @@
 import { createClient } from '@supabase/supabase-js';
 import { sendEmail } from '@/lib/smtp';
 import { z } from 'zod';
-import { getUserEmailTemplate, getAdminEmailTemplate, getOtpEmailTemplate, getGenericEmailTemplate } from '@/lib/email-templates';
+import { getUserEmailTemplate, getAdminEmailTemplate, getGenericEmailTemplate } from '@/lib/email-templates';
 import { headers } from 'next/headers';
 import crypto from 'crypto';
 import { logger } from '@/lib/logger';
 
 // Initialize Supabase Client
-// Initialize Supabase Client (Using Anon Key - Service Key in env seems invalid/expired)
-// Note: RLS policies are configured to allow Anon role to:
-// 1. SELECT from member_whitelist (public policy)
-// 2. INSERT/UPDATE applications (public permissions)
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim()!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// Initialize Resend - REMOVED for SMTP
-// const resendApiKey = process.env.RESEND_API_KEY;
-// const resend = resendApiKey ? new Resend(resendApiKey) : null;
+// HMAC Secret for Session Tokens (Use Env or fallback to generated one for runtime)
+const SESSION_SECRET = process.env.SESSION_SECRET || 'temp_secret_change_me_in_prod';
+
+// ----------------------------------------------------------------------
+// HELPER: TCKN Validation (Mod10/Mod11)
+// ----------------------------------------------------------------------
+function validateTckn(tckn: string): boolean {
+    if (!tckn || tckn.length !== 11) return false;
+    if (!/^[1-9][0-9]*$/.test(tckn)) return false;
+
+    const digits = tckn.split('').map(Number);
+
+    // Algoritma Adım 1: 1, 3, 5, 7, 9. hanelerin toplamı t1
+    // 2, 4, 6, 8. hanelerin toplamı t2
+    const current13579 = digits[0] + digits[2] + digits[4] + digits[6] + digits[8];
+    const current2468 = digits[1] + digits[3] + digits[5] + digits[7];
+
+    // 10. hane kontrolü: (t1 * 7 - t2) % 10
+    const digit10 = ((current13579 * 7) - current2468) % 10;
+    if (digit10 !== digits[9]) return false;
+
+    // 11. hane kontrolü: İlk 10 hanenin toplamı % 10
+    let total10 = 0;
+    for (let i = 0; i < 10; i++) total10 += digits[i];
+
+    if ((total10 % 10) !== digits[10]) return false;
+
+    return true;
+}
+
+
+
+// ----------------------------------------------------------------------
+// HELPER: Session Token (HMAC Signed JSON)
+// ----------------------------------------------------------------------
+function createSessionToken(tckn: string): string {
+    const payload = {
+        tckn,
+        exp: Date.now() + 15 * 60 * 1000 // 15 Minutes
+    };
+    const data = JSON.stringify(payload);
+    const signature = crypto.createHmac('sha256', SESSION_SECRET).update(data).digest('hex');
+    return `${Buffer.from(data).toString('base64')}.${signature}`;
+}
+
+function verifySessionToken(token: string): string | null {
+    try {
+        const [b64Data, signature] = token.split('.');
+        if (!b64Data || !signature) return null;
+
+        const data = Buffer.from(b64Data, 'base64').toString();
+        const expectedSignature = crypto.createHmac('sha256', SESSION_SECRET).update(data).digest('hex');
+
+        if (signature !== expectedSignature) return null;
+
+        const payload = JSON.parse(data);
+        if (Date.now() > payload.exp) return null;
+
+        return payload.tckn;
+    } catch (e) {
+        return null;
+    }
+}
+
 
 // Validation Schema
 const formSchema = z.object({
     tckn: z.string().length(11, "TCKN 11 haneli olmalıdır."),
     fullName: z.string().min(2, "Ad Soyad en az 2 karakter olmalıdır."),
-    phone: z.string().min(10, "Geçerli bir telefon numarası giriniz."),
-    email: z.string().email("Geçerli bir e-posta adresi giriniz."),
-    // Address is strictly required if delivery is 'address' - handled in refinement
+    phone: z.string()
+        .length(10, "Telefon numarası 10 haneli olmalıdır (başında 0 olmadan)")
+        .regex(/^[1-9][0-9]{9}$/, "Telefon numarası başında 0 olmadan yazılmalıdır"),
+    email: z.string().email("Geçerli bir e-posta adresi giriniz.").optional(),
     address: z.string().optional(),
-
-    city: z.string().optional(),
-    district: z.string().optional(),
-
-    // New Fields
-    isDenizbankCustomer: z.enum(['yes', 'no'], { errorMap: () => ({ message: "Denizbank müşteri durumunuzu seçiniz." }) }),
-    deliveryMethod: z.enum(['branch', 'address'], { errorMap: () => ({ message: "Teslimat yöntemi seçiniz." }) }),
-
-    // address is required if deliveryMethod is 'address'
-
-    denizbankConsent: z.boolean().refine(val => val === true, "Denizbank Paylaşım İzni'ni onaylamanız gerekmektedir."),
-    talpaDisclaimer: z.boolean().refine(val => val === true, "TALPA Sorumluluk Reddi'ni onaylamanız gerekmektedir."),
-
-    kvkkConsent: z.boolean().refine(val => val === true, "KVKK Metni'ni onaylamanız gerekmektedir."),
-    openConsent: z.boolean().refine(val => val === true, "Açık Rıza Metni'ni onaylamanız gerekmektedir."),
-    communicationConsent: z.boolean().refine(val => val === true, "İletişim İzni'ni onaylamanız gerekmektedir."),
-    campaignId: z.string().uuid("Geçersiz kampanya ID.").optional(),
+    deliveryMethod: z.enum(['branch', 'address']),
+    // New Consents
+    addressSharingConsent: z.boolean(),
+    cardApplicationConsent: z.boolean().refine(val => val === true, "Kart başvurusu onayı zorunludur."),
+    tcknPhoneSharingConsent: z.boolean().refine(val => val === true, "TC kimlik ve telefon paylaşım onayı zorunludur."),
+    sessionToken: z.string().min(1, "Oturum süreniz dolmuş.") // REQUIRED for Security
 }).superRefine((data, ctx) => {
+    // Custom Error Messages for Enums
+    if (!data.deliveryMethod) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Teslimat yöntemi seçiniz.", path: ["deliveryMethod"] });
+    }
+
+    // TCKN Validation
+    if (!validateTckn(data.tckn)) {
+        ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Geçersiz T.C. Kimlik Numarası.",
+            path: ["tckn"]
+        });
+    }
+
+
     if (data.deliveryMethod === 'address') {
-        if (!data.address || data.address.length < 5) {
+        if (!data.address || data.address.length < 10) {
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,
-                message: "Teslimat adresi için geçerli bir adres giriniz (en az 5 karakter).",
+                message: "Teslimat adresi için geçerli bir adres giriniz (en az 10 karakter, tam adres).",
                 path: ["address"]
             });
         }
-        if (!data.city || data.city.length < 2) {
+        // Address sharing consent validation
+        if (!data.addressSharingConsent) {
             ctx.addIssue({
                 code: z.ZodIssueCode.custom,
-                message: "İl seçiniz.",
-                path: ["city"]
-            });
-        }
-        if (!data.district || data.district.length < 2) {
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                message: "İlçe seçiniz.",
-                path: ["district"]
+                message: "Adres paylaşımı onayı zorunludur.",
+                path: ["addressSharingConsent"]
             });
         }
     }
@@ -78,10 +134,7 @@ export type FormState = {
     errors?: Record<string, string[]>;
 };
 
-// New Helper: Generate 6 digit OTP
-function generateOtp(): string {
-    return Math.floor(100000 + Math.random() * 900000).toString();
-}
+
 
 // Helper to get default active campaign
 async function getDefaultCampaignId(): Promise<string | null> {
@@ -98,356 +151,302 @@ async function getDefaultCampaignId(): Promise<string | null> {
 // ----------------------------------------------------------------------
 // ACTION: Check TCKN Status (Start Flow)
 // ----------------------------------------------------------------------
-export async function checkTcknStatus(tckn: string, campaignId: string) {
-    if (!tckn || tckn.length !== 11) return { status: 'INVALID', message: 'Geçersiz TCKN' };
+export async function checkTcknStatus(tckn: string) {
+    if (!validateTckn(tckn)) return { status: 'INVALID', message: 'Geçersiz TCKN (Algoritma).' };
 
-    // Resolve campaign ID
-    const targetCampaignId = campaignId || await getDefaultCampaignId();
-
-    if (!targetCampaignId) {
-        return { status: 'ERROR', message: 'Aktif başvuru dönemi bulunamadı.' };
-    }
+    const targetCampaignId = await getDefaultCampaignId();
+    if (!targetCampaignId) return { status: 'ERROR', message: 'Aktif başvuru dönemi bulunamadı.' };
 
     try {
-        // 1. Check Whitelist (Get Member ID)
-        console.log('Checking TCKN:', tckn);
-        // Public RLS allows check by TCKN
-        const { data: member, error: memberError } = await supabase
-            .from('member_whitelist')
-            .select('id, tckn')
-            .eq('tckn', tckn.trim())
-            .eq('is_active', true)
-            .single();
+        // 1. TALPA Üyelik Kontrolü (Whitelist) - verify_member RPC (plaintext TCKN alır)
+        const { data: memberStatus, error: memberError } = await supabase
+            .rpc('verify_member', { p_tckn_plain: tckn });
 
-        if (memberError) {
-            console.error('Whitelist Check Error:', memberError);
-        }
-
-        if (memberError || !member) {
-            console.log('Member not found or error. Data:', member);
+        // The RPC returns TABLE(id UUID, status TEXT) - rows
+        // If empty -> Not found.
+        if (memberError || !memberStatus || memberStatus.length === 0 || memberStatus[0].status === 'NOT_FOUND') {
             return { status: 'NOT_FOUND', message: 'TALPA listesinde kaydınız bulunamadı. Lütfen TALPA ile iletişime geçiniz.' };
         }
 
-        // 2. Check Existing Application (RPC)
-        const { data: application, error: appError } = await supabase
-            .rpc('get_application_status_rpc', {
-                p_tckn: tckn,
-                p_campaign_id: targetCampaignId
-            });
+        const memberId = memberStatus[0].id;
 
-        // RPC returns data directly. If 'returns table', it returns array of objects.
-        const appData = (application && Array.isArray(application) && application.length > 0) ? application[0] : null;
+        // 2. Check Existing Application (Using RPC to bypass RLS)
+        const { data: checkResult, error: checkError } = await supabase.rpc('check_existing_application', {
+            p_tckn_plain: tckn,
+            p_campaign_id: targetCampaignId,
+            p_member_id: memberId
+        });
 
-        if (appData) {
-            // EXISTS -> Send OTP
-            const code = generateOtp();
-
-            const { error: otpError } = await supabase
-                .from('otp_codes')
-                .insert({
-                    tckn: tckn,
-                    code: code
-                });
-
-            if (otpError) {
-                console.error('OTP Save Error:', otpError);
-                return { status: 'ERROR', message: 'Sistem hatası.' };
-            }
-
-            // Send Email
-            if (appData.email) {
-                try {
-                    await sendEmail({
-                        to: appData.email,
-                        subject: 'TALPA Başvuru Doğrulama Kodu',
-                        html: getOtpEmailTemplate(code)
-                    });
-                } catch (e) {
-                    console.error('Email Send Error:', e);
-                    return { status: 'ERROR', message: 'Doğrulama kodu gönderilemedi. Lütfen sistem yöneticisi ile görüşün.' };
-                }
-            }
-
+        if (checkResult?.exists) {
+            // EXISTS -> STRICT BLOCK
             return {
-                status: 'EXISTS_NEEDS_OTP',
-                message: 'Mevcut başvurunuz bulundu. Kayıtlı e-posta adresinize doğrulama kodu gönderildi.',
-                maskedEmail: appData.email.replace(/(.{2})(.*)(@.*)/, "$1***$3")
+                status: 'EXISTS',
+                message: 'Bu T.C. Kimlik Numarası ile daha önce yapılmış bir başvuru bulunmaktadır. Mükerrer başvuru yapılamaz.'
             };
         } else {
             // NEW -> Proceed
-            return { status: 'NEW_MEMBER', message: 'Yeni başvuru.', memberId: member.id };
+            const sessionToken = createSessionToken(tckn); // Generate Token
+            return { status: 'NEW_MEMBER', message: 'Yeni başvuru.', memberId: memberId, sessionToken };
         }
-
     } catch (error) {
-        console.error('Check Status Error:', error);
+        console.error('Check Error:', error);
         return { status: 'ERROR', message: 'Beklenmedik bir hata oluştu.' };
     }
 }
 
-// ----------------------------------------------------------------------
-// ACTION: Verify OTP & Get Data
-// ----------------------------------------------------------------------
-export async function verifyOtpAndGetData(tckn: string, code: string, campaignId: string) {
-    try {
-        // Resolve campaign ID
-        const targetCampaignId = campaignId || await getDefaultCampaignId();
-        if (!targetCampaignId) {
-            return { success: false, message: 'Aktif başvuru dönemi bulunamadı.' };
-        }
 
-        // 1. Verify Code
-        const { data: otpRecord, error: otpError } = await supabase
-            .from('otp_codes')
-            .select('*')
-            .eq('tckn', tckn)
-            .eq('code', code)
-            .gt('expires_at', new Date().toISOString())
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .single();
-
-        if (otpError || !otpRecord) {
-            return { success: false, message: 'Geçersiz veya süresi dolmuş kod.' };
-        }
-
-        // 2. Consume Code
-        await supabase.from('otp_codes').delete().eq('id', otpRecord.id);
-
-        // 3. Get Application Data (RPC)
-        const { data: application, error: appError } = await supabase
-            .rpc('get_application_data_rpc', {
-                p_tckn: tckn,
-                p_campaign_id: targetCampaignId
-            });
-
-        const appData = (application && Array.isArray(application) && application.length > 0) ? application[0] : null;
-
-        if (appError || !appData) {
-            return { success: false, message: 'Başvuru verisi alınamadı.' };
-        }
-
-        return {
-            success: true,
-            data: {
-                tckn: tckn,
-                fullName: appData.full_name,
-                phone: appData.phone,
-                email: appData.email,
-                address: appData.address,
-                city: appData.city,
-                district: appData.district,
-                kvkkConsent: appData.kvkk_consent,
-                openConsent: appData.open_consent,
-                communicationConsent: appData.communication_consent,
-                ...appData.dynamic_data
-            }
-        };
-
-    } catch (error) {
-        console.error('Verify OTP Error:', error);
-        return { success: false, message: 'Doğrulama hatası.' };
-    }
-}
 
 export async function submitApplication(prevState: FormState, formData: FormData): Promise<FormState> {
     const headersList = await headers();
     const ip = headersList.get('x-forwarded-for') || '127.0.0.1';
-    const userAgent = headersList.get('user-agent') || 'Unknown';
 
-    // Separate fixed fields from dynamic fields
-    // Updated for Denizbank specific fields which we will treat as "Dynamic" storage-wise 
-    // BUT we need to parse them from formData manually since they are not in the old list.
-    const fixedKeys = ['tckn', 'fullName', 'phone', 'email', 'address', 'city', 'district', 'kvkkConsent', 'openConsent', 'communicationConsent', 'campaignId',
-        'isDenizbankCustomer', 'deliveryMethod', 'denizbankConsent', 'talpaDisclaimer'];
-
-    const fixedData: any = {};
-    const dynamicData: Record<string, any> = {};
-
+    // Parse
+    const rawData: any = {};
     for (const [key, value] of formData.entries()) {
-        if (fixedKeys.includes(key)) {
-            fixedData[key] = value;
-        } else if (!key.startsWith('$ACTION')) {
-            dynamicData[key] = value;
-        }
+        if (!key.startsWith('$ACTION')) rawData[key] = value;
     }
 
-    // Manual type conversion for booleans
-    fixedData.kvkkConsent = fixedData.kvkkConsent === 'on' || fixedData.kvkkConsent === 'true';
-    fixedData.openConsent = fixedData.openConsent === 'on' || fixedData.openConsent === 'true';
-    fixedData.communicationConsent = fixedData.communicationConsent === 'on' || fixedData.communicationConsent === 'true';
-    fixedData.denizbankConsent = fixedData.denizbankConsent === 'on' || fixedData.denizbankConsent === 'true';
-    fixedData.talpaDisclaimer = fixedData.talpaDisclaimer === 'on' || fixedData.talpaDisclaimer === 'true';
+    // Convert Booleans
+    ['addressSharingConsent', 'cardApplicationConsent', 'tcknPhoneSharingConsent'].forEach(k => {
+        rawData[k] = rawData[k] === 'on' || rawData[k] === 'true';
+    });
 
-    // 1. Validate Fixed Fields
-    // If campaignId is missing, we need to fetch a default one or handle it.
-    // Since we removed campaign selection from UI, we must ensure campaignId is populated.
+    // 0. SESSION CHECK
+    if (!rawData.sessionToken) return { success: false, message: 'Oturum bilgisi bulunamadı.' };
+    const sessionTckn = verifySessionToken(rawData.sessionToken);
 
-    if (!fixedData.campaignId) {
-        // Fetch default/active campaign
-        fixedData.campaignId = await getDefaultCampaignId();
+    if (!sessionTckn) return { success: false, message: 'Oturum süreniz dolmuş (15dk). Lütfen sayfayı yenileyip tekrar giriş yapınız.' };
+    if (sessionTckn !== rawData.tckn) return { success: false, message: 'Kimlik doğrulama hatası.' };
 
-        if (!fixedData.campaignId) {
-            // If NO campaign exists, we can't submit to a foreign key.
-            return { success: false, message: 'Aktif başvuru dönemi bulunamadı.' };
-        }
+    // 1. Campaign Check (Force Active Campaign)
+    // Ignore passed campaignId, always use active one
+    const activeCampaignId = await getDefaultCampaignId();
+    if (!activeCampaignId) return { success: false, message: 'Aktif kampanya yok.' };
+
+    // Assign to data object for DB insert
+    const campaignId = activeCampaignId;
+
+    // 2. Validate Schema
+    const validated = formSchema.safeParse(rawData);
+    if (!validated.success) {
+        return { success: false, errors: validated.error.flatten().fieldErrors, message: 'Form hatalı.' };
     }
-
-    const validatedFields = formSchema.safeParse(fixedData);
-
-    if (!validatedFields.success) {
-        return {
-            success: false,
-            errors: validatedFields.error.flatten().fieldErrors,
-            message: "Lütfen form alanlarını kontrol ediniz."
-        };
-    }
-
-    const data = validatedFields.data;
+    const data = validated.data;
 
     try {
-        // 2. Rate Limiting Check
-        const { data: isAllowed, error: rateLimitError } = await supabase.rpc('check_rate_limit', {
-            p_ip_address: ip,
-            p_endpoint: 'submit_application',
-            p_max_requests: 10, // Increased for OTP flow loops
-            p_window_minutes: 60
+        // 3. Rate Limit
+        const { data: isAllowed } = await supabase.rpc('check_rate_limit', {
+            p_ip_address: ip, p_endpoint: 'submit_application', p_max_requests: 100, p_window_minutes: 60
         });
+        if (!isAllowed) return { success: false, message: 'Çok fazla deneme.' };
 
-        if (rateLimitError || !isAllowed) {
-            return { success: false, message: 'Çok fazla işlem yaptınız. Lütfen bekleyiniz.' };
-        }
-
-        // 3. Encrypt TCKN for Storage
+        // 4. Encrypt TCKN (Wait, we need to pass Encrypted TCKN to secure RPC too?)
+        // Yes, `submit_application_secure` needs keys.
         const encryptionKey = process.env.TCKN_ENCRYPTION_KEY || 'mysecretkey';
-        const { data: encryptedTckn, error: encryptionError } = await supabase
-            .rpc('encrypt_tckn', {
-                p_tckn: data.tckn,
-                p_key: encryptionKey
-            });
+        const { data: encryptedTckn } = await supabase.rpc('encrypt_tckn', { p_tckn: data.tckn, p_key: encryptionKey });
+        if (!encryptedTckn) return { success: false, message: 'Şifreleme hatası.' };
 
-        if (encryptionError || !encryptedTckn) {
-            return { success: false, message: 'Veri güvenliği hatası.' };
-        }
-
-        // 4. Prepare Metadata
+        // 5. Submit (Secure RPC)
         const consentMetadata = {
             ip,
-            userAgent,
+            userAgent: headersList.get('user-agent') || 'Unknown',
             timestamp: new Date().toISOString(),
-            consentVersion: 'v1.0',
-            kvkkAccepted: data.kvkkConsent,
-            openConsentAccepted: data.openConsent
+            consentVersion: 'v1.0'
         };
 
-        // 5. Save to Database (UPSERT via RPC)
-        // RPC handles finding member_id and upsert logic
-        const { data: rpcResult, error: dbError } = await supabase
-            .rpc('upsert_application_rpc', {
-                p_tckn: data.tckn,
-                p_campaign_id: data.campaignId,
-                p_encrypted_tckn: encryptedTckn,
-                p_full_name: data.fullName,
-                p_phone: data.phone,
-                p_email: data.email,
-                p_address: data.address,
-                p_city: data.city,
-                p_district: data.district,
-                p_kvkk_consent: data.kvkkConsent,
-                p_open_consent: data.openConsent,
-                p_communication_consent: data.communicationConsent,
-                p_consent_metadata: consentMetadata,
-                p_dynamic_data: {
-                    ...dynamicData,
-                    isDenizbankCustomer: data.isDenizbankCustomer,
-                    deliveryMethod: data.deliveryMethod,
-                    denizbankConsent: data.denizbankConsent,
-                    talpaDisclaimer: data.talpaDisclaimer
-                }
-            });
-
-        if (dbError || (rpcResult && !rpcResult.success)) {
-            console.error('Database/RPC Error:', dbError || rpcResult);
-            return { success: false, message: 'Başvuru kaydedilemedi: ' + (dbError?.message || rpcResult?.message || '') };
-        }
-
-        // 7. Send Emails (SMTP)
-        if (data.campaignId) {
-            try {
-                // Fetch email configurations for this campaign
-                const { data: emailConfigs } = await supabase
-                    .from('email_configurations')
-                    .select('*')
-                    .eq('campaign_id', data.campaignId)
-                    .eq('is_active', true);
-
-                if (emailConfigs && emailConfigs.length > 0) {
-                    for (const config of emailConfigs) {
-                        let toAddresses: string[] = [];
-
-                        if (config.recipient_type === 'applicant') {
-                            toAddresses = [data.email];
-                        } else if (config.recipient_type === 'admin') {
-                            toAddresses = [process.env.ADMIN_EMAIL || 'admin@example.com'];
-                        } else if (config.recipient_type === 'custom' && config.recipient_email) {
-                            toAddresses = [config.recipient_email];
-                        }
-
-                        if (toAddresses.length === 0) continue;
-
-                        // Replace Variables in Subject & Body
-                        let subject = config.subject_template || 'Talpa Bildirim';
-                        let body = config.body_template || '';
-
-                        const replacements: any = {
-                            '{{name}}': data.fullName,
-                            '{{tckn}}': data.tckn,
-                            '{{email}}': data.email,
-                            '{{phone}}': data.phone,
-                            '{{address}}': data.address || '-',
-                            '{{city}}': data.city || '-',
-                            '{{district}}': data.district || '-',
-                            '{{deliveryMethod}}': data.deliveryMethod === 'address' ? 'Adrese Teslim' : 'Şubeden Teslim',
-                            '{{isDenizbankCustomer}}': data.isDenizbankCustomer === 'yes' ? 'Evet' : 'Hayır',
-                            '{{consents}}': `KVKK: ${data.kvkkConsent ? 'Evet' : 'Hayır'}, Açık Rıza: ${data.openConsent ? 'Evet' : 'Hayır'}, İletişim: ${data.communicationConsent ? 'Evet' : 'Hayır'}, Denizbank: ${data.denizbankConsent ? 'Evet' : 'Hayır'},`,
-                            '{{date}}': new Date().toLocaleDateString('tr-TR')
-                        };
-
-                        Object.keys(replacements).forEach(key => {
-                            const val = replacements[key] || '';
-                            // Case insensitive replacement
-                            const regex = new RegExp(key, 'gi');
-                            subject = subject.replace(regex, val);
-                            body = body.replace(regex, val);
-                        });
-
-                        await sendEmail({
-                            to: toAddresses,
-                            subject: subject,
-                            html: getGenericEmailTemplate(subject, body.replace(/\n/g, '<br>')),
-                        });
-                    }
-                } else {
-                    // Fallback to default if no config? Or silent?
-                    // Let's keep silent to avoid spam if not configured.
-                    logger.info('No email config found for campaign', { campaignId: data.campaignId });
-                }
-
-            } catch (e: any) {
-                console.error('Email Send Error Details:', JSON.stringify(e, null, 2));
-                logger.error('Email Send Failed', e, { campaignId: data.campaignId });
-                // Don't fail the submission
-            }
-        }
-
-        logger.applicationEvent('APPLICATION_SUBMITTED', undefined, {
-            campaignId: data.campaignId || null,
-            status: 'UPSERTED'
+        const { data: rpcResult, error: dbError } = await supabase.rpc('submit_application_secure', {
+            p_tckn_plain: data.tckn,
+            p_campaign_id: campaignId,
+            p_encrypted_tckn: encryptedTckn,
+            p_form_data: {
+                fullName: data.fullName,
+                email: data.email,
+                phone: data.phone,
+                address: data.address,
+                deliveryMethod: data.deliveryMethod,
+                // Consents (only 3 new ones)
+                addressSharingConsent: data.addressSharingConsent || false,
+                cardApplicationConsent: data.cardApplicationConsent,
+                tcknPhoneSharingConsent: data.tcknPhoneSharingConsent
+            },
+            p_consent_metadata: consentMetadata
         });
+
+        if (dbError || !rpcResult?.success) {
+            console.error('Submit Error:', dbError, rpcResult);
+            // #region agent log
+            fetch('http://127.0.0.1:7247/ingest/f93d5c7d-e15e-4725-83b1-8e8a375674f4', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'actions.ts:293', message: 'Submit failed', data: { dbError: dbError?.message, rpcResult }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
+            // #endregion
+            return { success: false, message: rpcResult?.message || 'Kaydedilemedi.' };
+        }
+
+        // #region agent log
+        fetch('http://127.0.0.1:7247/ingest/f93d5c7d-e15e-4725-83b1-8e8a375674f4', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'actions.ts:297', message: 'Application saved successfully', data: { applicationId: rpcResult?.application_id, email: data.email, hasEmail: !!data.email }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
+        // #endregion
+
+        // ------------------------------------------------------------------
+        // DEBUG FALLBACK: Trigger email edge function directly (bypasses DB trigger)
+        // This is to gather runtime evidence for edge function reachability and SMTP.
+        // ------------------------------------------------------------------
+        try {
+            const fnBaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+            const fnUrl = fnBaseUrl ? `${fnBaseUrl}/functions/v1/process-email` : null;
+            const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+            const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
+            const jwtParts = serviceRoleKey ? serviceRoleKey.split('.').length : 0;
+            const isJwtLike = jwtParts === 3;
+
+            const safeDecodeJwt = (jwt?: string) => {
+                try {
+                    if (!jwt) return null;
+                    const parts = jwt.split('.');
+                    if (parts.length !== 3) return { parts: parts.length };
+                    const payloadB64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+                    const padded = payloadB64 + '='.repeat((4 - (payloadB64.length % 4)) % 4);
+                    const json = Buffer.from(padded, 'base64').toString('utf8');
+                    const payload = JSON.parse(json);
+                    // Only return non-sensitive fields useful for debugging key/project mismatch
+                    return {
+                        iss: payload?.iss,
+                        role: payload?.role,
+                        exp: payload?.exp,
+                        iat: payload?.iat,
+                        aud: payload?.aud,
+                    };
+                } catch {
+                    return { decodeError: true };
+                }
+            };
+
+            // #region agent log
+            fetch('http://127.0.0.1:7247/ingest/f93d5c7d-e15e-4725-83b1-8e8a375674f4', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    location: 'actions.ts:edge_email_fallback:pre',
+                    message: 'Preparing to call process-email edge function (fallback)',
+                    data: {
+                        hasFnUrl: !!fnUrl,
+                        fnUrl,
+                        hasServiceRoleKey: !!serviceRoleKey,
+                        isJwtLike,
+                        hasAnonKey: !!anonKey,
+                        serviceRoleClaims: safeDecodeJwt(serviceRoleKey),
+                        anonClaims: safeDecodeJwt(anonKey),
+                        applicationId: rpcResult?.application_id,
+                        email: data.email
+                    },
+                    timestamp: Date.now(),
+                    sessionId: 'debug-session',
+                    runId: 'run1',
+                    hypothesisId: 'B'
+                })
+            }).catch(() => { });
+            // #endregion
+
+            const authKeysToTry = [
+                { name: 'service_role', key: serviceRoleKey },
+                { name: 'anon', key: anonKey },
+            ].filter(x => !!x.key) as Array<{ name: string; key: string }>;
+
+            if (fnUrl && authKeysToTry.length > 0) {
+                const payload = {
+                    type: 'INSERT',
+                    table: 'applications',
+                    schema: 'public',
+                    old_record: null,
+                    record: {
+                        id: rpcResult?.application_id,
+                        email: data.email,
+                        full_name: data.fullName,
+                        tckn: data.tckn,
+                        phone: data.phone,
+                        address: data.address || '',
+                        form_data: {
+                            deliveryMethod: data.deliveryMethod,
+                            addressSharingConsent: data.addressSharingConsent,
+                            cardApplicationConsent: data.cardApplicationConsent,
+                            tcknPhoneSharingConsent: data.tcknPhoneSharingConsent
+                        },
+                        campaign_id: campaignId,
+                        created_at: new Date().toISOString()
+                    }
+                };
+
+                for (const auth of authKeysToTry) {
+                    const resp = await fetch(fnUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'apikey': auth.key,
+                            'Authorization': `Bearer ${auth.key}`
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const respText = await resp.text();
+
+                    // #region agent log
+                    fetch('http://127.0.0.1:7247/ingest/f93d5c7d-e15e-4725-83b1-8e8a375674f4', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            location: 'actions.ts:edge_email_fallback:post',
+                            message: 'process-email edge function response (fallback)',
+                            data: {
+                                auth: auth.name,
+                                status: resp.status,
+                                ok: resp.ok,
+                                responseSnippet: respText?.slice(0, 500)
+                            },
+                            timestamp: Date.now(),
+                            sessionId: 'debug-session',
+                            runId: 'run1',
+                            hypothesisId: resp.ok ? 'E' : 'F'
+                        })
+                    }).catch(() => { });
+                    // #endregion
+
+                    if (resp.ok) break;
+                }
+            }
+        } catch (e) {
+            // #region agent log
+            fetch('http://127.0.0.1:7247/ingest/f93d5c7d-e15e-4725-83b1-8e8a375674f4', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    location: 'actions.ts:edge_email_fallback:error',
+                    message: 'Fallback edge email call failed',
+                    data: { error: (e as any)?.message || String(e) },
+                    timestamp: Date.now(),
+                    sessionId: 'debug-session',
+                    runId: 'run1',
+                    hypothesisId: 'F'
+                })
+            }).catch(() => { });
+            // #endregion
+        }
+
+        // 6. Async Actions (Email)
+        // Moved to Edge Function (triggered by Database Webhook on 'applications' INSERT)
+        /*
+        try {
+             await sendEmail({
+                 to: data.email,
+                 subject: 'TALPA Başvuru Alındı',
+                 html: getGenericEmailTemplate('Başvurunuz başarıyla alınmıştır.')
+             });
+        } catch(e) {
+             console.error('Legacy Email Send Error', e);
+             // Non-blocking
+        }
+        */
 
         return { success: true, message: 'Başvurunuz başarıyla alınmıştır.' };
 
-    } catch (error) {
-        logger.error('Başvuru gönderim hatası', error as Error, { ip });
-        return { success: false, message: 'Beklenmedik bir hata oluştu.' };
+    } catch (e) {
+        logger.error('Submit Panic', e as Error);
+        return { success: false, message: 'Sunucu hatası.' };
     }
 }

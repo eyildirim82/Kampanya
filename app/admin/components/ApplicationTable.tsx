@@ -24,9 +24,9 @@ export default function ApplicationTable({ applications }: { applications: any[]
             'Telefon': app.phone,
             'E-posta': app.email,
             'Adres': app.address,
-            'İl': app.city,
-            'İlçe': app.district,
+            'Teslim Yöntemi': (app.delivery_method || app.form_data?.deliveryMethod) === 'branch' ? 'Şube' : (app.delivery_method || app.form_data?.deliveryMethod) === 'address' ? 'Adres' : '-',
             'KVKK Onayı': app.kvkk_consent ? 'Evet' : 'Hayır',
+            'Açık Rıza': app.open_consent ? 'Evet' : 'Hayır',
             'Başvuru Tarihi': new Date(app.created_at).toLocaleString('tr-TR'),
         })));
 
@@ -81,6 +81,8 @@ export default function ApplicationTable({ applications }: { applications: any[]
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">TCKN</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ad Soyad</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">İletişim</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Adres</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teslim</th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Onaylar</th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">İşlemler</th>
                         </tr>
@@ -88,7 +90,7 @@ export default function ApplicationTable({ applications }: { applications: any[]
                     <tbody className="bg-white divide-y divide-gray-200">
                         {filteredApps.length === 0 ? (
                             <tr>
-                                <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
+                                <td colSpan={8} className="px-6 py-4 text-center text-gray-500">
                                     Başvuru bulunamadı.
                                 </td>
                             </tr>
@@ -99,7 +101,7 @@ export default function ApplicationTable({ applications }: { applications: any[]
                                         {new Date(app.created_at).toLocaleDateString()}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                        {app.tckn ? `${app.tckn.substring(0, 3)}***${app.tckn.substring(7)}` : '-'}
+                                        {app.tckn || '-'}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                         {app.full_name}
@@ -107,6 +109,17 @@ export default function ApplicationTable({ applications }: { applications: any[]
                                     <td className="px-6 py-4 text-sm text-gray-500">
                                         <div>{app.phone}</div>
                                         <div className="text-xs text-gray-400">{app.email}</div>
+                                    </td>
+                                    <td className="px-6 py-4 text-sm text-gray-500 max-w-[250px]">
+                                        <div className="truncate" title={app.address}>{app.address || '-'}</div>
+                                    </td>
+                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <span className={clsx(
+                                            "px-2 py-1 rounded text-xs",
+                                            (app.delivery_method || app.form_data?.deliveryMethod) === 'branch' ? "bg-blue-100 text-blue-800" : "bg-purple-100 text-purple-800"
+                                        )}>
+                                            {(app.delivery_method || app.form_data?.deliveryMethod) === 'branch' ? 'Şube' : (app.delivery_method || app.form_data?.deliveryMethod) === 'address' ? 'Adres' : '-'}
+                                        </span>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                         <span className={clsx("px-2 py-1 rounded text-xs", app.kvkk_consent ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800")}>KVKK</span>

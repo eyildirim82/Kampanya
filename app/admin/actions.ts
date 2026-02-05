@@ -120,7 +120,8 @@ export async function getApplications(campaignId?: string) {
     let query = adminSupabase
         .from('applications')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(0, 9999);
 
     // If campaignId is provided and not 'all', filter by it
     if (campaignId && campaignId !== 'all') {

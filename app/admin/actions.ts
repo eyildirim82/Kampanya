@@ -116,36 +116,44 @@ export async function adminLogout() {
 // ----------------------------------------------------------------------
 
 // Helper to decrypt applications
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-async function decryptApplications(apps: Record<string, any>[], _adminSupabase: SupabaseClient) {
+// Helper to decrypt applications
+async function decryptApplications(apps: Record<string, any>[], adminSupabase: SupabaseClient) {
     const encryptionKey = process.env.TCKN_ENCRYPTION_KEY || 'mysecretkey';
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    // Use Service Role to bypass RLS/Auth checks in decrypt_tckn function
-    // ensuring we can always decrypt if we are already in this admin context.
-    const supabaseService = createClient(supabaseUrl, serviceRoleKey || supabaseKey, {
-        auth: {
-            persistSession: false,
-            autoRefreshToken: false,
-            detectSessionInUrl: false
-        }
-    });
+    let supabaseService: SupabaseClient | null = null;
+    if (serviceRoleKey) {
+        supabaseService = createClient(supabaseUrl, serviceRoleKey, {
+            auth: {
+                persistSession: false,
+                autoRefreshToken: false,
+                detectSessionInUrl: false
+            }
+        });
+    }
 
     return await Promise.all(apps.map(async (app) => {
         try {
-            const { data: decrypted, error: decryptError } = await supabaseService.rpc('decrypt_tckn', {
+            // Priority 1: Service Role (Most reliable if configured)
+            if (supabaseService) {
+                const { data: decrypted, error } = await supabaseService.rpc('decrypt_tckn', {
+                    p_encrypted_tckn: app.encrypted_tckn,
+                    p_key: encryptionKey
+                });
+                if (!error && decrypted) return { ...app, tckn: decrypted };
+                console.warn("Service Role Decrypt Failed:", error);
+            }
+
+            // Priority 2: Admin User Session (Fallback)
+            const { data: decryptedUser, error: errorUser } = await adminSupabase.rpc('decrypt_tckn', {
                 p_encrypted_tckn: app.encrypted_tckn,
                 p_key: encryptionKey
             });
 
-            if (decryptError || !decrypted) {
-                // If service role fails, fall back? Or just return error.
-                // Let's log why it failed.
-                console.error("Decrypt Error (RPC):", decryptError);
-                return { ...app, tckn: '***GK***' };
-            }
+            if (!errorUser && decryptedUser) return { ...app, tckn: decryptedUser };
 
-            return { ...app, tckn: decrypted };
+            console.error("User Role Decrypt Failed:", errorUser);
+            return { ...app, tckn: '***GK***' };
         } catch (err) {
             console.error("Decrypt Exception:", err);
             return { ...app, tckn: 'ERROR' };

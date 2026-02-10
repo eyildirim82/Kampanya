@@ -116,49 +116,19 @@ export async function adminLogout() {
 // ----------------------------------------------------------------------
 
 // Helper to decrypt applications
-// Helper to decrypt applications
-async function decryptApplications(apps: Record<string, any>[], adminSupabase: SupabaseClient) {
-    const encryptionKey = process.env.TCKN_ENCRYPTION_KEY || 'mysecretkey';
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-    let supabaseService: SupabaseClient | null = null;
-    if (serviceRoleKey) {
-        supabaseService = createClient(supabaseUrl, serviceRoleKey, {
-            auth: {
-                persistSession: false,
-                autoRefreshToken: false,
-                detectSessionInUrl: false
-            }
-        });
-    }
-
-    return await Promise.all(apps.map(async (app) => {
-        try {
-            // Priority 1: Service Role (Most reliable if configured)
-            if (supabaseService) {
-                const { data: decrypted, error } = await supabaseService.rpc('decrypt_tckn', {
-                    p_encrypted_tckn: app.encrypted_tckn,
-                    p_key: encryptionKey
-                });
-                if (!error && decrypted) return { ...app, tckn: decrypted };
-                console.warn("Service Role Decrypt Failed:", error);
-            }
-
-            // Priority 2: Admin User Session (Fallback)
-            const { data: decryptedUser, error: errorUser } = await adminSupabase.rpc('decrypt_tckn', {
-                p_encrypted_tckn: app.encrypted_tckn,
-                p_key: encryptionKey
-            });
-
-            if (!errorUser && decryptedUser) return { ...app, tckn: decryptedUser };
-
-            console.error("User Role Decrypt Failed:", errorUser);
-            return { ...app, tckn: '***GK***' };
-        } catch (err) {
-            console.error("Decrypt Exception:", err);
-            return { ...app, tckn: 'ERROR' };
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+async function decryptApplications(apps: Record<string, any>[], _adminSupabase?: SupabaseClient) {
+    // We now store plain 'tckn' in the applications table (migration 20260204210041)
+    // So we don't need to decrypt. We just pass the data through.
+    return apps.map((app) => {
+        // If tckn is already present (which it should be for new applications), use it.
+        // If app.tckn is null but encrypted_tckn exists, it's legacy data.
+        // User requested to remove TCKN_ENCRYPTION_KEY dependency completely.
+        if (!app.tckn && app.encrypted_tckn) {
+            return { ...app, tckn: '***ESKI_VERI***' };
         }
-    }));
+        return app;
+    });
 }
 
 export async function getApplications(campaignId?: string, page: number = 1, limit: number = 50) {
@@ -186,7 +156,7 @@ export async function getApplications(campaignId?: string, page: number = 1, lim
         return { data: [], count: 0 };
     }
 
-    const decryptedApps = await decryptApplications(apps, adminSupabase);
+    const decryptedApps = await decryptApplications(apps);
 
     return { data: decryptedApps, count: count || 0 };
 }
@@ -212,7 +182,7 @@ export async function getAllApplicationsForExport(campaignId?: string) {
         return [];
     }
 
-    return await decryptApplications(apps, adminSupabase);
+    return await decryptApplications(apps);
 }
 
 export async function deleteApplication(id: string) {

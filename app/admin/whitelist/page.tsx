@@ -1,19 +1,23 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { getWhitelistMembers, adminLogout, uploadWhitelist, addWhitelistMember, updateWhitelistMember, deleteWhitelistMember } from '../actions';
+
+import { getWhitelistMembers, adminLogout, uploadWhitelist, uploadDebtorList, addWhitelistMember, updateWhitelistMember, deleteWhitelistMember } from '../actions';
 import Link from 'next/link';
+import { Alert } from '@/components/ui/Alert';
 
 export default function WhitelistPage() {
-    const router = useRouter();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [members, setMembers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
+    const [debtorUploading, setDebtorUploading] = useState(false);
     const [adding, setAdding] = useState(false);
     const [showAddForm, setShowAddForm] = useState(false);
     const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const debtorFileInputRef = useRef<HTMLInputElement>(null);
     const addFormRef = useRef<HTMLFormElement>(null);
 
     const fetchMembers = () => {
@@ -46,12 +50,35 @@ export default function WhitelistPage() {
                 if (fileInputRef.current) fileInputRef.current.value = '';
                 fetchMembers(); // Refresh list
             } else {
-                setMessage({ text: result.message || 'Bir hata oluştu.', type: 'error' });
+                setMessage({ text: result.message || 'Dosya yüklenirken bir sorun oluştu.', type: 'error' });
             }
-        } catch (error) {
-            setMessage({ text: 'Beklenmedik bir hata oluştu.', type: 'error' });
+        } catch {
+            setMessage({ text: 'İşlem sırasında teknik bir hata oluştu.', type: 'error' });
         } finally {
             setUploading(false);
+        }
+    };
+
+    const handleDebtorUpload = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        setDebtorUploading(true);
+        setMessage(null);
+
+        const formData = new FormData(e.currentTarget);
+
+        try {
+            const result = await uploadDebtorList(null, formData);
+            if (result.success) {
+                setMessage({ text: result.message || 'Borçlu listesi yüklendi.', type: 'success' });
+                if (debtorFileInputRef.current) debtorFileInputRef.current.value = '';
+                fetchMembers(); // Refresh list
+            } else {
+                setMessage({ text: result.message || 'Borçlu listesi güncellenirken bir sorun oluştu.', type: 'error' });
+            }
+        } catch {
+            setMessage({ text: 'İşlem sırasında teknik bir hata oluştu.', type: 'error' });
+        } finally {
+            setDebtorUploading(false);
         }
     };
 
@@ -70,10 +97,10 @@ export default function WhitelistPage() {
                 setShowAddForm(false);
                 fetchMembers(); // Refresh list
             } else {
-                setMessage({ text: result.message || 'Bir hata oluştu.', type: 'error' });
+                setMessage({ text: result.message || 'Üye eklenemedi.', type: 'error' });
             }
-        } catch (error) {
-            setMessage({ text: 'Beklenmedik bir hata oluştu.', type: 'error' });
+        } catch {
+            setMessage({ text: 'İşlem sırasında teknik bir hata oluştu.', type: 'error' });
         } finally {
             setAdding(false);
         }
@@ -109,7 +136,7 @@ export default function WhitelistPage() {
                     <div className="flex justify-between h-16">
                         <div className="flex items-center">
                             <Link href="/admin/dashboard" className="text-gray-500 hover:text-gray-700 mr-4">
-                                &larr; Dashboard'a Dön
+                                &larr; Dashboard&apos;a Dön
                             </Link>
                             <h1 className="text-xl font-bold text-gray-900">Whitelist Yönetimi</h1>
                         </div>
@@ -129,8 +156,13 @@ export default function WhitelistPage() {
 
                 {/* Message Display */}
                 {message && (
-                    <div className={`mb-4 p-4 rounded-md ${message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-                        {message.text}
+                    <div className="mb-4">
+                        <Alert
+                            variant={message.type === 'success' ? 'success' : 'destructive'}
+                            title={message.type === 'success' ? 'İşlem Başarılı' : 'İşlem Başarısız'}
+                        >
+                            {message.text}
+                        </Alert>
                     </div>
                 )}
 
@@ -185,49 +217,58 @@ export default function WhitelistPage() {
                     </div>
                 )}
 
-                {/* Upload Section */}
-                <div className="bg-white px-4 py-5 shadow sm:rounded-lg sm:p-6 mb-8">
-                    <div className="md:grid md:grid-cols-3 md:gap-6">
-                        <div className="md:col-span-1">
-                            <h3 className="text-lg font-medium leading-6 text-gray-900">CSV Yükle</h3>
-                            <p className="mt-1 text-sm text-gray-500">
-                                Üye listesini güncellemek için CSV dosyası yükleyin.
-                                <br />
-                                <span className="text-xs text-gray-400">Format: Sadece TCKN sütunu yeterlidir.</span>
-                            </p>
-                        </div>
-                        <div className="mt-5 md:mt-0 md:col-span-2">
-                            <form onSubmit={handleUpload} className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-700">Dosya Seç</label>
-                                    <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
-                                        <div className="space-y-1 text-center">
-                                            <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
-                                                <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                            </svg>
-                                            <div className="flex text-sm text-gray-600">
-                                                <label htmlFor="file-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
-                                                    <span>Dosya Seç</span>
-                                                    <input id="file-upload" name="file" type="file" ref={fileInputRef} accept=".csv" className="sr-only" required />
-                                                </label>
-                                                <p className="pl-1">veya sürükleyip bırakın</p>
-                                            </div>
-                                            <p className="text-xs text-gray-500">Sadece CSV (Max 10MB)</p>
-                                        </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                    {/* Whitelist Upload Section */}
+                    <div className="bg-white px-4 py-5 shadow sm:rounded-lg sm:p-6">
+                        <div className="md:grid md:grid-cols-1 md:gap-6">
+                            <div>
+                                <h3 className="text-lg font-medium leading-6 text-gray-900">Whitelist Yükle (Aktif Üyeler)</h3>
+                                <p className="mt-1 text-sm text-gray-500">
+                                    Normal üye listesini güncelle.
+                                </p>
+                            </div>
+                            <div className="mt-4">
+                                <form onSubmit={handleUpload} className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Dosya Seç (CSV)</label>
+                                        <input name="file" type="file" ref={fileInputRef} accept=".csv" className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100" required />
                                     </div>
-                                </div>
-
-
-                                <div className="flex justify-end">
                                     <button
                                         type="submit"
                                         disabled={uploading}
-                                        className={`inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ${uploading ? 'opacity-50' : ''}`}
                                     >
-                                        {uploading ? 'Yükleniyor...' : 'Listeyi Güncelle'}
+                                        {uploading ? 'Yükleniyor...' : 'Whitelist Güncelle'}
                                     </button>
-                                </div>
-                            </form>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Debtor Upload Section */}
+                    <div className="bg-white px-4 py-5 shadow sm:rounded-lg sm:p-6 border-l-4 border-red-500">
+                        <div className="md:grid md:grid-cols-1 md:gap-6">
+                            <div>
+                                <h3 className="text-lg font-medium leading-6 text-red-900">Borçlu Listesi Yükle</h3>
+                                <p className="mt-1 text-sm text-red-500">
+                                    Borcu olan üyeleri işaretle (Başvuruları engellenecek).
+                                </p>
+                            </div>
+                            <div className="mt-4">
+                                <form onSubmit={handleDebtorUpload} className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700">Dosya Seç (CSV)</label>
+                                        <input name="file" type="file" ref={debtorFileInputRef} accept=".csv" className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-700 hover:file:bg-red-100" required />
+                                    </div>
+                                    <button
+                                        type="submit"
+                                        disabled={debtorUploading}
+                                        className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 ${debtorUploading ? 'opacity-50' : ''}`}
+                                    >
+                                        {debtorUploading ? 'Yükleniyor...' : 'Borçluları İşaretle'}
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -272,10 +313,12 @@ export default function WhitelistPage() {
                                                     <td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-500">Üye verisi bulunamadı.</td>
                                                 </tr>
                                             ) : (
+                                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                                                 members.map((m: any) => (
-                                                    <tr key={m.id}>
+                                                    <tr key={m.id} className={m.is_debtor ? 'bg-red-50' : ''}>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono text-xs">
                                                             {m.tckn}
+                                                            {m.is_debtor && <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">BORÇLU</span>}
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                             {new Date(m.synced_at || m.updated_at).toLocaleString('tr-TR')}

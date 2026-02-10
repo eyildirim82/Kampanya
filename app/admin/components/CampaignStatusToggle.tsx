@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useTransition } from 'react';
 import { toggleCampaignStatus } from '../actions';
 import { useRouter } from 'next/navigation';
 

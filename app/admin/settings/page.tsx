@@ -1,10 +1,15 @@
 'use client';
 
+import { useState } from 'react';
 import EmailConfig from '../components/EmailConfig';
+import CampaignManager from '../components/CampaignManager';
+import TemplateTester from '../components/TemplateTester';
 import Link from 'next/link';
 import { adminLogout } from '../actions';
 
 export default function SettingsPage() {
+    const [activeTab, setActiveTab] = useState<'campaigns' | 'templates' | 'tester'>('campaigns');
+
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Header */}
@@ -34,15 +39,46 @@ export default function SettingsPage() {
             <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
                 <div className="px-4 py-4 sm:px-0 space-y-6">
                     <div className="bg-white shadow rounded-lg p-6">
-                        <h2 className="text-xl font-semibold mb-4 text-gray-800">E-posta Bildirim Kuralları</h2>
+                        <h2 className="text-xl font-semibold mb-2 text-gray-800">Kampanya ve Mail Yönetimi</h2>
                         <p className="text-gray-600 mb-6 text-sm">
-                            Buradan sisteme gelen başvurular için otomatik e-posta gönderim kurallarını yönetebilirsiniz.
+                            Kampanyaları, kampanya bazlı şablonları ve test gönderimlerini bu ekrandan yönetebilirsiniz.
                         </p>
 
-                        {/* We are reusing the component from campaigns folder temporarily 
-                            until we can move it or delete the folder. 
-                            It is now context-agnostic. */}
-                        <EmailConfig />
+                        <div className="mb-6 border-b border-gray-200">
+                            <nav className="-mb-px flex gap-6">
+                                <button
+                                    onClick={() => setActiveTab('campaigns')}
+                                    className={`border-b-2 pb-2 text-sm font-medium ${activeTab === 'campaigns'
+                                            ? 'border-indigo-600 text-indigo-700'
+                                            : 'border-transparent text-gray-500 hover:text-gray-700'
+                                        }`}
+                                >
+                                    Kampanyalar
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('templates')}
+                                    className={`border-b-2 pb-2 text-sm font-medium ${activeTab === 'templates'
+                                            ? 'border-indigo-600 text-indigo-700'
+                                            : 'border-transparent text-gray-500 hover:text-gray-700'
+                                        }`}
+                                >
+                                    Mail Şablonları
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('tester')}
+                                    className={`border-b-2 pb-2 text-sm font-medium ${activeTab === 'tester'
+                                            ? 'border-indigo-600 text-indigo-700'
+                                            : 'border-transparent text-gray-500 hover:text-gray-700'
+                                        }`}
+                                >
+                                    Test Gönderimi
+                                </button>
+                            </nav>
+                        </div>
+
+                        {activeTab === 'campaigns' && <CampaignManager />}
+                        {activeTab === 'templates' && <EmailConfig />}
+                        {activeTab === 'tester' && <TemplateTester />}
                     </div>
                 </div>
             </main>

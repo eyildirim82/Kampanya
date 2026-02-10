@@ -81,6 +81,7 @@ export const CardHeader: React.FC<CardHeaderProps> = ({
     );
 };
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface CardBodyProps extends React.HTMLAttributes<HTMLDivElement> { }
 
 export const CardBody: React.FC<CardBodyProps> = ({
@@ -95,6 +96,7 @@ export const CardBody: React.FC<CardBodyProps> = ({
     );
 };
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface CardFooterProps extends React.HTMLAttributes<HTMLDivElement> { }
 
 export const CardFooter: React.FC<CardFooterProps> = ({

@@ -1,0 +1,20 @@
+﻿
+> web@0.1.0 lint
+> eslint
+
+
+C:\Users\erkan\Talpa Denizbank forum\member-verification-system\web\app\admin\actions.ts
+  239:13  error    'skipped' is never reassigned. Use 'const' instead  prefer-const
+  239:13  warning  'skipped' is assigned a value but never used        @typescript-eslint/no-unused-vars
+  338:13  error    'skipped' is never reassigned. Use 'const' instead  prefer-const
+  338:13  warning  'skipped' is assigned a value but never used        @typescript-eslint/no-unused-vars
+
+C:\Users\erkan\Talpa Denizbank forum\member-verification-system\web\app\admin\components\ApplicationTable.tsx
+  244:28  error  Parsing error: '{' or JSX element expected
+
+C:\Users\erkan\Talpa Denizbank forum\member-verification-system\web\app\admin\whitelist\page.tsx
+  4:10  warning  'useRouter' is defined but never used  @typescript-eslint/no-unused-vars
+
+Ô£û 6 problems (3 errors, 3 warnings)
+  2 errors and 0 warnings potentially fixable with the `--fix` option.
+

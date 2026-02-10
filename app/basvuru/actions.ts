@@ -1,16 +1,18 @@
 'use server';
 
 import { createClient } from '@supabase/supabase-js';
-import { sendEmail } from '@/lib/smtp';
 import { z } from 'zod';
-import { getUserEmailTemplate, getAdminEmailTemplate, getGenericEmailTemplate } from '@/lib/email-templates';
 import { headers } from 'next/headers';
 import crypto from 'crypto';
 import { logger } from '@/lib/logger';
+import { resolveCampaignId } from './campaign';
 
 // Initialize Supabase Client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim()!;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
+if (!supabaseUrl || !supabaseKey) {
+    throw new Error('Supabase environment variables are missing.');
+}
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // HMAC Secret for Session Tokens (Use Env or fallback to generated one for runtime)
@@ -72,7 +74,7 @@ function verifySessionToken(token: string): string | null {
         if (Date.now() > payload.exp) return null;
 
         return payload.tckn;
-    } catch (e) {
+    } catch {
         return null;
     }
 }
@@ -136,25 +138,13 @@ export type FormState = {
 
 
 
-// Helper to get default active campaign
-async function getDefaultCampaignId(): Promise<string | null> {
-    const { data } = await supabase
-        .from('campaigns')
-        .select('id')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-    return data?.id || null;
-}
-
 // ----------------------------------------------------------------------
 // ACTION: Check TCKN Status (Start Flow)
 // ----------------------------------------------------------------------
-export async function checkTcknStatus(tckn: string) {
+export async function checkTcknStatus(tckn: string, campaignId?: string) {
     if (!validateTckn(tckn)) return { status: 'INVALID', message: 'Geçersiz TCKN (Algoritma).' };
 
-    const targetCampaignId = await getDefaultCampaignId();
+    const targetCampaignId = await resolveCampaignId(campaignId);
     if (!targetCampaignId) return { status: 'ERROR', message: 'Aktif başvuru dönemi bulunamadı.' };
 
     try {
@@ -168,10 +158,18 @@ export async function checkTcknStatus(tckn: string) {
             return { status: 'NOT_FOUND', message: 'TALPA listesinde kaydınız bulunamadı. Lütfen TALPA ile iletişime geçiniz.' };
         }
 
+        // Check for DEBTOR status
+        if (memberStatus[0].status === 'DEBTOR') {
+            return {
+                status: 'BLOCKED',
+                message: 'Derneğimizde bulunan borcunuz nedeniyle işleminize devam edilememektedir. Lütfen muhasebe birimi ile iletişime geçiniz.'
+            };
+        }
+
         const memberId = memberStatus[0].id;
 
         // 2. Check Existing Application (Using RPC to bypass RLS)
-        const { data: checkResult, error: checkError } = await supabase.rpc('check_existing_application', {
+        const { data: checkResult } = await supabase.rpc('check_existing_application', {
             p_tckn_plain: tckn,
             p_campaign_id: targetCampaignId,
             p_member_id: memberId
@@ -190,7 +188,7 @@ export async function checkTcknStatus(tckn: string) {
         }
     } catch (error) {
         console.error('Check Error:', error);
-        return { status: 'ERROR', message: 'Beklenmedik bir hata oluştu.' };
+        return { status: 'ERROR', message: 'Sorgulama sırasında teknik bir aksaklık oluştu. Lütfen kısa bir süre sonra tekrar deneyiniz.' };
     }
 }
 
@@ -201,7 +199,8 @@ export async function submitApplication(prevState: FormState, formData: FormData
     const ip = headersList.get('x-forwarded-for') || '127.0.0.1';
 
     // Parse
-    const rawData: any = {};
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rawData: Record<string, any> = {};
     for (const [key, value] of formData.entries()) {
         if (!key.startsWith('$ACTION')) rawData[key] = value;
     }
@@ -218,13 +217,10 @@ export async function submitApplication(prevState: FormState, formData: FormData
     if (!sessionTckn) return { success: false, message: 'Oturum süreniz dolmuş (15dk). Lütfen sayfayı yenileyip tekrar giriş yapınız.' };
     if (sessionTckn !== rawData.tckn) return { success: false, message: 'Kimlik doğrulama hatası.' };
 
-    // 1. Campaign Check (Force Active Campaign)
-    // Ignore passed campaignId, always use active one
-    const activeCampaignId = await getDefaultCampaignId();
-    if (!activeCampaignId) return { success: false, message: 'Aktif kampanya yok.' };
-
-    // Assign to data object for DB insert
-    const campaignId = activeCampaignId;
+    // 1. Campaign Check (Prefer explicit campaignId, fallback to default active campaign)
+    const requestedCampaignId = typeof rawData.campaignId === 'string' ? rawData.campaignId : undefined;
+    const targetCampaignId = await resolveCampaignId(requestedCampaignId);
+    if (!targetCampaignId) return { success: false, message: 'Aktif kampanya yok.' };
 
     // 2. Validate Schema
     const validated = formSchema.safeParse(rawData);
@@ -238,7 +234,7 @@ export async function submitApplication(prevState: FormState, formData: FormData
         const { data: isAllowed } = await supabase.rpc('check_rate_limit', {
             p_ip_address: ip, p_endpoint: 'submit_application', p_max_requests: 100, p_window_minutes: 60
         });
-        if (!isAllowed) return { success: false, message: 'Çok fazla deneme.' };
+        if (!isAllowed) return { success: false, message: 'Çok fazla deneme yaptınız. Lütfen biraz bekleyip tekrar deneyiniz.' };
 
         // 4. Encrypt TCKN (Wait, we need to pass Encrypted TCKN to secure RPC too?)
         // Yes, `submit_application_secure` needs keys.
@@ -256,7 +252,7 @@ export async function submitApplication(prevState: FormState, formData: FormData
 
         const { data: rpcResult, error: dbError } = await supabase.rpc('submit_application_secure', {
             p_tckn_plain: data.tckn,
-            p_campaign_id: campaignId,
+            p_campaign_id: targetCampaignId,
             p_encrypted_tckn: encryptedTckn,
             p_form_data: {
                 fullName: data.fullName,
@@ -274,159 +270,12 @@ export async function submitApplication(prevState: FormState, formData: FormData
 
         if (dbError || !rpcResult?.success) {
             console.error('Submit Error:', dbError, rpcResult);
-            // #region agent log
-            fetch('http://127.0.0.1:7247/ingest/f93d5c7d-e15e-4725-83b1-8e8a375674f4', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'actions.ts:293', message: 'Submit failed', data: { dbError: dbError?.message, rpcResult }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
-            // #endregion
+
             return { success: false, message: rpcResult?.message || 'Kaydedilemedi.' };
         }
 
-        // #region agent log
-        fetch('http://127.0.0.1:7247/ingest/f93d5c7d-e15e-4725-83b1-8e8a375674f4', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ location: 'actions.ts:297', message: 'Application saved successfully', data: { applicationId: rpcResult?.application_id, email: data.email, hasEmail: !!data.email }, timestamp: Date.now(), sessionId: 'debug-session', runId: 'run1', hypothesisId: 'A' }) }).catch(() => { });
-        // #endregion
 
-        // ------------------------------------------------------------------
-        // DEBUG FALLBACK: Trigger email edge function directly (bypasses DB trigger)
-        // This is to gather runtime evidence for edge function reachability and SMTP.
-        // ------------------------------------------------------------------
-        try {
-            const fnBaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
-            const fnUrl = fnBaseUrl ? `${fnBaseUrl}/functions/v1/process-email` : null;
-            const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
-            const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
-            const jwtParts = serviceRoleKey ? serviceRoleKey.split('.').length : 0;
-            const isJwtLike = jwtParts === 3;
 
-            const safeDecodeJwt = (jwt?: string) => {
-                try {
-                    if (!jwt) return null;
-                    const parts = jwt.split('.');
-                    if (parts.length !== 3) return { parts: parts.length };
-                    const payloadB64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-                    const padded = payloadB64 + '='.repeat((4 - (payloadB64.length % 4)) % 4);
-                    const json = Buffer.from(padded, 'base64').toString('utf8');
-                    const payload = JSON.parse(json);
-                    // Only return non-sensitive fields useful for debugging key/project mismatch
-                    return {
-                        iss: payload?.iss,
-                        role: payload?.role,
-                        exp: payload?.exp,
-                        iat: payload?.iat,
-                        aud: payload?.aud,
-                    };
-                } catch {
-                    return { decodeError: true };
-                }
-            };
-
-            // #region agent log
-            fetch('http://127.0.0.1:7247/ingest/f93d5c7d-e15e-4725-83b1-8e8a375674f4', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    location: 'actions.ts:edge_email_fallback:pre',
-                    message: 'Preparing to call process-email edge function (fallback)',
-                    data: {
-                        hasFnUrl: !!fnUrl,
-                        fnUrl,
-                        hasServiceRoleKey: !!serviceRoleKey,
-                        isJwtLike,
-                        hasAnonKey: !!anonKey,
-                        serviceRoleClaims: safeDecodeJwt(serviceRoleKey),
-                        anonClaims: safeDecodeJwt(anonKey),
-                        applicationId: rpcResult?.application_id,
-                        email: data.email
-                    },
-                    timestamp: Date.now(),
-                    sessionId: 'debug-session',
-                    runId: 'run1',
-                    hypothesisId: 'B'
-                })
-            }).catch(() => { });
-            // #endregion
-
-            const authKeysToTry = [
-                { name: 'service_role', key: serviceRoleKey },
-                { name: 'anon', key: anonKey },
-            ].filter(x => !!x.key) as Array<{ name: string; key: string }>;
-
-            if (fnUrl && authKeysToTry.length > 0) {
-                const payload = {
-                    type: 'INSERT',
-                    table: 'applications',
-                    schema: 'public',
-                    old_record: null,
-                    record: {
-                        id: rpcResult?.application_id,
-                        email: data.email,
-                        full_name: data.fullName,
-                        tckn: data.tckn,
-                        phone: data.phone,
-                        address: data.address || '',
-                        form_data: {
-                            deliveryMethod: data.deliveryMethod,
-                            addressSharingConsent: data.addressSharingConsent,
-                            cardApplicationConsent: data.cardApplicationConsent,
-                            tcknPhoneSharingConsent: data.tcknPhoneSharingConsent
-                        },
-                        campaign_id: campaignId,
-                        created_at: new Date().toISOString()
-                    }
-                };
-
-                for (const auth of authKeysToTry) {
-                    const resp = await fetch(fnUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'apikey': auth.key,
-                            'Authorization': `Bearer ${auth.key}`
-                        },
-                        body: JSON.stringify(payload)
-                    });
-
-                    const respText = await resp.text();
-
-                    // #region agent log
-                    fetch('http://127.0.0.1:7247/ingest/f93d5c7d-e15e-4725-83b1-8e8a375674f4', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            location: 'actions.ts:edge_email_fallback:post',
-                            message: 'process-email edge function response (fallback)',
-                            data: {
-                                auth: auth.name,
-                                status: resp.status,
-                                ok: resp.ok,
-                                responseSnippet: respText?.slice(0, 500)
-                            },
-                            timestamp: Date.now(),
-                            sessionId: 'debug-session',
-                            runId: 'run1',
-                            hypothesisId: resp.ok ? 'E' : 'F'
-                        })
-                    }).catch(() => { });
-                    // #endregion
-
-                    if (resp.ok) break;
-                }
-            }
-        } catch (e) {
-            // #region agent log
-            fetch('http://127.0.0.1:7247/ingest/f93d5c7d-e15e-4725-83b1-8e8a375674f4', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    location: 'actions.ts:edge_email_fallback:error',
-                    message: 'Fallback edge email call failed',
-                    data: { error: (e as any)?.message || String(e) },
-                    timestamp: Date.now(),
-                    sessionId: 'debug-session',
-                    runId: 'run1',
-                    hypothesisId: 'F'
-                })
-            }).catch(() => { });
-            // #endregion
-        }
 
         // 6. Async Actions (Email)
         // Moved to Edge Function (triggered by Database Webhook on 'applications' INSERT)
@@ -447,6 +296,6 @@ export async function submitApplication(prevState: FormState, formData: FormData
 
     } catch (e) {
         logger.error('Submit Panic', e as Error);
-        return { success: false, message: 'Sunucu hatası.' };
+        return { success: false, message: 'Başvurunuz işlenirken teknik bir hata oluştu. Lütfen daha sonra tekrar deneyiniz.' };
     }
 }

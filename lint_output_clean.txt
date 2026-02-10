@@ -1,0 +1,10 @@
+﻿
+> web@0.1.0 lint
+> eslint
+
+
+C:\Users\erkan\Talpa Denizbank forum\member-verification-system\web\app\admin\components\ApplicationTable.tsx
+  40:74  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+Ô£û 1 problem (1 error, 0 warnings)
+

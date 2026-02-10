@@ -24,6 +24,7 @@ export async function POST(request: Request) {
 
         // RPC returns the row directly as an object (or null if not found?)
         // Our function returns TABLE, so it returns an array of rows.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const result = Array.isArray(data) ? data[0] : (data as any);
 
         if (!result || !result.member_exists) {
@@ -60,7 +61,7 @@ export async function POST(request: Request) {
             emailMasked: maskedEmail
         });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Check API Error:', error);
         return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 });
     }

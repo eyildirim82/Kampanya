@@ -18,12 +18,20 @@ export default async function DashboardPage({
         redirect('/admin/login');
     }
 
-    const { campaignId } = await searchParams;
+    const { campaignId, page } = await searchParams;
     const validCampaignId = typeof campaignId === 'string' ? campaignId : undefined;
+    const currentPage = typeof page === 'string' ? parseInt(page) : 1;
 
-    const [applications] = await Promise.all([
-        getApplications(validCampaignId),
+    const [result, allCampaigns] = await Promise.all([
+        getApplications(validCampaignId, currentPage),
+        getCampaigns()
     ]);
+
+    const { data: applications, count } = result;
+
+    // Identify current campaign type
+    const currentCampaign = allCampaigns.find(c => c.id === validCampaignId);
+    const isCreditCampaign = currentCampaign?.campaign_code === 'CREDIT_2026' || currentCampaign?.name?.includes('Kredi');
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -61,9 +69,46 @@ export default async function DashboardPage({
             {/* Main Content */}
             <main>
                 <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+
+                    {/* Campaign Tabs */}
+                    <div className="mb-6 border-b border-gray-200">
+                        <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+                            <a
+                                href="/admin/dashboard"
+                                className={`
+                                    whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
+                                    ${!validCampaignId
+                                        ? 'border-[#002855] text-[#002855]'
+                                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}
+                                `}
+                            >
+                                Tümü
+                            </a>
+                            {allCampaigns.map((campaign) => (
+                                <a
+                                    key={campaign.id}
+                                    href={`/admin/dashboard?campaignId=${campaign.id}`}
+                                    className={`
+                                        whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm
+                                        ${validCampaignId === campaign.id
+                                            ? 'border-[#002855] text-[#002855]'
+                                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}
+                                    `}
+                                >
+                                    {campaign.name || campaign.title}
+                                </a>
+                            ))}
+                        </nav>
+                    </div>
+
                     <div className="px-4 py-4 sm:px-0 space-y-4">
-                        {/* Removed CampaignSelector */}
-                        <ApplicationTable applications={applications} />
+                        <ApplicationTable
+                            applications={applications}
+                            totalCount={count}
+                            currentPage={currentPage}
+                            campaignId={validCampaignId}
+                            isCreditCampaign={isCreditCampaign}
+                        />
                     </div>
                 </div>
             </main>

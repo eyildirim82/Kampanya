@@ -3,8 +3,8 @@ import { NextResponse } from 'next/server';
 
 // Use Anon Key
 const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL?.trim()!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim()!
+    (process.env.NEXT_PUBLIC_SUPABASE_URL ?? '').trim(),
+    (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '').trim()
 );
 
 export async function POST(request: Request) {
@@ -21,6 +21,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Sistem hatası' }, { status: 500 });
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const result = Array.isArray(data) ? data[0] : (data as any);
 
         if (!result || !result.member_exists) {

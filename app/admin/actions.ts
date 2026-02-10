@@ -1,10 +1,12 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use server';
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { logger } from '@/lib/logger';
-import crypto from 'crypto';
+
+import { sendEmail } from '@/lib/smtp';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -33,7 +35,7 @@ async function getAdminClient() {
             try {
                 cookieStore.delete('sb-access-token');
                 cookieStore.delete('sb-refresh-token');
-            } catch (e) {
+            } catch {
                 // Ignore if we can't delete (e.g. inside SC)
             }
             return null;
@@ -50,7 +52,7 @@ async function getAdminClient() {
 // AUTH
 // ----------------------------------------------------------------------
 
-export async function adminLogin(prevState: any, formData: FormData) {
+export async function adminLogin(prevState: unknown, formData: FormData) {
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
 
@@ -99,7 +101,7 @@ export async function adminLogin(prevState: any, formData: FormData) {
     cookieStore.set('sb-access-token', session.access_token, { path: '/', httpOnly: true, secure: true, maxAge: 604800 });
     cookieStore.set('sb-refresh-token', session.refresh_token, { path: '/', httpOnly: true, secure: true, maxAge: 604800 });
 
-    redirect('/admin/dashboard');
+    return { success: true, message: 'Giriş başarılı.', redirectUrl: '/admin/dashboard' };
 }
 
 export async function adminLogout() {
@@ -113,65 +115,80 @@ export async function adminLogout() {
 // APPLICATIONS (For Export)
 // ----------------------------------------------------------------------
 
-export async function getApplications(campaignId?: string) {
-    const adminSupabase = await getAdminClient();
-    if (!adminSupabase) return [];
-
-    let query = adminSupabase
-        .from('applications')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .range(0, 9999);
-
-    // If campaignId is provided and not 'all', filter by it
-    if (campaignId && campaignId !== 'all') {
-        query = query.eq('campaign_id', campaignId);
-    }
-    // If NO campaignId provided, maybe we just show all? Or distinct default?
-    // User requested "Removing Campaign" concept. So showing ALL applications 
-    // seems most appropriate for the "Single Form" feel. 
-    // If they want to filter, we can add that later, but by default show all.
-
-    // However, ensureDefaultCampaign might create one if none exists.
-    // Let's just return all applications for now as the dashboard becomes "The Dashboard".
-
-    const { data: apps, error } = await query;
-
-    if (error) {
-        console.error("Fetch Apps Error:", error);
-        return [];
-    }
-
+// Helper to decrypt applications
+async function decryptApplications(apps: Record<string, any>[], adminSupabase: SupabaseClient) {
     const encryptionKey = process.env.TCKN_ENCRYPTION_KEY || 'mysecretkey';
 
-    // Decrypt TCKNs (or Mask if viewer)
-    const decryptedApps = await Promise.all(apps.map(async (app) => {
+    return await Promise.all(apps.map(async (app) => {
         try {
-            // Use RPC to decrypt.
-            // If user is 'viewer', RPC should fail or policies should prevent access?
-            // Actually, we modified decrypt_tckn function to check role.
             const { data: decrypted, error: decryptError } = await adminSupabase.rpc('decrypt_tckn', {
                 p_encrypted_tckn: app.encrypted_tckn,
                 p_key: encryptionKey
             });
 
             if (decryptError || !decrypted) {
-                // If decryption fails (e.g. Viewer role), return masked
-                // Mask logic: first 3, last 2 visible? Or generic mask.
-                const fallbackTckn = app.dynamic_data?.tckn || '***********';
-                // If we stored plain tckn in dynamic_data, that's a leak! 
-                // We don't store plain tckn in dynamic_data (we shouldn't).
-                // Just return masked string.
                 return { ...app, tckn: '***GK***' };
             }
 
             return { ...app, tckn: decrypted };
-        } catch (e) {
+        } catch {
             return { ...app, tckn: 'ERROR' };
         }
     }));
+}
 
-    return decryptedApps;
+export async function getApplications(campaignId?: string, page: number = 1, limit: number = 50) {
+    const adminSupabase = await getAdminClient();
+    if (!adminSupabase) return { data: [], count: 0 };
+
+    let query = adminSupabase
+        .from('applications')
+        .select('*', { count: 'exact' })
+        .order('created_at', { ascending: false });
+
+    // If campaignId is provided and not 'all', filter by it
+    if (campaignId && campaignId !== 'all') {
+        query = query.eq('campaign_id', campaignId);
+    }
+
+    // Pagination
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    const { data: apps, error, count } = await query.range(from, to);
+
+    if (error) {
+        console.error("Fetch Apps Error:", error);
+        return { data: [], count: 0 };
+    }
+
+    const decryptedApps = await decryptApplications(apps, adminSupabase);
+
+    return { data: decryptedApps, count: count || 0 };
+}
+
+export async function getAllApplicationsForExport(campaignId?: string) {
+    const adminSupabase = await getAdminClient();
+    if (!adminSupabase) return [];
+
+    let query = adminSupabase
+        .from('applications')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+    if (campaignId && campaignId !== 'all') {
+        query = query.eq('campaign_id', campaignId);
+    }
+
+    // Fetch all (up to reasonable limit for export, e.g. 5000)
+    const { data: apps, error } = await query.range(0, 4999);
+
+    if (error) {
+        console.error("Fetch Export Apps Error:", error);
+        return [];
+    }
+
+    return await decryptApplications(apps, adminSupabase);
 }
 
 export async function deleteApplication(id: string) {
@@ -206,7 +223,7 @@ export async function getWhitelistMembers() {
     return data;
 }
 
-export async function uploadWhitelist(prevState: any, formData: FormData) {
+export async function uploadWhitelist(prevState: unknown, formData: FormData) {
     const file = formData.get('file') as File;
     if (!file || !file.name.endsWith('.csv')) {
         return { success: false, message: 'Geçersiz dosya.' };
@@ -219,7 +236,7 @@ export async function uploadWhitelist(prevState: any, formData: FormData) {
         if (lines.length === 0) return { success: false, message: 'Dosya boş.' };
 
         const members = [];
-        let skipped = 0;
+
 
         // Dynamic Header Check
         // If first line has letters 'TCKN', assume header and skip
@@ -231,11 +248,11 @@ export async function uploadWhitelist(prevState: any, formData: FormData) {
             // 1. TCKN (Required)
             // 2. Name (Optional)
 
-            let tckn = parts[0]?.trim().replace(/[^0-9]/g, '');
-            let name = parts.length > 1 ? parts.slice(1).join(',').trim() : 'Bilinmeyen Üye';
+            const tckn = parts[0]?.trim().replace(/[^0-9]/g, '');
+            const name = parts.length > 1 ? parts.slice(1).join(',').trim() : 'Bilinmeyen Üye';
 
             if (!tckn || tckn.length !== 11) {
-                skipped++;
+                // skipped++;
                 continue;
             }
 
@@ -282,7 +299,7 @@ export async function uploadWhitelist(prevState: any, formData: FormData) {
     }
 }
 
-export async function addWhitelistMember(prevState: any, formData: FormData) {
+export async function addWhitelistMember(prevState: unknown, formData: FormData) {
     const tckn = formData.get('tckn') as string;
     const name = formData.get('name') as string; // Optional now?
     const isActive = formData.get('is_active') === 'on';
@@ -303,6 +320,77 @@ export async function addWhitelistMember(prevState: any, formData: FormData) {
     if (error) return { success: false, message: error.message };
 
     return { success: true, message: 'Eklendi.' };
+}
+
+export async function uploadDebtorList(prevState: unknown, formData: FormData) {
+    const file = formData.get('file') as File;
+    if (!file || !file.name.endsWith('.csv')) {
+        return { success: false, message: 'Geçersiz dosya.' };
+    }
+
+    try {
+        const text = await file.text();
+        const lines = text.split('\n').filter(l => l.trim() !== '');
+
+        if (lines.length === 0) return { success: false, message: 'Dosya boş.' };
+
+        const members = [];
+
+
+        // Dynamic Header Check
+        const hasHeader = /[a-zA-Z]/.test(lines[0].split(',')[0]);
+        const startIdx = hasHeader ? 1 : 0;
+
+        for (let i = startIdx; i < lines.length; i++) {
+            const parts = lines[i].split(',');
+            const tckn = parts[0]?.trim().replace(/[^0-9]/g, '');
+            // Optional name
+            const name = parts.length > 1 ? parts.slice(1).join(',').trim() : undefined;
+
+            if (!tckn || tckn.length !== 11) {
+                // skipped++;
+                continue;
+            }
+
+            members.push({
+                tckn: tckn,
+                // Only provide name if new insert, but upsert will overwrite if we provide it.
+                // If we don't provide masked_name, upsert might fail on NULL if not nullable?
+                // masked_name is NOT NULL in schema usually. 
+                // Strategy: If name provided, use it. If not, if exists keep it? 
+                // Supabase upsert: provided columns update. 
+                // BUT we need to handle "Insert new debtor" case too.
+                // If inserting new, we need masked_name.
+                masked_name: name || 'Borçlu Üye',
+                // @ts-expect-error: is_debtor missing in types (added manually via migration)
+                is_active: true,
+                // @ts-expect-error: is_debtor is a custom field added via migration
+                is_debtor: true,
+                synced_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+            } as any);
+        }
+
+        if (members.length === 0) return { success: false, message: 'Geçerli kayıt bulunamadı.' };
+
+        const adminSupabase = await getAdminClient();
+        if (!adminSupabase) return { success: false, message: 'Auth error' };
+
+        // We use upsert. 
+        // Note: This matches on TCKN. It will Update existing, or Insert new.
+        const { error } = await adminSupabase
+            .from('member_whitelist')
+            .upsert(members, { onConflict: 'tckn' });
+
+        if (error) throw error;
+
+        logger.adminAction('DEBTOR_UPLOAD', 'system', { count: members.length });
+        return { success: true, message: `${members.length} borçlu kayıt güncellendi/eklendi.` };
+
+    } catch (error: any) {
+        console.error('Debtor Upload Error:', error);
+        return { success: false, message: 'Hata: ' + error.message };
+    }
 }
 
 export async function updateWhitelistMember(id: string, isActive: boolean) {
@@ -407,7 +495,7 @@ export async function getEmailConfigs(campaignId?: string) {
     return data;
 }
 
-export async function saveEmailConfig(prevState: any, formData: FormData) {
+export async function saveEmailConfig(prevState: unknown, formData: FormData) {
     const id = formData.get('id') as string;
     // campaignId might not be passed, fetch default
     let campaignId = formData.get('campaignId') as string;
@@ -468,6 +556,72 @@ export async function deleteEmailConfig(id: string) {
     return { success: true };
 }
 
+function compileTemplate(source: string, data: Record<string, string>) {
+    return Object.entries(data).reduce((output, [key, value]) => {
+        return output
+            .replaceAll(`{{${key}}}`, value)
+            .replaceAll(`{{${key.toLowerCase()}}}`, value);
+    }, source || '');
+}
+
+export async function sendTestEmail(payload: {
+    campaignId: string;
+    templateId: string;
+    testRecipient: string;
+}) {
+    const adminSupabase = await getAdminClient();
+    if (!adminSupabase) return { success: false, message: 'Auth error' };
+
+    const campaignId = String(payload.campaignId || '').trim();
+    const templateId = String(payload.templateId || '').trim();
+    const testRecipient = String(payload.testRecipient || '').trim();
+
+    if (!campaignId || !templateId || !testRecipient) {
+        return { success: false, message: 'Kampanya, şablon ve alıcı e-posta zorunludur.' };
+    }
+
+    const { data: template, error: templateError } = await adminSupabase
+        .from('email_configurations')
+        .select('*')
+        .eq('id', templateId)
+        .eq('campaign_id', campaignId)
+        .single();
+
+    if (templateError || !template) {
+        return { success: false, message: 'Şablon bulunamadı.' };
+    }
+
+    const sampleData: Record<string, string> = {
+        name: 'Test Kullanici',
+        full_name: 'Test Kullanici',
+        email: testRecipient,
+        tckn: '12345678901',
+        phone: '5551234567',
+        address: 'Istanbul',
+        city: 'Istanbul',
+        district: 'Bakirkoy',
+        deliveryMethod: 'Subeden Teslim',
+        requestedAmount: '2.000.000 TL',
+        isDenizbankCustomer: 'Evet',
+        consents: 'Onaylandi',
+        date: new Date().toLocaleDateString('tr-TR')
+    };
+
+    const subject = compileTemplate(template.subject_template, sampleData);
+    const html = compileTemplate(template.body_template, sampleData);
+
+    try {
+        await sendEmail({
+            to: testRecipient,
+            subject,
+            html
+        });
+        return { success: true, message: 'Test e-postasi gonderildi.' };
+    } catch {
+        return { success: false, message: 'Test e-postasi gonderilemedi.' };
+    }
+}
+
 // Re-export campaign functions
 export async function getCampaigns() {
     const adminSupabase = await getAdminClient();
@@ -476,8 +630,37 @@ export async function getCampaigns() {
     return data || [];
 }
 
-// createCampaign REMOVED as per single campaign simplification request. 
-// If needed manually, admin can insert via SQL.
+function toCampaignCode(input: string): string {
+    return input
+        .toLocaleUpperCase('tr-TR')
+        .replace(/[^A-Z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '');
+}
+
+export async function createCampaign(prevState: unknown, formData: FormData) {
+    const adminSupabase = await getAdminClient();
+    if (!adminSupabase) return { success: false, message: 'Auth error' };
+
+    const name = String(formData.get('name') || '').trim();
+    const codeFromForm = String(formData.get('campaignCode') || '').trim();
+    const isActive = formData.get('isActive') === 'on';
+
+    if (!name) {
+        return { success: false, message: 'Kampanya adı zorunludur.' };
+    }
+
+    const campaignCode = codeFromForm || toCampaignCode(name) || `CAMPAIGN_${Date.now()}`;
+    const payload: Record<string, any> = {
+        campaign_code: campaignCode,
+        is_active: isActive,
+    };
+
+    payload.name = name;
+
+    const { error } = await adminSupabase.from('campaigns').insert(payload);
+    if (error) return { success: false, message: error.message };
+    return { success: true, message: 'Kampanya oluşturuldu.' };
+}
 
 export async function toggleCampaignStatus(id: string, isActive: boolean) {
     const adminSupabase = await getAdminClient();

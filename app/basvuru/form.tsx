@@ -4,17 +4,20 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useSearchParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { submitApplication, checkTcknStatus } from './actions';
 import clsx from 'clsx';
+import { toast } from 'sonner';
+import { Alert } from '@/components/ui/Alert';
 
 // Base Schema with updated fields
 const baseSchema = z.object({
     tckn: z.string().length(11, "TCKN 11 haneli olmalıdır."),
     fullName: z.string().min(2, "Ad Soyad en az 2 karakter olmalıdır."),
     phone: z.string()
-        .length(10, "Telefon numarası 10 haneli olmalıdır (başında 0 olmadan)")
-        .regex(/^[1-9][0-9]{9}$/, "Telefon numarası başında 0 olmadan yazılmalıdır"),
+        .min(10, "Telefon numarası eksik girildi")
+        .max(14, "Telefon numarası çok uzun") // 10 digits + 4 spaces
+        .regex(/^5[0-9]{2}\s[0-9]{3}\s[0-9]{2}\s[0-9]{2}$|^5[0-9]{9}$/, "Telefon numarası 5XX XXX XX XX formatında olmalıdır"),
     email: z.string().email("Geçerli bir e-posta adresi giriniz.").optional(),
 
     // Address field - required if delivery is 'address'
@@ -61,7 +64,7 @@ const baseSchema = z.object({
 
 type FormData = z.infer<typeof baseSchema>;
 
-export default function ApplicationForm() {
+export default function ApplicationForm({ campaignId }: { campaignId?: string }) {
     const searchParams = useSearchParams();
     const initialTckn = searchParams.get('tckn') || '';
 
@@ -92,11 +95,38 @@ export default function ApplicationForm() {
             addressSharingConsent: false,
             cardApplicationConsent: false,
             tcknPhoneSharingConsent: false
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any,
     });
 
     const currentTckn = watch('tckn');
     const deliveryMethod = watch('deliveryMethod');
+
+    // Phone Masking Handler
+    const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+
+        // Ensure it starts with 5 if anything is typed
+        if (value.length > 0 && value[0] !== '5') {
+            // value = '5' + value; // Optionally force it, or just let user type. 
+            // Better UX: limit length to 10 digits
+        }
+        if (value.length > 10) value = value.slice(0, 10);
+
+        // Format: 5XX XXX XX XX
+        let formatted = value;
+        if (value.length > 3) {
+            formatted = `${value.slice(0, 3)} ${value.slice(3)}`;
+        }
+        if (value.length > 6) {
+            formatted = `${value.slice(0, 3)} ${value.slice(3, 6)} ${value.slice(6)}`;
+        }
+        if (value.length > 8) {
+            formatted = `${value.slice(0, 3)} ${value.slice(3, 6)} ${value.slice(6, 8)} ${value.slice(8)}`;
+        }
+
+        setValue('phone', formatted, { shouldValidate: true });
+    };
 
     // Handle TCKN Check
     const handleTcknCheck = async () => {
@@ -107,24 +137,26 @@ export default function ApplicationForm() {
         }
 
         setIsCheckingTckn(true);
-        // Pass empty campaign ID as we use default
-        const result = await checkTcknStatus(currentTckn);
+        const result = await checkTcknStatus(currentTckn, campaignId);
         setIsCheckingTckn(false);
 
+
         if (result.status === 'INVALID') {
-            alert(result.message);
+            toast.error(result.message);
         } else if (result.status === 'NOT_FOUND') {
             if (confirm(result.message + "\n\nÜyelik formuna gitmek ister misiniz?")) {
                 window.location.href = 'https://talpa.org/uyelik';
             }
         } else if (result.status === 'EXISTS') {
-            alert(result.message);
+            toast.warning(result.message);
             // Block flow, stay on INIT
+        } else if (result.status === 'BLOCKED') {
+            toast.error(result.message); // Direct message for debtors
         } else if (result.status === 'NEW_MEMBER') {
             if (result.sessionToken) setSessionToken(result.sessionToken);
             setStage('FORM');
         } else {
-            alert('Bir hata oluştu: ' + result.message);
+            toast.error('Sorgulama başarısız oldu: ' + (result.message || 'Bilinmeyen hata'));
         }
     };
 
@@ -134,10 +166,15 @@ export default function ApplicationForm() {
 
         const formData = new FormData();
         Object.entries(data).forEach(([key, value]) => {
-            formData.append(key, value?.toString() || '');
+            if (key === 'phone' && typeof value === 'string') {
+                formData.append(key, value.replace(/\s/g, ''));
+            } else {
+                formData.append(key, value?.toString() || '');
+            }
         });
 
         if (sessionToken) formData.append('sessionToken', sessionToken);
+        if (campaignId) formData.append('campaignId', campaignId);
 
         try {
             const result = await submitApplication({ success: false }, formData);
@@ -148,10 +185,10 @@ export default function ApplicationForm() {
                 setStage('INIT');
                 setSessionToken(null);
             } else {
-                setSubmitError(result.message || "Bir hata oluştu.");
+                setSubmitError(result.message || "İşlem başarısız oldu. Lütfen tekrar deneyiniz.");
             }
-        } catch (error) {
-            setSubmitError("Beklenmedik bir hata oluştu. Lütfen tekrar deneyiniz.");
+        } catch {
+            setSubmitError("Bağlantı hatası veya sunucu kaynaklı bir sorun oluştu. Lütfen tekrar deneyiniz.");
         } finally {
             setIsSubmitting(false);
         }
@@ -208,8 +245,10 @@ export default function ApplicationForm() {
             </div>
 
             {submitError && (
-                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start text-red-700">
-                    <span>{submitError}</span>
+                <div className="mb-6">
+                    <Alert variant="destructive" title="Başvuru Hatası">
+                        {submitError}
+                    </Alert>
                 </div>
             )}
 
@@ -267,8 +306,13 @@ export default function ApplicationForm() {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Telefon</label>
-                                <input {...register('phone')} className="w-full px-4 py-2 border rounded-lg text-gray-900" placeholder="5xxxxxxxxx" />
-                                <p className="text-xs text-gray-500 mt-1">Telefon numaranızı başında 0 olmadan yazınız.</p>
+                                <input
+                                    {...register('phone')}
+                                    onChange={handlePhoneChange}
+                                    className="w-full px-4 py-2 border rounded-lg text-gray-900"
+                                    placeholder="5XX XXX XX XX"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">Başında 0 olmadan giriniz.</p>
                                 {errors.phone && <p className="text-xs text-red-500">{errors.phone.message}</p>}
                             </div>
                             <div>
@@ -287,7 +331,7 @@ export default function ApplicationForm() {
                                 <div className="space-y-2">
                                     <label className="flex items-center gap-2 cursor-pointer">
                                         <input type="radio" value="branch" {...register('deliveryMethod')} className="w-4 h-4 text-[#002855]" />
-                                        <span className="text-gray-900 font-medium">Denizbank Yeşilköy Şubesi'nden teslim almak istiyorum (yaklaşık 5 gün)</span>
+                                        <span className="text-gray-900 font-medium">Denizbank Yeşilköy Şubesi&apos;nden teslim almak istiyorum (yaklaşık 5 gün)</span>
                                     </label>
                                     <label className="flex items-center gap-2 cursor-pointer">
                                         <input type="radio" value="address" {...register('deliveryMethod')} className="w-4 h-4 text-[#002855]" />
@@ -342,7 +386,7 @@ export default function ApplicationForm() {
                                         Kampanya katılımı için onay vermeniz gerekmektedir.
                                     </p>
                                     <label className="font-medium text-gray-800">
-                                        Talebim doğrultusunda adıma, Denizbank Yeşilköy Şubesi'nden kredi kartı başvurusu yapılmasını onaylıyorum.
+                                        Talebim doğrultusunda adıma, Denizbank Yeşilköy Şubesi&apos;nden kredi kartı başvurusu yapılmasını onaylıyorum.
                                     </label>
                                     {errors.cardApplicationConsent && <p className="text-xs text-red-500 mt-1">{errors.cardApplicationConsent.message}</p>}
                                 </div>
@@ -391,12 +435,12 @@ export default function ApplicationForm() {
                 </h4>
                 <div className="text-xs text-gray-600 leading-relaxed space-y-2">
                     <p>
-                        Bu kampanyada yer alan hiçbir husus <strong>TALPA</strong>'nın resmi görüşü kabul edilemez.
-                        TALPA'nın bu kampanyada yer alan reklam ve ilanların, reklam vereni, reklama konu mal ya da hizmet,
+                        Bu kampanyada yer alan hiçbir husus <strong>TALPA</strong>&apos;nın resmi görüşü kabul edilemez.
+                        TALPA&apos;nın bu kampanyada yer alan reklam ve ilanların, reklam vereni, reklama konu mal ya da hizmet,
                         reklamın içeriği vs. gibi konuların hiçbirisi üzerinde doğrudan kontrol hakkı ve olanağı bulunmamaktadır.
                     </p>
                     <p>
-                        Bir başka ifade ile TALPA'nın iş bu kampanyada yer alan reklamların yayımlanması dışında söz konusu reklam
+                        Bir başka ifade ile TALPA&apos;nın iş bu kampanyada yer alan reklamların yayımlanması dışında söz konusu reklam
                         içeriği ve/veya reklamveren ile herhangi bir bağlantısı işbirliği veya ortaklığı bulunmamaktadır.
                     </p>
                     <p className="font-semibold text-gray-800">

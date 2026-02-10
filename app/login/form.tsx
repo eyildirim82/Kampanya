@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
+import { Alert } from '@/components/ui/Alert';
 
 export default function LoginForm() {
     const router = useRouter();
@@ -37,9 +38,11 @@ export default function LoginForm() {
                 router.push(`/basvuru?tckn=${tckn}`);
             }
 
-        } catch (err: any) {
-            console.error(err);
-            setError(err.response?.data?.error || 'Bir hata oluştu');
+        } catch (err: unknown) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const error = err as any;
+            console.error(error);
+            setError(error.response?.data?.error || 'Giriş yapılırken sunucuyla iletişim kurulamadı.');
         } finally {
             setLoading(false);
         }
@@ -60,9 +63,11 @@ export default function LoginForm() {
                 router.push(`/basvuru?tckn=${tckn}`);
             }
 
-        } catch (err: any) {
-            console.error(err);
-            setError(err.response?.data?.error || 'Doğrulama hatası');
+        } catch (err: unknown) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const error = err as any;
+            console.error(error);
+            setError(error.response?.data?.error || 'Doğrulama işlemi başarısız oldu.');
         } finally {
             setLoading(false);
         }
@@ -71,8 +76,10 @@ export default function LoginForm() {
     return (
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
             {error && (
-                <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-sm">
-                    {error}
+                <div className="mb-4">
+                    <Alert variant="destructive" title="Giriş Hatası">
+                        {error}
+                    </Alert>
                 </div>
             )}
 

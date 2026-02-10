@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ensureConfigValid } from "@/lib/config-validation";
+import { Toaster } from "sonner";
 
 // Konfigürasyon doğrulaması (sadece server-side)
 if (typeof window === 'undefined') {
@@ -42,15 +44,18 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <Toaster richColors position="top-center" />
         {children}
 
         {/* Footer */}
         <footer className="w-full bg-white border-t border-gray-200 mt-12">
           <div className="max-w-7xl mx-auto px-4 py-8">
             <div className="flex justify-center">
-              <img
+              <Image
                 src="/denizbank-3.jpg"
                 alt="DenizBank Private Kart"
+                width={896}
+                height={500}
                 className="w-full max-w-4xl h-auto rounded-lg shadow-lg"
               />
             </div>

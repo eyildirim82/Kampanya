@@ -1,4 +1,4 @@
-const TALPA_LOGO_URL = 'https://talpa.org/wp-content/uploads/2023/12/Talpa-Logo.png'; // Replace with a valid hosted URL if needed, using general Talpa site for now or a placeholder if not available. Trying to find a generic one or use text.
+// const TALPA_LOGO_URL = 'https://talpa.org/wp-content/uploads/2023/12/Talpa-Logo.png';
 // Let's use a nice extensive HTML structure.
 
 const getSharedLayout = (content: string, title: string) => `
@@ -64,6 +64,7 @@ export const getUserEmailTemplate = (name: string) => {
     return getSharedLayout(content, 'TALPA Başvuru Onayı');
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const getAdminEmailTemplate = (data: any) => {
     const content = `
         <h2 style="color: #1e293b; margin-top: 0;">Yeni Kampanya Başvurusu</h2>

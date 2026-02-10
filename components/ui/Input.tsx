@@ -58,10 +58,12 @@ export const Input = React.forwardRef<HTMLInputElement | HTMLTextAreaElement, In
                     )}
 
                     <InputElement
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         ref={ref as any}
                         className={`${baseInputStyles} ${className}`}
                         disabled={disabled}
                         rows={multiline ? rows : undefined}
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         {...(props as any)}
                     />
 

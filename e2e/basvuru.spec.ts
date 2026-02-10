@@ -33,7 +33,7 @@ test.describe('Başvuru Formu E2E Testi', () => {
     // Form validasyonu react-hook-form ile yapılıyor, hata mesajları görünmeli
     await expect(page.locator('form')).toBeVisible();
     // En az bir hata mesajı görünmeli
-    await expect(page.locator('.text-red-500')).first().toBeVisible({ timeout: 3000 });
+    await expect(page.locator('.text-red-500').first()).toBeVisible({ timeout: 3000 });
   });
 
   test('should submit application with demo TCKN', async ({ page }) => {
@@ -63,7 +63,7 @@ test.describe('Başvuru Formu E2E Testi', () => {
   test('should show error for invalid TCKN', async ({ page }) => {
     // Geçersiz TCKN gir (11 haneden az)
     await page.getByLabel(/T\.C\. Kimlik Numarası|TCKN/i).fill('123');
-    
+
     // Form gönderilmeye çalışıldığında hata gösterilmeli
     const submitButton = page.getByRole('button', { name: /Başvuruyu Tamamla/i });
     await submitButton.click();

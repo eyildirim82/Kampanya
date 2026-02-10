@@ -3,14 +3,22 @@
 import { useActionState } from 'react';
 import { adminLogin } from '../actions';
 import clsx from 'clsx';
-import { useState } from 'react';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
-const initialState = { success: false, message: '' };
+const initialState = { success: false, message: '', redirectUrl: '' };
 
 export default function AdminLoginPage() {
     // using useActionState (Next.js 15+ / React 19)
     // Adjust logic if older next.js, but package.json said 16.
     const [state, formAction, isPending] = useActionState(adminLogin, initialState);
+    const router = useRouter();
+
+    useEffect(() => {
+        if (state?.success && state?.redirectUrl) {
+            router.push(state.redirectUrl);
+        }
+    }, [state, router]);
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">

@@ -16,6 +16,7 @@ interface LogEntry {
   level: LogLevel;
   message: string;
   timestamp: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   context?: Record<string, any>;
   error?: Error;
 }
@@ -23,26 +24,26 @@ interface LogEntry {
 class Logger {
   private formatLog(entry: LogEntry): string {
     const { level, message, timestamp, context, error } = entry;
-    
+
     let logMessage = `[${timestamp}] [${level.toUpperCase()}] ${message}`;
-    
+
     if (context && Object.keys(context).length > 0) {
       logMessage += ` | Context: ${JSON.stringify(context)}`;
     }
-    
+
     if (error) {
       logMessage += ` | Error: ${error.message}`;
       if (error.stack) {
         logMessage += ` | Stack: ${error.stack}`;
       }
     }
-    
+
     return logMessage;
   }
 
   private writeLog(entry: LogEntry): void {
     const formatted = this.formatLog(entry);
-    
+
     switch (entry.level) {
       case LogLevel.DEBUG:
         if (process.env.NODE_ENV === 'development') {
@@ -62,6 +63,7 @@ class Logger {
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   debug(message: string, context?: Record<string, any>): void {
     this.writeLog({
       level: LogLevel.DEBUG,
@@ -71,6 +73,7 @@ class Logger {
     });
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   info(message: string, context?: Record<string, any>): void {
     this.writeLog({
       level: LogLevel.INFO,
@@ -80,6 +83,7 @@ class Logger {
     });
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   warn(message: string, context?: Record<string, any>): void {
     this.writeLog({
       level: LogLevel.WARN,
@@ -89,6 +93,7 @@ class Logger {
     });
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   error(message: string, error?: Error, context?: Record<string, any>): void {
     this.writeLog({
       level: LogLevel.ERROR,
@@ -102,6 +107,7 @@ class Logger {
   /**
    * Admin işlemleri için özel log fonksiyonu
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   adminAction(action: string, adminId: string, details?: Record<string, any>): void {
     this.info(`Admin Action: ${action}`, {
       adminId,
@@ -113,6 +119,7 @@ class Logger {
   /**
    * Kritik güvenlik olayları için log
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   securityEvent(event: string, details?: Record<string, any>): void {
     this.warn(`Security Event: ${event}`, details);
   }
@@ -120,6 +127,7 @@ class Logger {
   /**
    * Başvuru işlemleri için log
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   applicationEvent(event: string, applicationId?: string, details?: Record<string, any>): void {
     this.info(`Application Event: ${event}`, {
       applicationId,

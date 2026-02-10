@@ -1,21 +1,27 @@
 import { Suspense } from 'react';
+import Image from 'next/image';
 import ApplicationForm from './form';
 import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
 import { PrivateCardBenefits } from '@/components/PrivateCardBenefits';
+import { getDefaultCampaignId } from './campaign';
 
 export const dynamic = 'force-dynamic';
 
 export default async function ApplicationPage() {
+    const campaignId = await getDefaultCampaignId();
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 py-6 px-4 sm:px-6 lg:px-8">
             <div className="max-w-6xl mx-auto">
                 {/* Top Banner */}
                 <div className="mb-4 flex justify-center fade-in">
-                    <img
+                    <Image
                         src="/denizbank-1.jpg"
                         alt="DenizBank Private Kart Banner"
+                        width={800}
+                        height={400}
                         className="w-full max-w-3xl h-auto rounded-xl shadow-lg"
+                        priority
                     />
                 </div>
 
@@ -89,7 +95,7 @@ export default async function ApplicationPage() {
                         </div>
                     </Card>
                 }>
-                    <ApplicationForm />
+                    <ApplicationForm campaignId={campaignId || undefined} />
                 </Suspense>
 
                 {/* Detailed Benefits Section */}

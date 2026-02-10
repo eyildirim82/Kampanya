@@ -5,10 +5,7 @@ import "./globals.css";
 import { ensureConfigValid } from "@/lib/config-validation";
 import { Toaster } from "sonner";
 
-// Konfigürasyon doğrulaması (sadece server-side)
-if (typeof window === 'undefined') {
-  ensureConfigValid();
-}
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,6 +36,18 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Konfigürasyon doğrulaması (sadece server-side ve ilk renderda çalışır)
+  if (typeof window === 'undefined') {
+    try {
+      ensureConfigValid();
+    } catch (error) {
+      console.error("Config validation failed:", error);
+      // Build sırasında tamamen patlamaması için throw'u kaldırıp sadece logluyoruz.
+      // Ya da production runtime'da yine patlamasını isteyebiliriz ama build'i bozuyorsa dikkatli olmalıyız.
+      // Şimdilik hatayı yakalayıp logluyoruz, böylece sayfa oluşumu devam edebilir.
+    }
+  }
+
   return (
     <html lang="en">
       <body

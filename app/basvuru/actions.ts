@@ -9,11 +9,14 @@ import { resolveCampaignId } from './campaign';
 
 // Initialize Supabase Client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
+const supabaseKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)?.trim();
+// For Docker networking: Use internal URL for server-side requests if available
+const supabaseInternalUrl = process.env.SUPABASE_INTERNAL_URL || supabaseUrl;
+
 if (!supabaseUrl || !supabaseKey) {
     throw new Error('Supabase environment variables are missing.');
 }
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createClient(supabaseInternalUrl || '', supabaseKey || '');
 
 // HMAC Secret for Session Tokens (Use Env or fallback to generated one for runtime)
 const SESSION_SECRET = process.env.SESSION_SECRET || 'temp_secret_change_me_in_prod';
@@ -236,11 +239,8 @@ export async function submitApplication(prevState: FormState, formData: FormData
         });
         if (!isAllowed) return { success: false, message: 'Çok fazla deneme yaptınız. Lütfen biraz bekleyip tekrar deneyiniz.' };
 
-        // 4. Encrypt TCKN (Wait, we need to pass Encrypted TCKN to secure RPC too?)
-        // Yes, `submit_application_secure` needs keys.
-        const encryptionKey = process.env.TCKN_ENCRYPTION_KEY || 'mysecretkey';
-        const { data: encryptedTckn } = await supabase.rpc('encrypt_tckn', { p_tckn: data.tckn, p_key: encryptionKey });
-        if (!encryptedTckn) return { success: false, message: 'Şifreleme hatası.' };
+        // 4. No encryption (Plaintext storage)
+        const encryptedTckn = data.tckn; // Pass plain TCKN as per user request
 
         // 5. Submit (Secure RPC)
         const consentMetadata = {
@@ -258,12 +258,17 @@ export async function submitApplication(prevState: FormState, formData: FormData
                 fullName: data.fullName,
                 email: data.email,
                 phone: data.phone,
+                // Generic Mapping for Admin Panel
                 address: data.address,
-                deliveryMethod: data.deliveryMethod,
-                // Consents (only 3 new ones)
-                addressSharingConsent: data.addressSharingConsent || false,
-                cardApplicationConsent: data.cardApplicationConsent,
-                tcknPhoneSharingConsent: data.tcknPhoneSharingConsent
+                delivery_method: data.deliveryMethod === 'branch' ? 'Şubeden Teslim' : 'Adrese Teslim',
+
+                // Consents
+                address_sharing_consent: data.addressSharingConsent,
+                card_application_consent: data.cardApplicationConsent,
+                tckn_phone_sharing_consent: data.tcknPhoneSharingConsent,
+
+                // Raw Data (just in case)
+                _raw_delivery_method: data.deliveryMethod
             },
             p_consent_metadata: consentMetadata
         });

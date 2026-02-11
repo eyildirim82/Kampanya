@@ -73,10 +73,7 @@ async function createAdmin() {
             .from('admins')
             .insert({
                 id: userId,
-                email: ADMIN_EMAIL,
-                full_name: 'System Administrator',
-                role: 'super_admin',
-                is_active: true
+                role: 'admin'
             });
 
         if (insertError) {

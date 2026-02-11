@@ -3,12 +3,14 @@ import Image from 'next/image';
 import ApplicationForm from './form';
 import { Card } from '@/components/ui/Card';
 import { PrivateCardBenefits } from '@/components/PrivateCardBenefits';
-import { getDefaultCampaignId } from './campaign';
+import { getCampaignIdByCode, getDefaultCampaignId } from './campaign';
+
+const PRIVATE_CARD_CODE = 'PRIVATE_CARD';
 
 export const dynamic = 'force-dynamic';
 
 export default async function ApplicationPage() {
-    const campaignId = await getDefaultCampaignId();
+    const campaignId = await getCampaignIdByCode(PRIVATE_CARD_CODE) || await getDefaultCampaignId();
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 py-6 px-4 sm:px-6 lg:px-8">

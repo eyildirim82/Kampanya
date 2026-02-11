@@ -10,6 +10,8 @@ import { sendEmail } from '@/lib/smtp';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+// For Docker networking: Use internal URL for server-side requests if available
+const supabaseInternalUrl = process.env.SUPABASE_INTERNAL_URL || supabaseUrl;
 
 // Helper to get authenticated client
 async function getAdminClient() {
@@ -19,7 +21,7 @@ async function getAdminClient() {
 
     if (!token || !refreshToken) return null;
 
-    const client = createClient(supabaseUrl, supabaseKey);
+    const client = createClient(supabaseInternalUrl, supabaseKey);
 
     // Set the session using access and refresh tokens
     const { error } = await client.auth.setSession({
@@ -56,7 +58,7 @@ export async function adminLogin(prevState: unknown, formData: FormData) {
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
 
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = createClient(supabaseInternalUrl, supabaseKey);
 
     const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -78,7 +80,7 @@ export async function adminLogin(prevState: unknown, formData: FormData) {
 
     // Verify Admin Role in DB
     // Use a client with the user's token
-    const userClient = createClient(supabaseUrl, supabaseKey, {
+    const userClient = createClient(supabaseInternalUrl, supabaseKey, {
         global: { headers: { Authorization: `Bearer ${session.access_token}` } }
     });
 
@@ -136,7 +138,7 @@ export async function getApplications(campaignId?: string, page: number = 1, lim
     if (!adminSupabase) return { data: [], count: 0 };
 
     let query = adminSupabase
-        .from('applications')
+        .from('applications') // Assuming 'applications' was an alias or previous table name, ensuring consistency
         .select('*', { count: 'exact' })
         .order('created_at', { ascending: false });
 
@@ -190,6 +192,58 @@ export async function deleteApplication(id: string) {
     if (!adminSupabase) return { success: false, message: 'Auth required' };
 
     const { error } = await adminSupabase.from('applications').delete().eq('id', id);
+    if (error) return { success: false, message: error.message };
+    return { success: true };
+}
+
+export async function updateApplicationStatus(id: string, status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'REVIEWING') {
+    const adminSupabase = await getAdminClient();
+    if (!adminSupabase) return { success: false, message: 'Auth required' };
+
+    const { error } = await adminSupabase
+        .from('applications')
+        .update({ status })
+        .eq('id', id);
+
+    if (error) return { success: false, message: error.message };
+    return { success: true };
+}
+
+export async function updateApplicationNotes(id: string, notes: string) {
+    const adminSupabase = await getAdminClient();
+    if (!adminSupabase) return { success: false, message: 'Auth required' };
+
+    const { error } = await adminSupabase
+        .from('applications')
+        .update({ admin_notes: notes })
+        .eq('id', id);
+
+    if (error) return { success: false, message: error.message };
+    return { success: true };
+}
+
+export async function bulkUpdateStatus(ids: string[], status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'REVIEWING') {
+    const adminSupabase = await getAdminClient();
+    if (!adminSupabase) return { success: false, message: 'Auth required' };
+
+    const { error } = await adminSupabase
+        .from('applications')
+        .update({ status })
+        .in('id', ids);
+
+    if (error) return { success: false, message: error.message };
+    return { success: true };
+}
+
+export async function bulkDeleteApplications(ids: string[]) {
+    const adminSupabase = await getAdminClient();
+    if (!adminSupabase) return { success: false, message: 'Auth required' };
+
+    const { error } = await adminSupabase
+        .from('applications')
+        .delete()
+        .in('id', ids);
+
     if (error) return { success: false, message: error.message };
     return { success: true };
 }
@@ -356,9 +410,7 @@ export async function uploadDebtorList(prevState: unknown, formData: FormData) {
                 // BUT we need to handle "Insert new debtor" case too.
                 // If inserting new, we need masked_name.
                 masked_name: name || 'Borçlu Üye',
-                // @ts-expect-error: is_debtor missing in types (added manually via migration)
                 is_active: true,
-                // @ts-expect-error: is_debtor is a custom field added via migration
                 is_debtor: true,
                 synced_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
@@ -385,6 +437,94 @@ export async function uploadDebtorList(prevState: unknown, formData: FormData) {
         console.error('Debtor Upload Error:', error);
         return { success: false, message: 'Hata: ' + error.message };
     }
+}
+
+// Search whitelist members with optional filters
+export async function searchWhitelistMembers(
+    query: string = '',
+    filter: 'all' | 'active' | 'inactive' | 'debtor' = 'all',
+    page: number = 1,
+    limit: number = 100
+) {
+    const adminSupabase = await getAdminClient();
+    if (!adminSupabase) return { data: [], total: 0 };
+
+    const offset = (page - 1) * limit;
+
+    let qb = adminSupabase
+        .from('member_whitelist')
+        .select('*', { count: 'exact' });
+
+    // Text search (TCKN or name)
+    if (query.trim()) {
+        const q = query.trim();
+        // If purely digits, search by TCKN prefix; otherwise search by name
+        if (/^\d+$/.test(q)) {
+            qb = qb.like('tckn', `${q}%`);
+        } else {
+            qb = qb.ilike('masked_name', `%${q}%`);
+        }
+    }
+
+    // Filters
+    if (filter === 'active') {
+        qb = qb.eq('is_active', true).or('is_debtor.is.null,is_debtor.eq.false');
+    } else if (filter === 'inactive') {
+        qb = qb.eq('is_active', false);
+    } else if (filter === 'debtor') {
+        qb = qb.eq('is_debtor', true);
+    }
+
+    const { data, count, error } = await qb
+        .order('synced_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+    if (error) {
+        console.error('Search Error:', error);
+        return { data: [], total: 0 };
+    }
+
+    return { data: data || [], total: count || 0 };
+}
+
+// Bulk update debtor status for given TCKNs
+export async function bulkUpdateDebtorStatus(tckns: string[], setDebtor: boolean) {
+    const adminSupabase = await getAdminClient();
+    if (!adminSupabase) return { success: false, message: 'Auth error' };
+
+    if (!tckns.length) return { success: false, message: 'TCKN listesi boş.' };
+
+    const cleanTckns = tckns.map(t => t.trim()).filter(t => /^\d{11}$/.test(t));
+    if (cleanTckns.length === 0) return { success: false, message: 'Geçerli TCKN bulunamadı.' };
+
+    const { error, count } = await adminSupabase
+        .from('member_whitelist')
+        .update({ is_debtor: setDebtor, updated_at: new Date().toISOString() } as any)
+        .in('tckn', cleanTckns);
+
+    if (error) return { success: false, message: error.message };
+
+    logger.adminAction(setDebtor ? 'BULK_DEBTOR_SET' : 'BULK_DEBTOR_CLEAR', 'system', { count, tckns: cleanTckns.length });
+    return { success: true, message: `${count || cleanTckns.length} kayıt güncellendi.` };
+}
+
+// Bulk delete members by TCKNs
+export async function bulkDeleteMembers(tckns: string[]) {
+    const adminSupabase = await getAdminClient();
+    if (!adminSupabase) return { success: false, message: 'Auth error' };
+
+    const cleanTckns = tckns.map(t => t.trim()).filter(t => /^\d{11}$/.test(t));
+    if (cleanTckns.length === 0) return { success: false, message: 'Geçerli TCKN bulunamadı.' };
+
+    const { error, count } = await adminSupabase
+        .from('member_whitelist')
+        .delete()
+        .in('tckn', cleanTckns);
+
+    if (error) return { success: false, message: error.message };
+
+    logger.adminAction('BULK_DELETE', 'system', { count, tckns: cleanTckns.length });
+    return { success: true, message: `${count || cleanTckns.length} kayıt silindi.` };
 }
 
 export async function updateWhitelistMember(id: string, isActive: boolean) {
@@ -631,6 +771,12 @@ function toCampaignCode(input: string): string {
         .replace(/^_+|_+$/g, '');
 }
 
+
+// Revised createCampaign to support dynamic fields
+// Note: We are now using a more typed approach for the new UI, but keeping backward compatibility for the form action if needed, or just replacing it.
+// The previous createCampaign was a form action. We will keep it but also add a structured one for the JSON editor.
+// Actually, let's create a new set of functions for the new "Dynamic Campaign Editor" to avoid breaking the old modal if it exists.
+
 export async function createCampaign(prevState: unknown, formData: FormData) {
     const adminSupabase = await getAdminClient();
     if (!adminSupabase) return { success: false, message: 'Auth error' };
@@ -644,16 +790,63 @@ export async function createCampaign(prevState: unknown, formData: FormData) {
     }
 
     const campaignCode = codeFromForm || toCampaignCode(name) || `CAMPAIGN_${Date.now()}`;
+    const slug = campaignCode.toLowerCase(); // Default slug
+
     const payload: Record<string, any> = {
+        name,
         campaign_code: campaignCode,
         is_active: isActive,
+        slug: slug,
+        page_content: {}, // Default empty content
+        form_schema: [] // Default empty form
     };
-
-    payload.name = name;
 
     const { error } = await adminSupabase.from('campaigns').insert(payload);
     if (error) return { success: false, message: error.message };
     return { success: true, message: 'Kampanya oluşturuldu.' };
+}
+
+// NEW: Structured actions for the Campaign Editor (JSON/Form Builder)
+
+export async function getCampaignById(id: string) {
+    const adminSupabase = await getAdminClient();
+    if (!adminSupabase) return null;
+
+    const { data, error } = await adminSupabase
+        .from('campaigns')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+    if (error) return null;
+    return data;
+}
+
+export async function updateCampaignConfig(id: string, data: {
+    slug?: string;
+    is_active?: boolean;
+    start_date?: string;
+    end_date?: string;
+    page_content?: any;
+    form_schema?: any;
+    title?: string;
+    name?: string;
+    description?: string;
+}) {
+    const adminSupabase = await getAdminClient();
+    if (!adminSupabase) return { success: false, message: 'Auth required' };
+
+    const payload: any = { ...data, updated_at: new Date().toISOString() };
+
+    // Ensure slug unique check? DB has unique constraint, so it will error if duplicate.
+
+    const { error } = await adminSupabase
+        .from('campaigns')
+        .update(payload)
+        .eq('id', id);
+
+    if (error) return { success: false, message: error.message };
+    return { success: true };
 }
 
 export async function toggleCampaignStatus(id: string, isActive: boolean) {

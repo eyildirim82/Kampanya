@@ -8,16 +8,25 @@ import { logger } from '@/lib/logger';
 
 // Initialize Supabase Client
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
+const supabaseKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)?.trim();
+// For Docker networking: Use internal URL for server-side requests if available
+const supabaseInternalUrl = process.env.SUPABASE_INTERNAL_URL || supabaseUrl;
+
 if (!supabaseUrl || !supabaseKey) {
     throw new Error('Supabase environment variables are missing.');
 }
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createClient(supabaseInternalUrl || '', supabaseKey || '');
 
 // HMAC Secret for Session Tokens
 const SESSION_SECRET = process.env.SESSION_SECRET || 'temp_secret_change_me_in_prod';
 
 // Credit Campaign Code
+// Helper to format amount
+function formatAmount(val: string) {
+    if (val === 'other') return 'Diğer / Belirtilmemiş';
+    return parseInt(val.replace(/_/g, '')).toLocaleString('tr-TR') + ' TL';
+}
+
 const CREDIT_CAMPAIGN_CODE = 'CREDIT_2026';
 
 // ----------------------------------------------------------------------
@@ -196,9 +205,8 @@ export async function submitCreditApplication(prevState: FormState, formData: Fo
     if (!targetCampaignId) return { success: false, message: 'Kampanya bulunamadı.' };
 
     try {
-        // 2. Encryption (Optional/Mock if env missing)
-        const encryptionKey = process.env.TCKN_ENCRYPTION_KEY || 'default_key';
-        const { data: encryptedTckn } = await supabase.rpc('encrypt_tckn', { p_tckn: data.tckn, p_key: encryptionKey });
+        // 2. No encryption (Plaintext storage)
+        const encryptedTckn = data.tckn;
 
         // 3. Submit
         const consentMetadata = {
@@ -216,14 +224,17 @@ export async function submitCreditApplication(prevState: FormState, formData: Fo
                 fullName: data.fullName,
                 phone: data.phone,
                 email: 'no-email@denizbank-kredi.com', // Placeholder to satisfy DB constraint
-                // These go to dynamic_data
-                isDenizbankCustomer: data.isDenizbankCustomer,
-                requestedAmount: data.requestedAmount,
-                // Map consents to generic fields or keep as custom
-                communicationConsent: data.phoneSharingConsent,
-                // We'll store exact consent keys in dynamic_data too
-                phoneSharingConsent: data.phoneSharingConsent,
-                tcknSharingConsent: data.tcknSharingConsent
+                // These go to dynamic_data and will be shown in Admin
+                musterisi_mi: data.isDenizbankCustomer === 'yes' ? 'Evet' : 'Hayır',
+                talep_edilen_limit: formatAmount(data.requestedAmount),
+
+                // Consents
+                ozel_iletisim_izni: data.phoneSharingConsent ? '✅ Evet' : '❌ Hayır', // Communication/Phone Sharing merged logic
+                tckn_paylasim_izni: data.tcknSharingConsent ? '✅ Evet' : '❌ Hayır',
+
+                // Raw Data
+                _raw_is_customer: data.isDenizbankCustomer,
+                _raw_amount: data.requestedAmount
             },
             p_consent_metadata: consentMetadata
         });

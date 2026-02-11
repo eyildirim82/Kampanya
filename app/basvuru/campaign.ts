@@ -10,11 +10,14 @@ type CampaignRecord = {
 };
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
+const supabaseKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)?.trim();
+// For Docker networking: Use internal URL for server-side requests if available
+const supabaseInternalUrl = process.env.SUPABASE_INTERNAL_URL || supabaseUrl;
+
 if (!supabaseUrl || !supabaseKey) {
     throw new Error('Supabase environment variables are missing.');
 }
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createClient(supabaseInternalUrl || '', supabaseKey || '');
 
 function slugify(input: string): string {
     return input
@@ -31,6 +34,17 @@ async function getActiveCampaigns(): Promise<CampaignRecord[]> {
         .order('created_at', { ascending: false });
 
     return (data || []) as CampaignRecord[];
+}
+
+export async function getCampaignIdByCode(code: string): Promise<string | null> {
+    const { data } = await supabase
+        .from('campaigns')
+        .select('id')
+        .eq('campaign_code', code)
+        .eq('is_active', true)
+        .maybeSingle();
+
+    return data?.id || null;
 }
 
 export async function getDefaultCampaignId(): Promise<string | null> {

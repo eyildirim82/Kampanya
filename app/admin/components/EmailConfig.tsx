@@ -10,20 +10,23 @@ type EmailConfig = {
     recipient_email?: string;
     subject_template: string;
     body_template: string;
+    trigger_event?: string;
     is_active: boolean;
     created_at: string;
 };
 
-type Campaign = {
-    id: string;
-    name: string;
-    campaign_code: string;
-};
+// Campaign type removed/unused
+// type Campaign = { ... }
 
-export default function EmailConfig() {
+interface EmailConfigProps {
+    campaignId?: string;
+}
+
+export default function EmailConfig({ campaignId: propCampaignId }: EmailConfigProps) {
     const [configs, setConfigs] = useState<EmailConfig[]>([]);
-    const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-    const [selectedCampaignId, setSelectedCampaignId] = useState<string>('');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const [campaigns, setCampaigns] = useState<any[]>([]);
+    const [selectedCampaignId, setSelectedCampaignId] = useState<string>(propCampaignId || '');
     const [loading, setLoading] = useState(true);
     const [editing, setEditing] = useState<Partial<EmailConfig> | null>(null);
     const [message, setMessage] = useState<string | null>(null);
@@ -46,26 +49,36 @@ export default function EmailConfig() {
     useEffect(() => {
         const fetchData = async () => {
             setLoading(true);
-            const campaignsData = await getCampaigns();
-            setCampaigns(campaignsData);
 
-            // Default to first campaign if none selected, or keep current
-            let targetId = selectedCampaignId;
-            if (!targetId && campaignsData.length > 0) {
-                targetId = campaignsData[0].id;
-                setSelectedCampaignId(targetId);
-            }
-
-            if (targetId) {
-                const configsData = await getEmailConfigs(targetId);
+            // If embedded with a specific ID, we don't need to fetch all campaigns
+            if (propCampaignId) {
+                setSelectedCampaignId(propCampaignId);
+                const configsData = await getEmailConfigs(propCampaignId);
                 setConfigs(configsData);
+                // We mock the campaign list with just one item or fetch just this one if needed for context
+                // But for now, we just proceed.
+            } else {
+                const campaignsData = await getCampaigns();
+                setCampaigns(campaignsData);
+
+                // Default to first campaign if none selected, or keep current
+                let targetId = selectedCampaignId;
+                if (!targetId && campaignsData.length > 0) {
+                    targetId = campaignsData[0].id;
+                    setSelectedCampaignId(targetId);
+                }
+
+                if (targetId) {
+                    const configsData = await getEmailConfigs(targetId);
+                    setConfigs(configsData);
+                }
             }
             setLoading(false);
         };
 
         void fetchData();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [propCampaignId]);
 
     const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -107,7 +120,81 @@ export default function EmailConfig() {
     );
 
     const isCreditCampaign = (currentCampaign?.campaign_code || '').includes('CREDIT') ||
-        (currentCampaign?.name || '').toLowerCase().includes('kredi');
+        (currentCampaign?.name || '').toLowerCase().includes('kredi') ||
+        // Fallback check if campaigns array is empty (embedded mode) can optionally check prop context if available
+        // For now, default to generic if not found
+        false;
+
+    // Live Preview State
+    const [activeSubject, setActiveSubject] = useState('');
+    const [activeBody, setActiveBody] = useState('');
+
+    // Sync editing state to local state
+    useEffect(() => {
+        if (editing) {
+            setActiveSubject(editing.subject_template || '');
+            setActiveBody(editing.body_template || '');
+        } else {
+            setActiveSubject('');
+            setActiveBody('');
+        }
+    }, [editing]);
+
+    // Helper to insert text at cursor position in textarea
+    const insertAtCursor = (field: 'subject' | 'body', text: string) => {
+        const elementId = field === 'subject' ? 'subjectInput' : 'bodyInput';
+        const element = document.getElementById(elementId) as HTMLInputElement | HTMLTextAreaElement;
+
+        if (element) {
+            const start = element.selectionStart || 0;
+            const end = element.selectionEnd || 0;
+            const value = element.value;
+            const newValue = value.substring(0, start) + text + value.substring(end);
+
+            if (field === 'subject') {
+                setActiveSubject(newValue);
+            } else {
+                setActiveBody(newValue);
+            }
+
+            // Restore focus and cursor (next tick)
+            setTimeout(() => {
+                element.focus();
+                element.setSelectionRange(start + text.length, start + text.length);
+            }, 0);
+        }
+    };
+
+    // Generate Preview with Dummy Data
+    const getPreview = (template: string) => {
+        let content = template || '';
+
+        const dummyData: Record<string, string> = {
+            '{{name}}': 'Ahmet Yılmaz',
+            '{{tckn}}': '12345678901',
+            '{{phone}}': '0532 555 44 33',
+            '{{email}}': 'ahmet@ornek.com',
+            '{{address}}': 'Örnek Mah. Test Sok. No:1',
+            '{{city}}': 'İstanbul',
+            '{{district}}': 'Şişli',
+            '{{deliveryMethod}}': 'Adres',
+            '{{isDenizbankCustomer}}': 'Evet',
+            '{{requestedAmount}}': '50.000 TL',
+            '{{consents}}': 'KVKK: Evet',
+            '{{date}}': new Date().toLocaleDateString('tr-TR'),
+            '{{status}}': 'Onaylandı'
+        };
+
+        Object.keys(dummyData).forEach(key => {
+            content = content.replaceAll(key, `<span class="bg-yellow-100 text-yellow-800 px-1 rounded">${dummyData[key]}</span>`);
+        });
+
+        return content;
+    };
+
+    const availableTags = isCreditCampaign
+        ? ['{{name}}', '{{tckn}}', '{{phone}}', '{{requestedAmount}}', '{{isDenizbankCustomer}}', '{{date}}', '{{consents}}', '{{status}}']
+        : ['{{name}}', '{{tckn}}', '{{email}}', '{{phone}}', '{{address}}', '{{city}}', '{{district}}', '{{deliveryMethod}}', '{{isDenizbankCustomer}}', '{{consents}}', '{{date}}', '{{status}}'];
 
     return (
         <div className="bg-white shadow sm:rounded-lg mb-8">
@@ -117,20 +204,22 @@ export default function EmailConfig() {
                         E-posta Bildirim Ayarları
                     </h3>
 
-                    {/* Campaign Selector */}
-                    <div className="flex items-center gap-2">
-                        <label className="text-sm font-medium text-gray-700">Kampanya:</label>
-                        <select
-                            value={selectedCampaignId}
-                            onChange={(e) => setSelectedCampaignId(e.target.value)}
-                            className="block w-48 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-                        >
-                            {campaigns.length === 0 && <option value="">Kampanya yok</option>}
-                            {campaigns.map(c => (
-                                <option key={c.id} value={c.id}>{c.name}</option>
-                            ))}
-                        </select>
-                    </div>
+                    {/* Campaign Selector - Only show if NO prop provided */}
+                    {!propCampaignId && (
+                        <div className="flex items-center gap-2">
+                            <label className="text-sm font-medium text-gray-700">Kampanya:</label>
+                            <select
+                                value={selectedCampaignId}
+                                onChange={(e) => setSelectedCampaignId(e.target.value)}
+                                className="block w-48 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                            >
+                                {campaigns.length === 0 && <option value="">Kampanya yok</option>}
+                                {campaigns.map(c => (
+                                    <option key={c.id} value={c.id}>{c.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
                 </div>
 
                 {loading && (
@@ -144,14 +233,17 @@ export default function EmailConfig() {
                                 <div className="font-medium text-sm text-gray-900">
                                     {config.subject_template}
                                 </div>
-                                <div className="text-sm text-gray-500 mt-1">
-                                    <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs mr-2">
-                                        {config.recipient_type === 'applicant' ? 'Başvuran' : config.recipient_type === 'admin' ? 'Yönetici' : 'Özel'}
+                                <div className="text-sm text-gray-500 mt-1 flex gap-2 items-center flex-wrap">
+                                    <span className="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded text-xs font-medium">
+                                        Tetikleyici: {config.trigger_event || 'SUBMISSION'}
+                                    </span>
+                                    <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs">
+                                        Alıcı: {config.recipient_type === 'applicant' ? 'Başvuran' : config.recipient_type === 'admin' ? 'Yönetici' : 'Özel'}
                                     </span>
                                     {config.is_active ? (
-                                        <span className="text-green-600 text-xs">Aktif</span>
+                                        <span className="text-green-600 text-xs font-bold">Aktif</span>
                                     ) : (
-                                        <span className="text-red-600 text-xs">Pasif</span>
+                                        <span className="text-red-600 text-xs font-bold">Pasif</span>
                                     )}
                                 </div>
                             </div>
@@ -168,7 +260,12 @@ export default function EmailConfig() {
 
                     {!editing && (
                         <button
-                            onClick={() => setEditing({ recipient_type: 'applicant', is_active: true })}
+                            onClick={() => {
+                                const newConfig: Partial<EmailConfig> = { recipient_type: 'applicant', is_active: true, trigger_event: 'SUBMISSION', subject_template: '', body_template: '' };
+                                setEditing(newConfig);
+                                setActiveSubject(newConfig.subject_template || '');
+                                setActiveBody(newConfig.body_template || '');
+                            }}
                             className="mt-2 inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200"
                         >
                             + Yeni Kural Ekle
@@ -177,8 +274,8 @@ export default function EmailConfig() {
                 </div>
 
                 {editing && (
-                    <div className="mt-6 border-t pt-4">
-                        <h4 className="text-md font-medium text-gray-900 mb-4">{editing.id ? 'Kuralı Düzenle' : 'Yeni Kural'}</h4>
+                    <div className="mt-8 border-t pt-6">
+                        <h4 className="text-lg font-medium text-gray-900 mb-6">{editing.id ? 'Kuralı Düzenle' : 'Yeni Kural'}</h4>
 
                         {/* Template Loader - Context Aware */}
                         <div className="mb-6 p-4 bg-indigo-50 rounded-md border border-indigo-100">
@@ -188,6 +285,8 @@ export default function EmailConfig() {
                                     type="button"
                                     onClick={() => setEditing(prev => ({
                                         ...prev,
+                                        recipient_type: 'applicant',
+                                        trigger_event: 'SUBMISSION',
                                         subject_template: 'Başvurunuz Alındı - {{name}}',
                                         body_template: isCreditCampaign ? `<p>Sayın <strong>{{name}}</strong>,</p>
 
@@ -225,7 +324,23 @@ export default function EmailConfig() {
                                     }))}
                                     className="px-3 py-1.5 bg-white border border-indigo-200 text-indigo-700 text-xs font-bold rounded hover:bg-indigo-50"
                                 >
-                                    Başvuran Şablonu
+                                    Başvuran: Yeni Başvuru
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => setEditing(prev => ({
+                                        ...prev,
+                                        recipient_type: 'applicant',
+                                        trigger_event: 'STATUS_APPROVED',
+                                        subject_template: 'Başvurunuz Onaylandı - {{name}}',
+                                        body_template: `<p>Sayın <strong>{{name}}</strong>,</p>
+<p>Başvurunuz incelenmiş ve <strong>ONAYLANMIŞTIR</strong>.</p>
+<p>En kısa sürede işlemleriniz tamamlanacaktır.</p>`
+                                    }))}
+                                    className="px-3 py-1.5 bg-white border border-green-200 text-green-700 text-xs font-bold rounded hover:bg-green-50"
+                                >
+                                    Başvuran: Onaylandı
                                 </button>
 
                                 <button
@@ -234,6 +349,7 @@ export default function EmailConfig() {
                                         ...prev,
                                         recipient_type: 'custom',
                                         recipient_email: 'talpa-basvuru@denizbank.com',
+                                        trigger_event: 'SUBMISSION',
                                         subject_template: isCreditCampaign ? 'Kredi Başvurusu - {{name}} - {{tckn}}' : 'Yeni Müşteri Adayı - {{name}}',
                                         body_template: isCreditCampaign ? `<p>Sayın Yetkili,</p>
 
@@ -253,7 +369,7 @@ export default function EmailConfig() {
                                     }))}
                                     className="px-3 py-1.5 bg-white border border-indigo-200 text-indigo-700 text-xs font-bold rounded hover:bg-indigo-50"
                                 >
-                                    Banka Şablonu
+                                    Banka: Yeni Başvuru
                                 </button>
                             </div>
                         </div>
@@ -261,7 +377,15 @@ export default function EmailConfig() {
                         <form onSubmit={handleSave} className="space-y-4">
                             <input type="hidden" name="campaignId" value={selectedCampaignId} />
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-900">Tetikleyici Olay</label>
+                                    <select name="triggerEvent" defaultValue={editing.trigger_event || 'SUBMISSION'} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm border p-2 text-gray-900">
+                                        <option value="SUBMISSION">Yeni Başvuru (Submission)</option>
+                                        <option value="STATUS_APPROVED">Durum: Onaylandı (Approved)</option>
+                                        <option value="STATUS_REJECTED">Durum: Reddedildi (Rejected)</option>
+                                    </select>
+                                </div>
                                 <div>
                                     <label className="block text-sm font-bold text-gray-900">Alıcı Tipi</label>
                                     <select name="recipientType" defaultValue={editing.recipient_type} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm sm:text-sm border p-2 text-gray-900">
@@ -284,8 +408,8 @@ export default function EmailConfig() {
                                     <p className="text-xs font-bold text-gray-900 mb-2">Kullanılabilir Değişkenler (Kopyalamak için tıklayın):</p>
                                     <div className="flex flex-wrap gap-2">
                                         {(isCreditCampaign
-                                            ? ['{{name}}', '{{tckn}}', '{{phone}}', '{{requestedAmount}}', '{{isDenizbankCustomer}}', '{{date}}', '{{consents}}']
-                                            : ['{{name}}', '{{tckn}}', '{{email}}', '{{phone}}', '{{address}}', '{{city}}', '{{district}}', '{{deliveryMethod}}', '{{isDenizbankCustomer}}', '{{consents}}', '{{date}}']
+                                            ? ['{{name}}', '{{tckn}}', '{{phone}}', '{{requestedAmount}}', '{{isDenizbankCustomer}}', '{{date}}', '{{consents}}', '{{status}}']
+                                            : ['{{name}}', '{{tckn}}', '{{email}}', '{{phone}}', '{{address}}', '{{city}}', '{{district}}', '{{deliveryMethod}}', '{{isDenizbankCustomer}}', '{{consents}}', '{{date}}', '{{status}}']
                                         ).map(tag => (
                                             <span
                                                 key={tag}
@@ -329,3 +453,4 @@ export default function EmailConfig() {
         </div>
     );
 }
+

@@ -1,7 +1,10 @@
-import { getApplications, getCampaigns, adminLogout } from '../actions';
+import { getApplications, getCampaigns, getDashboardStats, getCampaignStats, adminLogout } from '../actions';
 import ApplicationTable from '../components/ApplicationTable';
+import DashboardStats from '../components/DashboardStats';
+import CampaignStats from '../components/CampaignStats';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,9 +25,11 @@ export default async function DashboardPage({
     const validCampaignId = typeof campaignId === 'string' ? campaignId : undefined;
     const currentPage = typeof page === 'string' ? parseInt(page) : 1;
 
-    const [result, allCampaigns] = await Promise.all([
+    const [result, allCampaigns, stats, campaignStats] = await Promise.all([
         getApplications(validCampaignId, currentPage),
-        getCampaigns()
+        getCampaigns(),
+        getDashboardStats(),
+        getCampaignStats()
     ]);
 
     const { data: applications, count } = result;
@@ -42,18 +47,30 @@ export default async function DashboardPage({
                         Yönetim Paneli
                     </h1>
                     <div className="flex items-center space-x-4">
-                        <a
+                        <Link
+                            href="/admin/campaigns"
+                            className="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
+                        >
+                            Kampanyalar
+                        </Link>
+                        <Link
+                            href="/admin/interests"
+                            className="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
+                        >
+                            Talepler
+                        </Link>
+                        <Link
                             href="/admin/settings"
                             className="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
                         >
                             Ayarlar
-                        </a>
-                        <a
+                        </Link>
+                        <Link
                             href="/admin/whitelist"
                             className="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
                         >
                             Whitelist Yönetimi
-                        </a>
+                        </Link>
                         <form action={adminLogout}>
                             <button
                                 type="submit"
@@ -70,9 +87,17 @@ export default async function DashboardPage({
             <main>
                 <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
 
+                    {/* Analytics Cards */}
+                    <DashboardStats stats={stats} />
+
+                    {/* Campaign Stats Report (Only show if no specific campaign selected, or always? specific usually focused. Let's show always for overview or just when Home) */}
+                    {!validCampaignId && (
+                        <CampaignStats stats={campaignStats} />
+                    )}
+
                     {/* Campaign Tabs */}
                     <div className="mb-6 border-b border-gray-200">
-                        <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+                        <nav className="-mb-px flex space-x-8 overflow-x-auto pb-1" aria-label="Tabs">
                             <a
                                 href="/admin/dashboard"
                                 className={`
@@ -115,3 +140,4 @@ export default async function DashboardPage({
         </div>
     );
 }
+

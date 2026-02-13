@@ -5,7 +5,10 @@ import {
     createCampaign,
     deleteCampaign,
     getCampaigns,
-    toggleCampaignStatus
+    pauseCampaign,
+    resumeCampaign,
+    startCampaign,
+    closeCampaign
 } from '../actions';
 
 type Campaign = {
@@ -41,12 +44,20 @@ export default function CampaignManager() {
         }
     };
 
-    const handleToggle = (campaign: Campaign) => {
+    const handleStatusChange = (campaign: Campaign, action: 'start' | 'pause' | 'resume' | 'close') => {
         startTransition(async () => {
-            const result = await toggleCampaignStatus(campaign.id, !campaign.is_active);
-            setMessage(result.success ? 'Durum güncellendi.' : result.message || 'Durum güncellenemedi.');
-            if (result.success) {
-                await loadCampaigns();
+            let result;
+            if (action === 'start') result = await startCampaign(campaign.id);
+            else if (action === 'pause') result = await pauseCampaign(campaign.id);
+            else if (action === 'resume') result = await resumeCampaign(campaign.id);
+            else if (action === 'close') {
+                if (!confirm('Kampanyayı sonlandırmak istediğinize emin misiniz? Bu işlem geri alınamaz? (Not: Şimdilik PAUSED kullanılabilir)')) return;
+                result = await closeCampaign(campaign.id);
+            }
+
+            if (result) {
+                setMessage(result.success ? 'Durum güncellendi.' : result.message || 'Hata oluştu.');
+                if (result.success) await loadCampaigns();
             }
         });
     };
@@ -84,8 +95,8 @@ export default function CampaignManager() {
                         placeholder="Kampanya kodu (opsiyonel)"
                     />
                     <label className="flex items-center gap-2 rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-800">
-                        <input type="checkbox" name="isActive" defaultChecked />
-                        Başlangıçta aktif
+                        <input type="checkbox" name="isActive" disabled title="Varsayılan olarak taslak oluşturulur" />
+                        <span className="text-gray-400">Taslak olarak oluşturulur</span>
                     </label>
                     <div className="md:col-span-3">
                         <button
@@ -120,10 +131,18 @@ export default function CampaignManager() {
                                     <td className="px-3 py-2 text-gray-700">{campaign.campaign_code || '-'}</td>
                                     <td className="px-3 py-2">
                                         <span
-                                            className={`rounded-full px-2 py-1 text-xs font-semibold ${campaign.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                                            className={`rounded-full px-2 py-1 text-xs font-semibold ${
+                                                // @ts-expect-error status is explicitly available in new migration
+                                                campaign.status === 'active' ? 'bg-green-100 text-green-700' :
+                                                    // @ts-expect-error status
+                                                    campaign.status === 'paused' ? 'bg-yellow-100 text-yellow-700' :
+                                                        // @ts-expect-error status
+                                                        campaign.status === 'closed' ? 'bg-red-100 text-red-700' :
+                                                            'bg-gray-100 text-gray-600'
                                                 }`}
                                         >
-                                            {campaign.is_active ? 'Aktif' : 'Pasif'}
+                                            {/* @ts-expect-error status */}
+                                            {campaign.status ? campaign.status.toUpperCase() : (campaign.is_active ? 'ACTIVE (Legacy)' : 'PASSIVE')}
                                         </span>
                                     </td>
                                     <td className="px-3 py-2 text-gray-600">
@@ -131,17 +150,66 @@ export default function CampaignManager() {
                                     </td>
                                     <td className="px-3 py-2 text-right">
                                         <div className="inline-flex items-center gap-2">
-                                            <button
-                                                disabled={isPending}
-                                                onClick={() => handleToggle(campaign)}
-                                                className="rounded border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
+                                            <a
+                                                href={`/admin/campaigns/${campaign.id}`}
+                                                className="rounded border border-blue-200 px-2 py-1 text-xs text-blue-700 hover:bg-blue-50"
                                             >
-                                                {campaign.is_active ? 'Pasifleştir' : 'Aktifleştir'}
-                                            </button>
+                                                Düzenle
+                                            </a>
+
+                                            {/* Logic for Status Buttons */}
+                                            {(!('status' in campaign) || (campaign as any).status === 'draft') && (
+                                                <button
+                                                    disabled={isPending}
+                                                    onClick={() => handleStatusChange(campaign, 'start')}
+                                                    className="rounded border border-green-200 px-2 py-1 text-xs text-green-700 hover:bg-green-50"
+                                                >
+                                                    Başlat
+                                                </button>
+                                            )}
+
+                                            {((campaign as any).status === 'active') && (
+                                                <>
+                                                    <button
+                                                        disabled={isPending}
+                                                        onClick={() => handleStatusChange(campaign, 'pause')}
+                                                        className="rounded border border-yellow-200 px-2 py-1 text-xs text-yellow-700 hover:bg-yellow-50"
+                                                    >
+                                                        Durdur
+                                                    </button>
+                                                    <button
+                                                        disabled={isPending}
+                                                        onClick={() => handleStatusChange(campaign, 'close')}
+                                                        className="rounded border border-red-200 px-2 py-1 text-xs text-red-700 hover:bg-red-50"
+                                                    >
+                                                        Bitir
+                                                    </button>
+                                                </>
+                                            )}
+
+                                            {((campaign as any).status === 'paused') && (
+                                                <>
+                                                    <button
+                                                        disabled={isPending}
+                                                        onClick={() => handleStatusChange(campaign, 'resume')}
+                                                        className="rounded border border-green-200 px-2 py-1 text-xs text-green-700 hover:bg-green-50"
+                                                    >
+                                                        Devam
+                                                    </button>
+                                                    <button
+                                                        disabled={isPending}
+                                                        onClick={() => handleStatusChange(campaign, 'close')}
+                                                        className="rounded border border-red-200 px-2 py-1 text-xs text-red-700 hover:bg-red-50"
+                                                    >
+                                                        Bitir
+                                                    </button>
+                                                </>
+                                            )}
+
                                             <button
                                                 disabled={isPending}
                                                 onClick={() => handleDelete(campaign.id)}
-                                                className="rounded border border-red-200 px-2 py-1 text-xs text-red-700 hover:bg-red-50"
+                                                className="rounded border border-gray-200 px-2 py-1 text-xs text-gray-700 hover:bg-gray-50"
                                             >
                                                 Sil
                                             </button>

@@ -15,8 +15,13 @@ if (!supabaseUrl || !supabaseKey) {
 }
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-// HMAC Secret for Session Tokens (Use Env or fallback to generated one for runtime)
-const SESSION_SECRET = process.env.SESSION_SECRET || 'temp_secret_change_me_in_prod';
+// HMAC Secret for Session Tokens
+const DEFAULT_SECRET = 'temp_secret_change_me_in_prod';
+const SESSION_SECRET = process.env.SESSION_SECRET || DEFAULT_SECRET;
+
+if (process.env.NODE_ENV === 'production' && SESSION_SECRET === DEFAULT_SECRET) {
+    throw new Error('CRITICAL SECURITY ERROR: SESSION_SECRET is not set in production environment.');
+}
 
 // ----------------------------------------------------------------------
 // HELPER: TCKN Validation (Mod10/Mod11)
@@ -230,19 +235,7 @@ export async function submitApplication(prevState: FormState, formData: FormData
     const data = validated.data;
 
     try {
-        // 3. Rate Limit
-        const { data: isAllowed } = await supabase.rpc('check_rate_limit', {
-            p_ip_address: ip, p_endpoint: 'submit_application', p_max_requests: 100, p_window_minutes: 60
-        });
-        if (!isAllowed) return { success: false, message: 'Çok fazla deneme yaptınız. Lütfen biraz bekleyip tekrar deneyiniz.' };
-
-        // 4. Encrypt TCKN (Wait, we need to pass Encrypted TCKN to secure RPC too?)
-        // Yes, `submit_application_secure` needs keys.
-        const encryptionKey = process.env.TCKN_ENCRYPTION_KEY || 'mysecretkey';
-        const { data: encryptedTckn } = await supabase.rpc('encrypt_tckn', { p_tckn: data.tckn, p_key: encryptionKey });
-        if (!encryptedTckn) return { success: false, message: 'Şifreleme hatası.' };
-
-        // 5. Submit (Secure RPC)
+        // 3. Submit (Secure RPC)
         const consentMetadata = {
             ip,
             userAgent: headersList.get('user-agent') || 'Unknown',
@@ -250,10 +243,9 @@ export async function submitApplication(prevState: FormState, formData: FormData
             consentVersion: 'v1.0'
         };
 
-        const { data: rpcResult, error: dbError } = await supabase.rpc('submit_application_secure', {
-            p_tckn_plain: data.tckn,
+        const { data: rpcResult, error: dbError } = await supabase.rpc('submit_dynamic_application_secure', {
             p_campaign_id: targetCampaignId,
-            p_encrypted_tckn: encryptedTckn,
+            p_tckn: data.tckn,
             p_form_data: {
                 fullName: data.fullName,
                 email: data.email,
@@ -263,34 +255,17 @@ export async function submitApplication(prevState: FormState, formData: FormData
                 // Consents (only 3 new ones)
                 addressSharingConsent: data.addressSharingConsent || false,
                 cardApplicationConsent: data.cardApplicationConsent,
-                tcknPhoneSharingConsent: data.tcknPhoneSharingConsent
+                tcknPhoneSharingConsent: data.tcknPhoneSharingConsent,
+                // Meta
+                consent_metadata: consentMetadata
             },
-            p_consent_metadata: consentMetadata
+            p_client_ip: ip
         });
 
         if (dbError || !rpcResult?.success) {
             console.error('Submit Error:', dbError, rpcResult);
-
-            return { success: false, message: rpcResult?.message || 'Kaydedilemedi.' };
+            return { success: false, message: rpcResult?.message || 'Kaydedilemedi. Lütfen tekrar deneyiniz.' };
         }
-
-
-
-
-        // 6. Async Actions (Email)
-        // Moved to Edge Function (triggered by Database Webhook on 'applications' INSERT)
-        /*
-        try {
-             await sendEmail({
-                 to: data.email,
-                 subject: 'TALPA Başvuru Alındı',
-                 html: getGenericEmailTemplate('Başvurunuz başarıyla alınmıştır.')
-             });
-        } catch(e) {
-             console.error('Legacy Email Send Error', e);
-             // Non-blocking
-        }
-        */
 
         return { success: true, message: 'Başvurunuz başarıyla alınmıştır.' };
 

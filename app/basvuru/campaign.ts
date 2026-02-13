@@ -1,29 +1,31 @@
 import { createClient } from '@supabase/supabase-js';
 
-type CampaignRecord = {
+export type CampaignRecord = {
     id: string;
     is_active?: boolean;
     campaign_code?: string | null;
+    slug?: string | null;
     name?: string | null;
     title?: string | null;
     created_at?: string | null;
+    page_content?: any; // JSONB
 };
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+const supabaseUrl = process.env.SUPABASE_INTERNAL_URL || process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
 if (!supabaseUrl || !supabaseKey) {
     throw new Error('Supabase environment variables are missing.');
 }
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-function slugify(input: string): string {
+export function slugify(input: string): string {
     return input
         .toLocaleLowerCase('tr-TR')
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '');
 }
 
-async function getActiveCampaigns(): Promise<CampaignRecord[]> {
+export async function getActiveCampaigns(): Promise<CampaignRecord[]> {
     const { data } = await supabase
         .from('campaigns')
         .select('*')
@@ -52,6 +54,17 @@ export async function resolveCampaignId(campaignId?: string | null): Promise<str
 }
 
 export async function getCampaignIdBySlug(slug: string): Promise<string | null> {
+    // 1. Try direct match on slug column
+    const { data } = await supabase
+        .from('campaigns')
+        .select('id')
+        .eq('slug', slug)
+        .eq('is_active', true)
+        .maybeSingle();
+
+    if (data) return data.id;
+
+    // 2. Fallback: Try matching other fields via slugify (legacy)
     const normalizedSlug = slugify(slug);
     const campaigns = await getActiveCampaigns();
 
@@ -60,7 +73,9 @@ export async function getCampaignIdBySlug(slug: string): Promise<string | null> 
             campaign.campaign_code,
             campaign.name,
             campaign.title
-        ].filter(Boolean) as string[];
+        ]
+            // @ts-ignore
+            .filter(Boolean) as string[];
 
         return candidateValues.some((value) => slugify(value) === normalizedSlug);
     });

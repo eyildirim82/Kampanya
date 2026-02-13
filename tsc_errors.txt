@@ -1,0 +1,7 @@
+app/admin/components/EmailConfig.tsx(220,62): error TS2339: Property 'trigger_event' does not exist on type 'EmailConfig'.
+app/admin/components/EmailConfig.tsx(246,121): error TS2353: Object literal may only specify known properties, and 'trigger_event' does not exist in type 'Partial<EmailConfig>'.
+app/admin/components/EmailConfig.tsx(365,87): error TS2339: Property 'trigger_event' does not exist on type 'Partial<EmailConfig>'.
+app/admin/components/InstitutionList.tsx(6,10): error TS2305: Module '"../../actions"' has no exported member 'deleteInstitution'.
+app/admin/components/InstitutionList.tsx(6,29): error TS2305: Module '"../../actions"' has no exported member 'upsertInstitution'.
+app/admin/institutions/page.tsx(1,10): error TS2305: Module '"../../actions"' has no exported member 'getInstitutions'.
+app/admin/interests/page.tsx(1,24): error TS2305: Module '"../../actions"' has no exported member 'getInterests'.

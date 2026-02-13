@@ -1,0 +1,35 @@
+
+> web@0.1.0 build
+> next build
+
+⚠ `eslint` configuration in next.config.ts is no longer supported. See more info here: https://nextjs.org/docs/app/api-reference/cli/next#next-lint-options
+⚠ Invalid next.config.ts options detected: 
+⚠     Unrecognized key(s) in object: 'eslint'
+⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\Users\erkan\package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * C:\Users\erkan\Talpa Denizbank forum\member-verification-system\web\package-lock.json
+   * C:\Users\erkan\Talpa Denizbank forum\package-lock.json
+
+▲ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 7.3s
+  Running TypeScript ...
+Failed to compile.
+
+./app/admin/components/EmailConfig.tsx:218:62
+Type error: Property 'trigger_event' does not exist on type 'EmailConfig'.
+
+[0m [90m 216 |[39m                                 [33m<[39m[33mdiv[39m className[33m=[39m[32m"text-sm text-gray-500 mt-1 flex gap-2 items-center flex-wrap"[39m[33m>[39m
+ [90m 217 |[39m                                     [33m<[39m[33mspan[39m className[33m=[39m[32m"bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded text-xs font-medium"[39m[33m>[39m
+[31m[1m>[22m[39m[90m 218 |[39m                                         [33mTetikleyici[39m[33m:[39m {config[33m.[39mtrigger_event [33m||[39m [32m'SUBMISSION'[39m}
+ [90m     |[39m                                                              [31m[1m^[22m[39m
+ [90m 219 |[39m                                     [33m<[39m[33m/[39m[33mspan[39m[33m>[39m
+ [90m 220 |[39m                                     [33m<[39m[33mspan[39m className[33m=[39m[32m"bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs"[39m[33m>[39m
+ [90m 221 |[39m                                         [33mAlıcı[39m[33m:[39m {config[33m.[39mrecipient_type [33m===[39m [32m'applicant'[39m [33m?[39m [32m'Başvuran'[39m [33m:[39m config[33m.[39mrecipient_type [33m===[39m [32m'admin'[39m [33m?[39m [32m'Yönetici'[39m [33m:[39m [32m'Özel'[39m}[0m
+Next.js build worker exited with code: 1 and signal: null

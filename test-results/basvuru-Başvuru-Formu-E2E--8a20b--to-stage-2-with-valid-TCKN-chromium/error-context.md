@@ -1,0 +1,134 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - region "Notifications alt+T"
+  - generic [ref=e3]:
+    - img "DenizBank Private Kart Banner" [ref=e5]
+    - generic [ref=e6]:
+      - heading "Private Kart Özel Avantajlar Sizi Bekliyor" [level=1] [ref=e7]:
+        - text: Private Kart
+        - text: Özel Avantajlar Sizi Bekliyor
+      - paragraph [ref=e8]:
+        - text: TALPA ve DenizBank iş birliği ile, normalde sadece
+        - strong [ref=e9]: yüksek portföy müşterilerine
+        - text: sunulan, piyasadaki en iyi restoran/otel indirimlerine ve bir çok özelliğe sahip
+        - strong [ref=e10]: Private Kart
+        - text: hizmetinizdedir.
+    - generic [ref=e11]:
+      - generic [ref=e13]:
+        - img [ref=e15]
+        - heading "IGA Lounge" [level=3] [ref=e17]
+        - paragraph [ref=e18]:
+          - text: Ayda
+          - strong [ref=e19]: 2 İç/2 Dış Hat
+      - generic [ref=e21]:
+        - img [ref=e23]
+        - heading "TAV Passport" [level=3] [ref=e25]
+        - paragraph [ref=e26]:
+          - strong [ref=e27]: 2 Otopark / 2 Lounge / 2 FastTrack
+    - generic [ref=e28]:
+      - generic [ref=e29]:
+        - img [ref=e32]
+        - heading "Kampanya Başvuru Formu" [level=2] [ref=e34]
+        - paragraph [ref=e35]: Lütfen bilgilerinizi doğrulayarak başlayınız.
+      - generic [ref=e37]:
+        - generic [ref=e38]: T.C. Kimlik Numarası
+        - generic [ref=e39]:
+          - textbox [ref=e40]
+          - button "Doğrula" [ref=e41]
+      - generic [ref=e42]:
+        - heading "Önemli Uyarı ve Sorumluluk Reddi" [level=4] [ref=e43]:
+          - img [ref=e44]
+          - text: Önemli Uyarı ve Sorumluluk Reddi
+        - generic [ref=e46]:
+          - paragraph [ref=e47]:
+            - text: Bu kampanyada yer alan hiçbir husus
+            - strong [ref=e48]: TALPA
+            - text: "'nın resmi görüşü kabul edilemez. TALPA'nın bu kampanyada yer alan reklam ve ilanların, reklam vereni, reklama konu mal ya da hizmet, reklamın içeriği vs. gibi konuların hiçbirisi üzerinde doğrudan kontrol hakkı ve olanağı bulunmamaktadır."
+          - paragraph [ref=e49]: Bir başka ifade ile TALPA'nın iş bu kampanyada yer alan reklamların yayımlanması dışında söz konusu reklam içeriği ve/veya reklamveren ile herhangi bir bağlantısı işbirliği veya ortaklığı bulunmamaktadır.
+          - paragraph [ref=e50]: Reklam ve ilanlara konu mal veya hizmet sunulması ile ilgili her türlü hukuki veya cezai sorumluluk reklam verene aittir.
+    - generic [ref=e53]:
+      - generic [ref=e55]:
+        - generic [ref=e56]:
+          - heading "Private Kart Avantajları" [level=2] [ref=e57]
+          - paragraph [ref=e58]: TALPA ve DenizBank iş birliği ile havacılık profesyonellerine özel, en yüksek portföy ayrıcalıklarıyla donatılmış Private Kart hizmetinizde.
+        - generic [ref=e59]: "Üyelere Özel: Yıllık Kart Ücreti Yok!"
+      - generic [ref=e60]:
+        - heading "Harcama İndirimleri ve Limitler" [level=3] [ref=e61]: Harcama İndirimleri ve Limitler
+        - generic [ref=e63]:
+          - generic [ref=e64] [cursor=pointer]:
+            - generic [ref=e65]: "%15"
+            - generic [ref=e66]: Restoran & Kafe
+            - generic [ref=e67]:
+              - generic [ref=e68]: Minimum Harcama
+              - generic [ref=e69]: 4.000 TL
+              - generic [ref=e70]: Maksimum İndirim
+              - generic [ref=e71]: 6.000 TL / Ay
+          - generic [ref=e72] [cursor=pointer]:
+            - generic [ref=e73]: "%15"
+            - generic [ref=e74]: Tüm Oteller
+            - generic [ref=e75]:
+              - generic [ref=e76]: Minimum Harcama
+              - generic [ref=e77]: 25.000 TL
+              - generic [ref=e78]: Maksimum İndirim
+              - generic [ref=e79]: 4.000 TL / Ay
+          - generic [ref=e80] [cursor=pointer]:
+            - generic [ref=e81]: "%25"
+            - generic [ref=e82]: Kuru Temizleme
+            - generic [ref=e83]:
+              - generic [ref=e84]: Minimum Harcama
+              - generic [ref=e85]: 1.500 TL
+              - generic [ref=e86]: Maksimum İndirim
+              - generic [ref=e87]: 600 TL / Ay
+          - generic [ref=e88] [cursor=pointer]:
+            - generic [ref=e89]: "%15"
+            - generic [ref=e90]: Kozmetik
+            - generic [ref=e91]:
+              - generic [ref=e92]: Minimum Harcama
+              - generic [ref=e93]: 1.500 TL
+              - generic [ref=e94]: Maksimum İndirim
+              - generic [ref=e95]: 600 TL / Ay
+          - generic [ref=e96] [cursor=pointer]:
+            - generic [ref=e97]: "%10"
+            - generic [ref=e98]: Güzellik & Kuaför
+            - generic [ref=e99]:
+              - generic [ref=e100]: Minimum Harcama
+              - generic [ref=e101]: 1.500 TL
+              - generic [ref=e102]: Maksimum İndirim
+              - generic [ref=e103]: 600 TL / Ay
+          - generic [ref=e104] [cursor=pointer]:
+            - generic [ref=e105]: "%10"
+            - generic [ref=e106]: Sinema & Tiyatro
+            - generic [ref=e107]:
+              - generic [ref=e108]: Minimum Harcama
+              - generic [ref=e109]: 1.500 TL
+              - generic [ref=e110]: Maksimum İndirim
+              - generic [ref=e111]: 600 TL / Ay
+          - generic [ref=e112] [cursor=pointer]:
+            - generic [ref=e113]: "%10"
+            - generic [ref=e114]: Araç Kiralama
+            - generic [ref=e115]:
+              - generic [ref=e116]: Minimum Harcama
+              - generic [ref=e117]: 2.000 TL
+              - generic [ref=e118]: Maksimum İndirim
+              - generic [ref=e119]: 2.000 TL / Ay
+          - generic [ref=e120] [cursor=pointer]:
+            - generic [ref=e121]: "%5"
+            - generic [ref=e122]: Duty Free
+            - generic [ref=e123]:
+              - generic [ref=e124]: Minimum Harcama
+              - generic [ref=e125]: 2.000 TL
+              - generic [ref=e126]: Maksimum İndirim
+              - generic [ref=e127]: 1.000 TL / Ay
+      - generic [ref=e128]:
+        - img [ref=e129]
+        - paragraph [ref=e131]: İndirimler yurt içi ve yurt dışı harcamalarda geçerlidir. Belirtilen aylık maksimum indirim tutarları müşteri bazlıdır. DenizBank kampanya koşullarında değişiklik yapma hakkını saklı tutar.
+  - contentinfo [ref=e132]:
+    - generic [ref=e133]:
+      - img "DenizBank Private Kart" [ref=e135]
+      - paragraph [ref=e137]: © 2026 TALPA - Türkiye Havayolu Pilotları Derneği
+  - button "Open Next.js Dev Tools" [ref=e143] [cursor=pointer]:
+    - img [ref=e144]
+  - alert [ref=e147]
+```

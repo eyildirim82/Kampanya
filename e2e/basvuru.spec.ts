@@ -1,74 +1,76 @@
 import { test, expect } from '@playwright/test';
 
-/**
- * Demo TCKN ve kampanya bilgileri
- * Bu bilgiler DEMO_CONFIG.md'den alınmalıdır
- */
-const DEMO_TCKN = '12345678901';
+const DEMO_TCKN = '11111111110'; // Valid checksum TCKN for testing if Mernis is mocked or generic
 const DEMO_NAME = 'Ahmet Yılmaz';
 
 test.describe('Başvuru Formu E2E Testi', () => {
   test.beforeEach(async ({ page }) => {
-    // Başvuru sayfasına git ve sayfanın yüklenmesini bekle
     await page.goto('/basvuru');
-    // Sayfanın yüklendiğini doğrula
-    await expect(page.getByText(/TALPA Üyelik Başvurusu/i)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText(/Kampanya Başvuru Formu/i)).toBeVisible({ timeout: 15000 });
   });
 
-  test('should display application form', async ({ page }) => {
-    // Form alanlarının görünür olduğunu kontrol et
-    // Label'lar: "T.C. Kimlik Numarası", "Ad Soyad", "E-posta", "Telefon"
-    await expect(page.getByLabel(/T\.C\. Kimlik Numarası|TCKN/i)).toBeVisible({ timeout: 5000 });
-    await expect(page.getByLabel(/Ad Soyad/i)).toBeVisible({ timeout: 5000 });
-    await expect(page.getByLabel(/E-posta/i)).toBeVisible({ timeout: 5000 });
-    await expect(page.getByLabel(/Telefon/i)).toBeVisible({ timeout: 5000 });
+  test('should validate TCKN in stage 1', async ({ page }) => {
+    // Stage 1: Only TCKN input should be visible
+    await expect(page.getByLabel(/T\.C\. Kimlik Numarası/i)).toBeVisible();
+    await expect(page.getByLabel(/Ad Soyad/i)).toBeHidden(); // Stage 2 fields hidden
+
+    // Invalid TCKN
+    await page.getByLabel(/T\.C\. Kimlik Numarası/i).fill('123');
+    await page.getByRole('button', { name: /Doğrula/i }).click();
+    await expect(page.getByText(/TCKN 11 haneli olmalıdır/i)).toBeVisible();
   });
 
-  test('should validate required fields', async ({ page }) => {
-    // Formu boş göndermeyi dene
-    const submitButton = page.getByRole('button', { name: /Başvuruyu Tamamla/i });
-    await submitButton.click();
+  test('should proceed to stage 2 with valid TCKN', async ({ page }) => {
+    // Fill TCKN
+    await page.getByLabel(/T\.C\. Kimlik Numarası/i).fill(DEMO_TCKN);
 
-    // Hata mesajlarının göründüğünü kontrol et
-    // Form validasyonu react-hook-form ile yapılıyor, hata mesajları görünmeli
-    await expect(page.locator('form')).toBeVisible();
-    // En az bir hata mesajı görünmeli
-    await expect(page.locator('.text-red-500').first()).toBeVisible({ timeout: 3000 });
+    // Click Verify
+    // Note: This relies on the backend mocking 'NEW_MEMBER' response for this TCKN
+    // If backend is real and TCKN doesn't exist/fails Mernis, this might fail.
+    // Assuming dev environment handles this or we need to mock the route.
+    await page.getByRole('button', { name: /Doğrula/i }).click();
+
+    // Check if Stage 2 appeared
+    // Wait for "Ad Soyad" to become visible
+    // Using a longer timeout to account for RPC call
+    await expect(page.getByLabel(/Ad Soyad/i)).toBeVisible({ timeout: 10000 });
+
+    // Check auto-filled TCKN in Stage 2 (disabled)
+    const tcknInputStage2 = page.locator('input[name="tckn"]').nth(1); // Might be 2nd input if stage 1 is hidden/removed or just disabled
+    // Actually in the code: {stage === 'FORM' && ...} replaces Stage 1 div.
+    // So there is only one TCKN input visible in Stage 2, which is disabled.
+    await expect(page.getByLabel(/T\.C\. Kimlik Numarası/i)).toBeDisabled();
+    await expect(page.getByLabel(/T\.C\. Kimlik Numarası/i)).toHaveValue(DEMO_TCKN);
   });
 
-  test('should submit application with demo TCKN', async ({ page }) => {
-    // Not: Bu test için demo verisi yüklenmiş olmalı ve Supabase bağlantısı olmalı
-    // Formu doldur - name attribute'larına göre bul
-    await page.getByLabel(/T\.C\. Kimlik Numarası|TCKN/i).fill(DEMO_TCKN);
+  // Combined flow
+  test('should submit application successfully', async ({ page }) => {
+    // STAGE 1
+    await page.getByLabel(/T\.C\. Kimlik Numarası/i).fill(DEMO_TCKN);
+    await page.getByRole('button', { name: /Doğrula/i }).click();
+
+    // Wait for Stage 2
+    await expect(page.getByLabel(/Ad Soyad/i)).toBeVisible({ timeout: 10000 });
+
+    // STAGE 2
     await page.getByLabel(/Ad Soyad/i).fill(DEMO_NAME);
-    await page.getByLabel(/E-posta/i).fill('test@example.com');
     await page.getByLabel(/Telefon/i).fill('5551234567');
-    await page.getByLabel(/Adres/i).fill('Test Adresi 123');
-    await page.getByLabel(/İl/i).fill('İstanbul');
-    await page.getByLabel(/İlçe/i).fill('Kadıköy');
+    await page.getByLabel(/E-posta/i).fill('test@example.com');
 
-    // KVKK onay kutularını işaretle - id'lerine göre bul
-    await page.getByLabel(/KVKK Metni/i).check();
-    await page.getByLabel(/Açık Rıza Metni/i).check();
-    await page.getByLabel(/İletişim İzni/i).check();
+    // Delivery Method -> Branch
+    // Select radio button "Denizbank Yeşilköy Şubesi'nden..."
+    await page.getByLabel(/Denizbank Yeşilköy Şubesi'nden/i).check();
 
-    // Formu gönder
-    const submitButton = page.getByRole('button', { name: /Başvuruyu Tamamla/i });
-    await submitButton.click();
+    // Consents
+    // "Kart başvurusu..." checkbox
+    await page.getByLabel(/talebim doğrultusunda adıma/i).check();
+    // "TC kimlik ve telefon..." checkbox
+    await page.getByLabel(/iletişime geçilebilmesi için telefon/i).check();
 
-    // Başarı mesajını kontrol et - "Başvurunuz Alındı" veya benzeri
-    await expect(page.getByText(/Başvurunuz Alındı|başarı/i)).toBeVisible({ timeout: 15000 });
-  });
+    // Submit
+    await page.getByRole('button', { name: /Başvuruyu Tamamla/i }).click();
 
-  test('should show error for invalid TCKN', async ({ page }) => {
-    // Geçersiz TCKN gir (11 haneden az)
-    await page.getByLabel(/T\.C\. Kimlik Numarası|TCKN/i).fill('123');
-
-    // Form gönderilmeye çalışıldığında hata gösterilmeli
-    const submitButton = page.getByRole('button', { name: /Başvuruyu Tamamla/i });
-    await submitButton.click();
-
-    // TCKN validasyon hatası gösterilmeli
-    await expect(page.getByText(/TCKN 11 haneli olmalıdır/i)).toBeVisible({ timeout: 3000 });
+    // Success
+    await expect(page.getByText(/Başvurunuz Alındı/i)).toBeVisible({ timeout: 20000 });
   });
 });

@@ -1,0 +1,106 @@
+﻿
+> web@0.1.0 build
+> next build
+
+node.exe : ÔÜá Warnin
+g: Next.js inferred y
+our workspace root, b
+ut it may not be corr
+ect.
+At line:1 char:1
++ & "C:\Program Files
+\nodejs/node.exe" "C:
+\Program Files\nodejs
+/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~
+    + CategoryInfo   
+           : NotSpe  
+  cified: (ÔÜá War   
+ ning: Ne...not b    
+e correct.:Strin    g
+) [], RemoteExc    ep
+tion
+    + FullyQualified 
+   ErrorId : Native  
+  CommandError
+ 
+ We detected multiple
+ lockfiles and select
+ed the directory of C
+:\Users\erkan\package
+-lock.json as the roo
+t directory.
+ To silence this warn
+ing, set `turbopack.r
+oot` in your Next.js 
+config, or consider r
+emoving one of the lo
+ckfiles if it's not n
+eeded.
+   See https://nextjs
+.org/docs/app/api-ref
+erence/config/next-co
+nfig-js/turbopack#roo
+t-directory for more 
+information.
+ Detected additional 
+lockfiles: 
+   * C:\Users\erkan\T
+alpa Denizbank forum\
+member-verification-s
+ystem\web\package-loc
+k.json
+   * C:\Users\erkan\T
+alpa Denizbank forum\
+package-lock.json
+
+Ôû▓ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+
+ÔÜá The "middleware" 
+file convention is de
+precated. Please use 
+"proxy" instead. Lear
+n more: https://nextj
+s.org/docs/messages/m
+iddleware-to-proxy
+  Creating an optimized production build ...
+
+> Build error occurre
+d
+Error: Turbopack buil
+d failed with 1 error
+s:
+./Talpa Denizbank for
+um/member-verificatio
+n-system/web/app/admi
+n/campaigns/[id]/page
+.tsx:454:1
+Parsing ecmascript so
+urce code failed
+[0m [90m 452 |[39m
+             [33m<[
+39m[33m/[39m[33mdi
+v[39m[33m>[39m
+ [90m 453 |[39m    
+     [33m<[39m[33m
+/[39m[33mdiv[39m[
+33m>[39m
+[31m[1m>[22m[39m
+[90m 454 |[39m
+ [90m     |[39m [3
+1m[1m^[22m[39m[0m
+
+Expected ',', got '<e
+of>'
+
+
+    at <unknown> (./T
+alpa Denizbank forum/
+member-verification-s
+ystem/web/app/admin/c
+ampaigns/[id]/page.ts
+x:454:1)

@@ -147,6 +147,8 @@ export async function checkCreditTcknStatus(tckn: string, campaignId?: string) {
     }
 }
 
+
+
 // ----------------------------------------------------------------------
 // FORM ACTIONS
 // ----------------------------------------------------------------------
@@ -196,11 +198,7 @@ export async function submitCreditApplication(prevState: FormState, formData: Fo
     if (!targetCampaignId) return { success: false, message: 'Kampanya bulunamadı.' };
 
     try {
-        // 2. Encryption (Optional/Mock if env missing)
-        const encryptionKey = process.env.TCKN_ENCRYPTION_KEY || 'default_key';
-        const { data: encryptedTckn } = await supabase.rpc('encrypt_tckn', { p_tckn: data.tckn, p_key: encryptionKey });
-
-        // 3. Submit
+        // 2. Submit (Secure RPC)
         const consentMetadata = {
             ip,
             userAgent: headersList.get('user-agent') || 'Unknown',
@@ -208,24 +206,23 @@ export async function submitCreditApplication(prevState: FormState, formData: Fo
             consentVersion: 'v1.0-credit'
         };
 
-        const { data: rpcResult, error: dbError } = await supabase.rpc('submit_application_secure', {
-            p_tckn_plain: data.tckn,
+        const { data: rpcResult, error: dbError } = await supabase.rpc('submit_dynamic_application_secure', {
             p_campaign_id: targetCampaignId,
-            p_encrypted_tckn: encryptedTckn || 'enc_error', // fallback
+            p_tckn: data.tckn,
             p_form_data: {
                 fullName: data.fullName,
                 phone: data.phone,
-                email: 'no-email@denizbank-kredi.com', // Placeholder to satisfy DB constraint
-                // These go to dynamic_data
+                email: 'no-email@denizbank-kredi.com', // Placeholder to satisfy DB constraint if strictly required by old schema, or just for record
+                // Credit Specifics
                 isDenizbankCustomer: data.isDenizbankCustomer,
                 requestedAmount: data.requestedAmount,
-                // Map consents to generic fields or keep as custom
-                communicationConsent: data.phoneSharingConsent,
-                // We'll store exact consent keys in dynamic_data too
+                // Consents
                 phoneSharingConsent: data.phoneSharingConsent,
-                tcknSharingConsent: data.tcknSharingConsent
+                tcknSharingConsent: data.tcknSharingConsent,
+                // Meta
+                consent_metadata: consentMetadata
             },
-            p_consent_metadata: consentMetadata
+            p_client_ip: ip
         });
 
         if (dbError || !rpcResult?.success) {

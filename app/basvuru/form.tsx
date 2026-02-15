@@ -334,7 +334,7 @@ export default function ApplicationForm({ campaignId }: { campaignId?: string })
                                             type="radio"
                                             value="branch"
                                             {...register('deliveryMethod')}
-                                            className="w-5 h-5 text-[#002855] accent-[#002855] focus:ring-2 focus:ring-[#002855] focus:ring-offset-2 focus:outline-none transition-all cursor-pointer"
+                                            className="w-5 h-5 shrink-0 text-[#002855] accent-[#002855] focus:ring-2 focus:ring-[#002855] focus:ring-offset-2 focus:outline-none transition-all cursor-pointer"
                                         />
                                         <span className="text-gray-900 font-medium">Denizbank Yeşilköy Şubesi&apos;nden teslim almak istiyorum (yaklaşık 5 iş günü içerisinde teslim edilecektir.)</span>
                                     </label>
@@ -343,7 +343,7 @@ export default function ApplicationForm({ campaignId }: { campaignId?: string })
                                             type="radio"
                                             value="address"
                                             {...register('deliveryMethod')}
-                                            className="w-5 h-5 text-[#002855] accent-[#002855] focus:ring-2 focus:ring-[#002855] focus:ring-offset-2 focus:outline-none transition-all cursor-pointer"
+                                            className="w-5 h-5 shrink-0 text-[#002855] accent-[#002855] focus:ring-2 focus:ring-[#002855] focus:ring-offset-2 focus:outline-none transition-all cursor-pointer"
                                         />
                                         <span className="text-gray-900 font-medium">Ev adresime kargolansın (yaklaşık 15  iş günü içerisinde teslim edilecektir.)</span>
                                     </label>
@@ -375,7 +375,7 @@ export default function ApplicationForm({ campaignId }: { campaignId?: string })
                             {/* Address Sharing Consent - Only visible if delivery is 'address' */}
                             {deliveryMethod === 'address' && (
                                 <div className="flex items-start bg-blue-50 p-3 rounded-lg border border-blue-200">
-                                    <input type="checkbox" {...register('addressSharingConsent')} className="w-5 h-5 mt-0.5 text-[#002855] rounded focus:ring-[#002855]" />
+                                    <input type="checkbox" {...register('addressSharingConsent')} className="w-5 h-5 shrink-0 mt-0.5 text-[#002855] rounded focus:ring-2 focus:ring-[#002855] focus:ring-offset-2 focus:outline-none transition-all" />
                                     <div className="ml-3 text-sm">
                                         <p className="text-blue-700 text-xs mb-2 font-medium">
                                             Adres bilginizin Denizbank Yeşilköy Şubesi ile paylaşılması için onayınız gerekmektedir.
@@ -390,7 +390,7 @@ export default function ApplicationForm({ campaignId }: { campaignId?: string })
 
                             {/* Card Application Consent */}
                             <div className="flex items-start">
-                                <input type="checkbox" {...register('cardApplicationConsent')} className="w-5 h-5 mt-0.5 text-[#002855] rounded focus:ring-[#002855]" />
+                                <input type="checkbox" {...register('cardApplicationConsent')} className="w-5 h-5 shrink-0 mt-0.5 text-[#002855] rounded focus:ring-2 focus:ring-[#002855] focus:ring-offset-2 focus:outline-none transition-all" />
                                 <div className="ml-3 text-sm">
                                     <p className="text-gray-600 text-xs mb-2">
                                         Kampanya katılımı için onay vermeniz gerekmektedir.
@@ -404,7 +404,7 @@ export default function ApplicationForm({ campaignId }: { campaignId?: string })
 
                             {/* TCKN & Phone Sharing Consent */}
                             <div className="flex items-start">
-                                <input type="checkbox" {...register('tcknPhoneSharingConsent')} className="w-5 h-5 mt-0.5 text-[#002855] rounded focus:ring-[#002855]" />
+                                <input type="checkbox" {...register('tcknPhoneSharingConsent')} className="w-5 h-5 shrink-0 mt-0.5 text-[#002855] rounded focus:ring-2 focus:ring-[#002855] focus:ring-offset-2 focus:outline-none transition-all" />
                                 <div className="ml-3 text-sm">
                                     <p className="text-gray-600 text-xs mb-2">
                                         Kampanya katılımı için onay vermeniz gerekmektedir.

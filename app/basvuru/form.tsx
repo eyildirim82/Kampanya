@@ -329,12 +329,22 @@ export default function ApplicationForm({ campaignId }: { campaignId?: string })
                             <div className="mb-6">
                                 <label className="block text-sm font-medium text-gray-900 mb-2">Kartınızı nasıl teslim almak istersiniz?</label>
                                 <div className="space-y-2">
-                                    <label className="flex items-center gap-2 cursor-pointer">
-                                        <input type="radio" value="branch" {...register('deliveryMethod')} className="w-4 h-4 text-[#002855]" />
+                                    <label className="flex items-center gap-3 cursor-pointer group">
+                                        <input
+                                            type="radio"
+                                            value="branch"
+                                            {...register('deliveryMethod')}
+                                            className="w-5 h-5 text-[#002855] accent-[#002855] focus:ring-2 focus:ring-[#002855] focus:ring-offset-2 focus:outline-none transition-all cursor-pointer"
+                                        />
                                         <span className="text-gray-900 font-medium">Denizbank Yeşilköy Şubesi&apos;nden teslim almak istiyorum (yaklaşık 5 iş günü içerisinde teslim edilecektir.)</span>
                                     </label>
-                                    <label className="flex items-center gap-2 cursor-pointer">
-                                        <input type="radio" value="address" {...register('deliveryMethod')} className="w-4 h-4 text-[#002855]" />
+                                    <label className="flex items-center gap-3 cursor-pointer group">
+                                        <input
+                                            type="radio"
+                                            value="address"
+                                            {...register('deliveryMethod')}
+                                            className="w-5 h-5 text-[#002855] accent-[#002855] focus:ring-2 focus:ring-[#002855] focus:ring-offset-2 focus:outline-none transition-all cursor-pointer"
+                                        />
                                         <span className="text-gray-900 font-medium">Ev adresime kargolansın (yaklaşık 15  iş günü içerisinde teslim edilecektir.)</span>
                                     </label>
                                 </div>

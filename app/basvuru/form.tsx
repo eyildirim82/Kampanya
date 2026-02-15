@@ -331,11 +331,11 @@ export default function ApplicationForm({ campaignId }: { campaignId?: string })
                                 <div className="space-y-2">
                                     <label className="flex items-center gap-2 cursor-pointer">
                                         <input type="radio" value="branch" {...register('deliveryMethod')} className="w-4 h-4 text-[#002855]" />
-                                        <span className="text-gray-900 font-medium">Denizbank Yeşilköy Şubesi&apos;nden teslim almak istiyorum (yaklaşık 5 gün)</span>
+                                        <span className="text-gray-900 font-medium">Denizbank Yeşilköy Şubesi&apos;nden teslim almak istiyorum (yaklaşık 5 iş günü içerisinde teslim edilecektir.)</span>
                                     </label>
                                     <label className="flex items-center gap-2 cursor-pointer">
                                         <input type="radio" value="address" {...register('deliveryMethod')} className="w-4 h-4 text-[#002855]" />
-                                        <span className="text-gray-900 font-medium">Ev adresime kargolansın (yaklaşık 15 gün)</span>
+                                        <span className="text-gray-900 font-medium">Ev adresime kargolansın (yaklaşık 15  iş günü içerisinde teslim edilecektir.)</span>
                                     </label>
                                 </div>
                                 {errors.deliveryMethod && <p className="text-xs text-red-500 mt-1">{errors.deliveryMethod.message}</p>}

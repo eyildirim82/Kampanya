@@ -74,7 +74,7 @@ export const CardHeader: React.FC<CardHeaderProps> = ({
                 </h3>
             )}
             {subtitle && (
-                <p className="text-gray-500 text-sm">{subtitle}</p>
+                <p className="text-gray-700 text-sm">{subtitle}</p>
             )}
             {children}
         </div>

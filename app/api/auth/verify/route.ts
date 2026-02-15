@@ -1,14 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
-
-// Use Anon Key
-const supabase = createClient(
-    (process.env.NEXT_PUBLIC_SUPABASE_URL ?? '').trim(),
-    (process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '').trim()
-);
+import { getSupabaseUrl } from '@/lib/supabase-url';
 
 export async function POST(request: Request) {
     try {
+        const url = getSupabaseUrl();
+        const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
+        if (!key) {
+            return NextResponse.json({ error: 'Sunucu yapılandırma hatası' }, { status: 500 });
+        }
+        const supabase = createClient(url, key);
+
         const { tckn, otp } = await request.json();
 
         // 1. Get member email securely using RPC
@@ -17,7 +19,7 @@ export async function POST(request: Request) {
         });
 
         if (rpcError) {
-            console.error('RPC Error:', rpcError);
+            console.error('Verify RPC Error:', rpcError.code, rpcError.message);
             return NextResponse.json({ error: 'Sistem hatası' }, { status: 500 });
         }
 
@@ -37,7 +39,7 @@ export async function POST(request: Request) {
         });
 
         if (verifyError || !session) {
-            console.error('Verify OTP Error:', verifyError);
+            console.error('Verify OTP Error:', verifyError?.code, verifyError?.message);
             return NextResponse.json({ error: 'Hatalı veya süresi dolmuş kod' }, { status: 400 });
         }
 
@@ -48,7 +50,8 @@ export async function POST(request: Request) {
         });
 
     } catch (error) {
-        console.error('Verify API Error:', error);
+        const err = error instanceof Error ? error : new Error(String(error));
+        console.error('Verify API Error:', err.message);
         return NextResponse.json({ error: 'Doğrulama hatası' }, { status: 500 });
     }
 }

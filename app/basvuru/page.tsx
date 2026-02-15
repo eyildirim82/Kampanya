@@ -3,12 +3,24 @@ import Image from 'next/image';
 import ApplicationForm from './form';
 import { Card } from '@/components/ui/Card';
 import { PrivateCardBenefits } from '@/components/PrivateCardBenefits';
-import { getDefaultCampaignId } from './campaign';
+import { getActiveCampaigns } from './campaign';
 
 export const dynamic = 'force-dynamic';
 
 export default async function ApplicationPage() {
-    const campaignId = await getDefaultCampaignId();
+    const campaigns = await getActiveCampaigns();
+    const campaign = campaigns[0] || null;
+
+    if (!campaign) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <div className="text-center">
+                    <h1 className="text-2xl font-bold text-gray-800">Aktif Başvuru Dönemi Bulunamadı</h1>
+                    <p className="text-gray-600 mt-2">Şu anda aktif bir kampanya bulunmamaktadır.</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 py-6 px-4 sm:px-6 lg:px-8">
@@ -95,7 +107,7 @@ export default async function ApplicationPage() {
                         </div>
                     </Card>
                 }>
-                    <ApplicationForm campaignId={campaignId || undefined} />
+                    <ApplicationForm campaign={campaign} />
                 </Suspense>
 
                 {/* Detailed Benefits Section */}

@@ -1,14 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
-
-// Initialize with ANON KEY - Privileged operations are handled by RPC SECURITY DEFINER functions
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { getSupabaseUrl } from '@/lib/supabase-url';
 
 export async function POST(request: Request) {
     try {
+        const url = getSupabaseUrl();
+        const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
+        if (!key) {
+            return NextResponse.json({ error: 'Sunucu yapılandırma hatası' }, { status: 500 });
+        }
+        const supabase = createClient(url, key);
+
         const { tckn } = await request.json();
 
         // 2. Check Member Status using RPC
@@ -48,7 +50,7 @@ export async function POST(request: Request) {
         });
 
         if (otpError) {
-            console.error('OTP Error Object:', JSON.stringify(otpError, null, 2));
+            console.error('OTP Error:', otpError.code || otpError.status, otpError.message);
             return NextResponse.json({ error: `OTP hatası: ${otpError.message}` }, { status: 500 });
         }
 
@@ -62,7 +64,8 @@ export async function POST(request: Request) {
         });
 
     } catch (error: unknown) {
-        console.error('Check API Error:', error);
+        const err = error instanceof Error ? error : new Error(String(error));
+        console.error('Check API Error:', err.message);
         return NextResponse.json({ error: 'Sunucu hatası' }, { status: 500 });
     }
 }

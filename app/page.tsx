@@ -1,9 +1,11 @@
+import { unstable_noStore as noStore } from 'next/cache';
 import { getActiveCampaigns, slugify } from './basvuru/campaign';
 import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
+  noStore();
   const campaigns = await getActiveCampaigns();
 
   return (
@@ -14,7 +16,7 @@ export default async function Home() {
           <h1 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight">
             Türkiye Havayolu Pilotları Derneği
           </h1>
-          <p className="text-xl md:text-2xl text-gray-300 max-w-2xl mx-auto">
+          <p className="text-xl md:text-2xl text-gray-100 max-w-2xl mx-auto font-medium">
             Üyelerimize özel ayrıcalıklı dünyayı keşfedin.
           </p>
         </div>
@@ -48,7 +50,7 @@ export default async function Home() {
                     <h2 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">
                       {title}
                     </h2>
-                    <p className="text-gray-600 mb-6 line-clamp-3 text-sm flex-grow">
+                    <p className="text-gray-800 mb-6 line-clamp-3 text-sm flex-grow">
                       {subtitle}
                     </p>
 
@@ -71,7 +73,7 @@ export default async function Home() {
               </svg>
             </div>
             <h3 className="text-xl font-semibold text-gray-900 mb-2">Aktif Kampanya Bulunmuyor</h3>
-            <p className="text-gray-500">
+            <p className="text-gray-700">
               Şu anda aktif bir kampanya bulunmamaktadır. Lütfen daha sonra tekrar kontrol ediniz.
             </p>
           </div>
@@ -79,7 +81,7 @@ export default async function Home() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 py-8 text-center text-gray-500 text-sm">
+      <footer className="bg-white border-t border-gray-200 py-8 text-center text-gray-700 text-sm">
         <p>&copy; {new Date().getFullYear()} Türkiye Havayolu Pilotları Derneği. Tüm hakları saklıdır.</p>
       </footer>
     </div>

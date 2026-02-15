@@ -27,25 +27,25 @@ const configValidations: ConfigValidation[] = [
   },
   {
     key: 'SECRET_SALT',
-    required: true,
+    required: false, // Uygulama içinde kullanılmıyorsa opsiyonel
     validator: (value) => {
-      if (value === 'default_salt_change_me_in_prod') {
-        return false; // Production'da default salt kullanılmamalı
-      }
+      if (value === 'default_salt_change_me_in_prod') return false;
       return value.length >= 32;
     },
-    errorMessage: 'SECRET_SALT production ortamında en az 32 karakter olmalı ve default değer kullanılmamalıdır',
+    errorMessage: 'SECRET_SALT en az 32 karakter olmalı ve default değer kullanılmamalıdır',
   },
+  // TCKN artık plain saklandığı için şifreleme anahtarı zorunlu değil (legacy/env uyumu için opsiyonel bırakıldı)
   {
     key: 'TCKN_ENCRYPTION_KEY',
+    required: false,
+    validator: (value) => value !== 'mysecretkey' && (value?.length ?? 0) >= 16,
+    errorMessage: 'TCKN_ENCRYPTION_KEY en az 16 karakter olmalı (kullanılıyorsa)',
+  },
+  {
+    key: 'SESSION_SECRET',
     required: true,
-    validator: (value) => {
-      if (value === 'mysecretkey') {
-        return false; // Production'da default key kullanılmamalı
-      }
-      return value.length >= 16;
-    },
-    errorMessage: 'TCKN_ENCRYPTION_KEY production ortamında en az 16 karakter olmalı ve default değer kullanılmamalıdır',
+    validator: (value) => value !== 'temp_secret_change_me_in_prod' && (value?.length ?? 0) >= 16,
+    errorMessage: 'SESSION_SECRET production\'da zorunludur ve en az 16 karakter olmalıdır',
   },
   {
     key: 'RESEND_API_KEY',
@@ -94,11 +94,8 @@ export function validateConfig(): { valid: boolean; errors: string[] } {
 
   // Production'da kritik kontroller
   if (isProduction) {
-    if (process.env.SECRET_SALT === 'default_salt_change_me_in_prod') {
-      errors.push('SECRET_SALT production ortamında default değer kullanılamaz');
-    }
-    if (process.env.TCKN_ENCRYPTION_KEY === 'mysecretkey') {
-      errors.push('TCKN_ENCRYPTION_KEY production ortamında default değer kullanılamaz');
+    if (process.env.SESSION_SECRET === 'temp_secret_change_me_in_prod' || !process.env.SESSION_SECRET) {
+      errors.push('SESSION_SECRET production ortamında zorunludur ve default değer kullanılamaz');
     }
   }
 

@@ -19,6 +19,8 @@ const interestSchema = z.object({
 
 type FormData = z.infer<typeof interestSchema>;
 
+const INTEREST_FORM_KEYS: (keyof FormData)[] = ['fullName', 'email', 'phone', 'tckn', 'note'];
+
 export default function InterestForm({ campaignId }: { campaignId: string }) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitSuccess, setSubmitSuccess] = useState(false);
@@ -28,7 +30,8 @@ export default function InterestForm({ campaignId }: { campaignId: string }) {
         register,
         handleSubmit,
         formState: { errors },
-        reset
+        reset,
+        setError
     } = useForm<FormData>({
         resolver: zodResolver(interestSchema),
     });
@@ -55,6 +58,15 @@ export default function InterestForm({ campaignId }: { campaignId: string }) {
             } else {
                 setServerError(result.message || 'Bir hata oluştu.');
                 toast.error(result.message || 'Bir hata oluştu.');
+                // Sunucudan dönen alan hatalarını ilgili inputlara eşle
+                if (result.errors && typeof result.errors === 'object') {
+                    for (const [field, messages] of Object.entries(result.errors)) {
+                        const msg = Array.isArray(messages) ? messages[0] : String(messages);
+                        if (INTEREST_FORM_KEYS.includes(field as keyof FormData) && msg) {
+                            setError(field as keyof FormData, { type: 'server', message: msg });
+                        }
+                    }
+                }
             }
         } catch {
             setServerError('Bağlantı hatası.');
@@ -133,7 +145,7 @@ export default function InterestForm({ campaignId }: { campaignId: string }) {
                     className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#002855] outline-none transition-all"
                     placeholder="***********"
                 />
-                <p className="text-xs text-gray-500 mt-1">Üye doğrulaması için gereklidir.</p>
+                <p className="text-xs text-gray-700 mt-1">Üye doğrulaması için gereklidir.</p>
                 {errors.tckn && <p className="text-xs text-red-500 mt-1">{errors.tckn.message}</p>}
             </div>
 

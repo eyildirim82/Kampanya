@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 import clsx from 'clsx';
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement | HTMLTextAreaElement> {
@@ -23,14 +23,18 @@ export const Input = React.forwardRef<HTMLInputElement | HTMLTextAreaElement, In
             rows = 3,
             className = '',
             disabled,
+            id: propsId,
             ...props
         },
         ref
     ) => {
+        const generatedId = useId();
+        const inputId = propsId ?? generatedId;
+
         const baseInputStyles = clsx(
             'w-full px-4 py-3 rounded-xl border-2 transition-all duration-200',
             'focus:outline-none focus:ring-2 focus:ring-offset-1',
-            'placeholder:text-gray-400',
+            'text-gray-900 placeholder:text-gray-500 bg-white',
             {
                 'border-red-300 focus:border-red-500 focus:ring-red-200': error,
                 'border-gray-200 focus:border-[#0066cc] focus:ring-[#e6f2ff]': !error,
@@ -45,14 +49,14 @@ export const Input = React.forwardRef<HTMLInputElement | HTMLTextAreaElement, In
         return (
             <div className="w-full">
                 {label && (
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label htmlFor={inputId} className="block text-sm font-semibold text-gray-700 mb-2">
                         {label}
                     </label>
                 )}
 
                 <div className="relative">
                     {leftIcon && (
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden>
                             {leftIcon}
                         </div>
                     )}
@@ -60,6 +64,9 @@ export const Input = React.forwardRef<HTMLInputElement | HTMLTextAreaElement, In
                     <InputElement
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         ref={ref as any}
+                        id={inputId}
+                        aria-invalid={!!error}
+                        aria-describedby={error ? `${inputId}-error` : helperText ? `${inputId}-helper` : undefined}
                         className={`${baseInputStyles} ${className}`}
                         disabled={disabled}
                         rows={multiline ? rows : undefined}
@@ -75,8 +82,8 @@ export const Input = React.forwardRef<HTMLInputElement | HTMLTextAreaElement, In
                 </div>
 
                 {error && (
-                    <p className="mt-1.5 text-sm text-red-600 flex items-center gap-1">
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <p id={`${inputId}-error`} className="mt-1.5 text-sm text-red-600 flex items-center gap-1" role="alert">
+                        <svg className="w-4 h-4 shrink-0" fill="currentColor" viewBox="0 0 20 20" aria-hidden>
                             <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                         </svg>
                         {error}
@@ -84,7 +91,7 @@ export const Input = React.forwardRef<HTMLInputElement | HTMLTextAreaElement, In
                 )}
 
                 {helperText && !error && (
-                    <p className="mt-1.5 text-sm text-gray-500">
+                    <p id={`${inputId}-helper`} className="mt-1.5 text-sm text-gray-700">
                         {helperText}
                     </p>
                 )}

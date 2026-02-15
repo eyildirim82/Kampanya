@@ -5,10 +5,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
-import { submitApplication, checkTcknStatus } from './actions';
+import { submitApplication, verifyTcknAction } from './actions';
 import clsx from 'clsx';
 import { toast } from 'sonner';
 import { Alert } from '@/components/ui/Alert';
+import { CampaignRecord } from './campaign';
+import DynamicFormRenderer, { FormField } from '@/components/DynamicFormRenderer';
 
 // Base Schema with updated fields
 const baseSchema = z.object({
@@ -64,7 +66,8 @@ const baseSchema = z.object({
 
 type FormData = z.infer<typeof baseSchema>;
 
-export default function ApplicationForm({ campaignId }: { campaignId?: string }) {
+export default function ApplicationForm({ campaign }: { campaign: CampaignRecord }) {
+    const campaignId = campaign.id;
     const searchParams = useSearchParams();
     const initialTckn = searchParams.get('tckn') || '';
 
@@ -137,11 +140,12 @@ export default function ApplicationForm({ campaignId }: { campaignId?: string })
         }
 
         setIsCheckingTckn(true);
-        const result = await checkTcknStatus(currentTckn, campaignId);
+        const result = await verifyTcknAction(currentTckn, campaignId);
         setIsCheckingTckn(false);
 
-
-        if (result.status === 'INVALID') {
+        if (result.status === 'RATE_LIMIT') {
+            toast.error(result.message);
+        } else if (result.status === 'INVALID') {
             toast.error(result.message);
         } else if (result.status === 'NOT_FOUND') {
             if (confirm(result.message + "\n\nÜyelik formuna gitmek ister misiniz?")) {
@@ -149,10 +153,9 @@ export default function ApplicationForm({ campaignId }: { campaignId?: string })
             }
         } else if (result.status === 'EXISTS') {
             toast.warning(result.message);
-            // Block flow, stay on INIT
         } else if (result.status === 'BLOCKED') {
-            toast.error(result.message); // Direct message for debtors
-        } else if (result.status === 'NEW_MEMBER') {
+            toast.error(result.message);
+        } else if (result.status === 'SUCCESS') {
             if (result.sessionToken) setSessionToken(result.sessionToken);
             setStage('FORM');
         } else {
@@ -160,21 +163,20 @@ export default function ApplicationForm({ campaignId }: { campaignId?: string })
         }
     };
 
-    const onSubmit = async (data: FormData) => {
+    const handleDynamicSubmit = async (data: any) => {
         setIsSubmitting(true);
         setSubmitError(null);
 
         const formData = new FormData();
+        // Add form fields
         Object.entries(data).forEach(([key, value]) => {
-            if (key === 'phone' && typeof value === 'string') {
-                formData.append(key, value.replace(/\s/g, ''));
-            } else {
-                formData.append(key, value?.toString() || '');
-            }
+            formData.append(key, String(value ?? ''));
         });
 
+        // Add orchestration fields
         if (sessionToken) formData.append('sessionToken', sessionToken);
         if (campaignId) formData.append('campaignId', campaignId);
+        formData.append('tckn', currentTckn);
 
         try {
             const result = await submitApplication({ success: false }, formData);
@@ -186,9 +188,11 @@ export default function ApplicationForm({ campaignId }: { campaignId?: string })
                 setSessionToken(null);
             } else {
                 setSubmitError(result.message || "İşlem başarısız oldu. Lütfen tekrar deneyiniz.");
+                toast.error(result.message);
             }
-        } catch {
-            setSubmitError("Bağlantı hatası veya sunucu kaynaklı bir sorun oluştu. Lütfen tekrar deneyiniz.");
+        } catch (err) {
+            console.error(err);
+            setSubmitError("Bağlantı hatası veya sunucu kaynaklı bir sorun oluştu.");
         } finally {
             setIsSubmitting(false);
         }
@@ -284,146 +288,29 @@ export default function ApplicationForm({ campaignId }: { campaignId?: string })
             )}
 
             {/* STAGE: FORM (Main Form) */}
-            {
-                stage === 'FORM' && (
-                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 mt-6 animate-in fade-in">
-
-                        {/* INFO BLOCK */}
-                        <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-500 mb-1">T.C. Kimlik Numarası</label>
-                                    <input {...register('tckn')} disabled className="w-full bg-transparent border-none p-0 font-semibold text-gray-700" />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-500 mb-1">Ad Soyad</label>
-                                    <input {...register('fullName')} className="w-full px-4 py-2 border rounded-lg text-gray-900" placeholder="Ad Soyad" />
-                                    {errors.fullName && <p className="text-xs text-red-500">{errors.fullName.message}</p>}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Telefon</label>
-                                <input
-                                    {...register('phone')}
-                                    onChange={handlePhoneChange}
-                                    className="w-full px-4 py-2 border rounded-lg text-gray-900"
-                                    placeholder="5XX XXX XX XX"
-                                />
-                                <p className="text-xs text-gray-500 mt-1">Başında 0 olmadan giriniz.</p>
-                                {errors.phone && <p className="text-xs text-red-500">{errors.phone.message}</p>}
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">E-posta</label>
-                                <input {...register('email')} className="w-full px-4 py-2 border rounded-lg text-gray-900" />
-                                {errors.email && <p className="text-xs text-red-500">{errors.email.message}</p>}
-                            </div>
-                        </div>
-
-                        {/* DENIZBANK SPECIFIC FIELDS */}
-                        <div className="border-t border-gray-100 pt-6 mt-6">
-                            <h3 className="text-lg font-semibold text-[#002855] mb-4">Kart ve Banka Tercihleri</h3>
-
-                            <div className="mb-6">
-                                <label className="block text-sm font-medium text-gray-900 mb-2">Kartınızı nasıl teslim almak istersiniz?</label>
-                                <div className="space-y-2">
-                                    <label className="flex items-center gap-2 cursor-pointer">
-                                        <input type="radio" value="branch" {...register('deliveryMethod')} className="w-4 h-4 text-[#002855]" />
-                                        <span className="text-gray-900 font-medium">Denizbank Yeşilköy Şubesi&apos;nden teslim almak istiyorum (yaklaşık 5 gün)</span>
-                                    </label>
-                                    <label className="flex items-center gap-2 cursor-pointer">
-                                        <input type="radio" value="address" {...register('deliveryMethod')} className="w-4 h-4 text-[#002855]" />
-                                        <span className="text-gray-900 font-medium">Ev adresime kargolansın (yaklaşık 15 gün)</span>
-                                    </label>
-                                </div>
-                                {errors.deliveryMethod && <p className="text-xs text-red-500 mt-1">{errors.deliveryMethod.message}</p>}
-                            </div>
-                        </div>
-
-                        {/* ADDRESS SECTION - shown only when delivery method is address */}
-                        {deliveryMethod === 'address' && (
-                            <div className="animate-in fade-in transition-all duration-300">
-                                <div className="mb-4">
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Teslimat Adresi</label>
-                                    <p className="text-xs text-gray-500 mb-1">Lütfen il, ilçe, mahalle, sokak ve bina bilgilerinizi içeren tam adresinizi giriniz.</p>
-                                    <textarea
-                                        {...register('address')}
-                                        rows={3}
-                                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#002855] text-gray-900"
-                                        placeholder="Örnek: Atatürk Mah. Cumhuriyet Cad. No:15 Daire:3 Bakırköy/İstanbul"
-                                    />
-                                    {errors.address && <p className="text-xs text-red-500">{errors.address.message}</p>}
-                                </div>
-                            </div>
-                        )}
-
-
-                        {/* CONSENTS */}
-                        <div className="space-y-4 pt-4 border-t border-gray-100 mt-6 bg-gray-50 p-4 rounded-lg">
-                            {/* Address Sharing Consent - Only visible if delivery is 'address' */}
-                            {deliveryMethod === 'address' && (
-                                <div className="flex items-start bg-blue-50 p-3 rounded-lg border border-blue-200">
-                                    <input type="checkbox" {...register('addressSharingConsent')} className="w-5 h-5 mt-0.5 text-[#002855] rounded focus:ring-[#002855]" />
-                                    <div className="ml-3 text-sm">
-                                        <p className="text-blue-700 text-xs mb-2 font-medium">
-                                            Adres bilginizin Denizbank Yeşilköy Şubesi ile paylaşılması için onayınız gerekmektedir.
-                                        </p>
-                                        <label className="font-medium text-gray-800">
-                                            Kart gönderimi için adres bilgimin, ilgili şube ile paylaşılmasını onaylıyorum.
-                                        </label>
-                                        {errors.addressSharingConsent && <p className="text-xs text-red-500 mt-1">{errors.addressSharingConsent.message}</p>}
-                                    </div>
-                                </div>
-                            )}
-
-                            {/* Card Application Consent */}
-                            <div className="flex items-start">
-                                <input type="checkbox" {...register('cardApplicationConsent')} className="w-5 h-5 mt-0.5 text-[#002855] rounded focus:ring-[#002855]" />
-                                <div className="ml-3 text-sm">
-                                    <p className="text-gray-600 text-xs mb-2">
-                                        Kampanya katılımı için onay vermeniz gerekmektedir.
-                                    </p>
-                                    <label className="font-medium text-gray-800">
-                                        Talebim doğrultusunda adıma, Denizbank Yeşilköy Şubesi&apos;nden kredi kartı başvurusu yapılmasını onaylıyorum.
-                                    </label>
-                                    {errors.cardApplicationConsent && <p className="text-xs text-red-500 mt-1">{errors.cardApplicationConsent.message}</p>}
-                                </div>
-                            </div>
-
-                            {/* TCKN & Phone Sharing Consent */}
-                            <div className="flex items-start">
-                                <input type="checkbox" {...register('tcknPhoneSharingConsent')} className="w-5 h-5 mt-0.5 text-[#002855] rounded focus:ring-[#002855]" />
-                                <div className="ml-3 text-sm">
-                                    <p className="text-gray-600 text-xs mb-2">
-                                        Kampanya katılımı için onay vermeniz gerekmektedir.
-                                    </p>
-                                    <label className="font-medium text-gray-800">
-                                        Kart başvurusu yapılabilmesi için TC kimlik numaramın, benimle iletişime geçilebilmesi için telefon numaramın Denizbank Yeşilköy Şubesi ile paylaşılmasını onaylıyorum.
-                                    </label>
-                                    {errors.tcknPhoneSharingConsent && <p className="text-xs text-red-500 mt-1">{errors.tcknPhoneSharingConsent.message}</p>}
-                                </div>
-                            </div>
-                        </div>
-
+            {stage === 'FORM' && (
+                <div className="mt-6">
+                    <DynamicFormRenderer
+                        schema={campaign.extra_fields_schema as FormField[] || []}
+                        onSubmit={handleDynamicSubmit}
+                        isSubmitting={isSubmitting}
+                        submitButtonText="Başvuruyu Tamamla"
+                        initialData={{ tckn: currentTckn }}
+                    />
+                    <div className="text-center mt-6">
                         <button
-                            type="submit"
-                            disabled={isSubmitting}
-                            className={clsx(
-                                "w-full py-3 px-4 rounded-lg text-white font-medium text-lg transition-colors shadow-lg shadow-indigo-200",
-                                isSubmitting ? "bg-gray-400 cursor-not-allowed" : "bg-[#002855] hover:bg-[#003366]"
-                            )}
+                            type="button"
+                            onClick={() => setStage('INIT')}
+                            className="text-sm text-slate-500 hover:text-slate-800 transition-colors flex items-center justify-center gap-1 mx-auto group"
                         >
-                            {isSubmitting ? 'İşleniyor...' : 'Başvuruyu Tamamla'}
+                            <svg className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                            </svg>
+                            Çıkış / Başa Dön
                         </button>
-
-                        <div className="text-center">
-                            <button type="button" onClick={() => setStage('INIT')} className="text-sm text-gray-500 underline hover:text-gray-800">Çıkış / Başa Dön</button>
-                        </div>
-                    </form>
-                )
-            }
+                    </div>
+                </div>
+            )}
 
             {/* Disclaimer Section */}
             <div className="mt-8 p-6 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border border-gray-200">

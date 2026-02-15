@@ -4,6 +4,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ensureConfigValid } from "@/lib/config-validation";
 import { Toaster } from "sonner";
+import { PerformanceMeasurePatch } from "@/components/PerformanceMeasurePatch";
 
 
 
@@ -49,10 +50,11 @@ export default function RootLayout({
   }
 
   return (
-    <html lang="en">
+    <html lang="tr">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <PerformanceMeasurePatch />
         <Toaster richColors position="top-center" />
         {children}
 
@@ -68,7 +70,7 @@ export default function RootLayout({
                 className="w-full max-w-4xl h-auto rounded-lg shadow-lg"
               />
             </div>
-            <div className="text-center mt-6 text-sm text-gray-500">
+            <div className="text-center mt-6 text-sm text-gray-700">
               <p>© 2026 TALPA - Türkiye Havayolu Pilotları Derneği</p>
             </div>
           </div>

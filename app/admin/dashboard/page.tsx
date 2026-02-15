@@ -35,8 +35,9 @@ export default async function DashboardPage({
     const { data: applications, count } = result;
 
     // Identify current campaign type
+    const creditCampaignCode = process.env.NEXT_PUBLIC_CREDIT_CAMPAIGN_CODE || 'CREDIT_2026';
     const currentCampaign = allCampaigns.find(c => c.id === validCampaignId);
-    const isCreditCampaign = currentCampaign?.campaign_code === 'CREDIT_2026' || currentCampaign?.name?.includes('Kredi');
+    const isCreditCampaign = currentCampaign?.campaign_code === creditCampaignCode || currentCampaign?.name?.includes('Kredi');
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -70,6 +71,12 @@ export default async function DashboardPage({
                             className="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
                         >
                             Whitelist Yönetimi
+                        </Link>
+                        <Link
+                            href="/admin/fields"
+                            className="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
+                        >
+                            Alan Kütüphanesi
                         </Link>
                         <form action={adminLogout}>
                             <button

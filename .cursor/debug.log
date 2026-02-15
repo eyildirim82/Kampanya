@@ -1,0 +1,6 @@
+{"location":"app/basvuru/campaign.ts:getActiveCampaigns","message":"getActiveCampaigns result from Supabase","data":{"count":0,"slugs":[],"names":[]},"timestamp":1771067843965,"hypothesisId":"H2"}
+{"location":"app/basvuru/campaign.ts:getActiveCampaigns","message":"getActiveCampaigns result from Supabase","data":{"count":0,"slugs":[],"names":[]},"timestamp":1771067844060,"hypothesisId":"H2"}
+{"location":"app/page.tsx:Home","message":"Home ran, campaigns loaded","data":{"count":0,"items":[]},"timestamp":1771067844062,"hypothesisId":"H1_H2_H3"}
+{"location":"app/page.tsx:Home","message":"Home ran, campaigns loaded","data":{"count":0,"items":[]},"timestamp":1771067843968,"hypothesisId":"H1_H2_H3"}
+{"location":"app/basvuru/campaign.ts:getActiveCampaigns","message":"getActiveCampaigns result from Supabase","data":{"count":0,"slugs":[],"names":[]},"timestamp":1771067849359,"hypothesisId":"H2"}
+{"location":"app/page.tsx:Home","message":"Home ran, campaigns loaded","data":{"count":0,"items":[]},"timestamp":1771067849365,"hypothesisId":"H1_H2_H3"}

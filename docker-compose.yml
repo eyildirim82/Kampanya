@@ -1,0 +1,26 @@
+# Test ortamı: Next.js uygulamasını Docker'da çalıştırır.
+# Kullanım:
+#   1. .env.test.example dosyasını .env.test olarak kopyalayıp değerleri doldurun.
+#   2. docker compose up --build
+#   3. Tarayıcıda http://localhost:3000
+# Not: .env.test yoksa "env_file" satırını kaldırıp değişkenleri environment ile verebilirsiniz.
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.test
+    environment:
+      NODE_ENV: development
+      # Konteyner içinde Next.js'in tüm arayüzlerde dinlemesi için
+      HOSTNAME: "0.0.0.0"
+    volumes:
+      # Geliştirme sırasında kodu canlı yansıtmak için (isteğe bağlı)
+      - .:/app
+      - /app/node_modules
+    command: ["npx", "next", "dev", "--hostname", "0.0.0.0"]
+    restart: "no"

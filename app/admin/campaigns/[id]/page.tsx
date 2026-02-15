@@ -6,16 +6,14 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import FormBuilder, { FormField } from '../../../../components/FormBuilder';
-import { Trash, Plus } from 'lucide-react';
+import { Trash, Plus, LayoutTemplate, FileText, Mail } from 'lucide-react';
+import EmailConfig from '../../components/EmailConfig';
 
 // Define Feature type
 interface ContentFeature {
     title: string;
     description: string;
 }
-
-import EmailConfig from '../../components/EmailConfig';
-import { LayoutTemplate, FileText, Mail } from 'lucide-react';
 
 export default function CampaignEditPage({ params }: { params: Promise<{ id: string }> }) {
     const router = useRouter();
@@ -179,7 +177,7 @@ export default function CampaignEditPage({ params }: { params: Promise<{ id: str
                 is_active: isActive,
                 page_content: parsedPageContent,
                 form_schema: formFields
-            });
+            }, campaign?.slug ?? null);
 
             if (res.success) {
                 toast.success('Kampanya güncellendi.');

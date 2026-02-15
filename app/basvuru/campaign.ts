@@ -1,4 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
+import { unstable_noStore as noStore } from 'next/cache';
+import { getSupabaseClient } from '@/lib/supabase-client';
 
 export type CampaignRecord = {
     id: string;
@@ -9,14 +10,8 @@ export type CampaignRecord = {
     title?: string | null;
     created_at?: string | null;
     page_content?: any; // JSONB
+    extra_fields_schema?: any[]; // JSONB
 };
-
-const supabaseUrl = process.env.SUPABASE_INTERNAL_URL || process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
-if (!supabaseUrl || !supabaseKey) {
-    throw new Error('Supabase environment variables are missing.');
-}
-const supabase = createClient(supabaseUrl, supabaseKey);
 
 export function slugify(input: string): string {
     return input
@@ -26,13 +21,16 @@ export function slugify(input: string): string {
 }
 
 export async function getActiveCampaigns(): Promise<CampaignRecord[]> {
+    noStore();
+    const supabase = getSupabaseClient();
     const { data } = await supabase
         .from('campaigns')
         .select('*')
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 
-    return (data || []) as CampaignRecord[];
+    const list = (data || []) as CampaignRecord[];
+    return list;
 }
 
 export async function getDefaultCampaignId(): Promise<string | null> {
@@ -43,6 +41,7 @@ export async function getDefaultCampaignId(): Promise<string | null> {
 export async function resolveCampaignId(campaignId?: string | null): Promise<string | null> {
     if (!campaignId) return getDefaultCampaignId();
 
+    const supabase = getSupabaseClient();
     const { data } = await supabase
         .from('campaigns')
         .select('id, is_active')
@@ -53,16 +52,17 @@ export async function resolveCampaignId(campaignId?: string | null): Promise<str
     return data?.id || null;
 }
 
-export async function getCampaignIdBySlug(slug: string): Promise<string | null> {
+export async function getCampaignBySlug(slug: string): Promise<CampaignRecord | null> {
+    const supabase = getSupabaseClient();
     // 1. Try direct match on slug column
     const { data } = await supabase
         .from('campaigns')
-        .select('id')
+        .select('*')
         .eq('slug', slug)
         .eq('is_active', true)
         .maybeSingle();
 
-    if (data) return data.id;
+    if (data) return data;
 
     // 2. Fallback: Try matching other fields via slugify (legacy)
     const normalizedSlug = slugify(slug);
@@ -74,11 +74,32 @@ export async function getCampaignIdBySlug(slug: string): Promise<string | null> 
             campaign.name,
             campaign.title
         ]
-            // @ts-ignore
             .filter(Boolean) as string[];
 
         return candidateValues.some((value) => slugify(value) === normalizedSlug);
     });
 
-    return matched?.id || null;
+    return matched || null;
+}
+
+const CREDIT_CAMPAIGN_CODE =
+    process.env.NEXT_PUBLIC_CREDIT_CAMPAIGN_CODE || 'CREDIT_2026';
+
+/** Aktif kredi kampanyasının slug'ını döner (redirect için). */
+export async function getCreditCampaignSlug(): Promise<string | null> {
+    noStore();
+    const campaigns = await getActiveCampaigns();
+    const c = campaigns.find(
+        (campaign) => campaign.campaign_code === CREDIT_CAMPAIGN_CODE
+    );
+    if (c?.slug) return c.slug;
+    const byName = campaigns.find((campaign) =>
+        (campaign.name || campaign.title || '')
+            .toLocaleLowerCase('tr-TR')
+            .includes('kredi')
+    );
+    if (byName?.slug) return byName.slug;
+    return byName
+        ? slugify(byName.campaign_code || byName.name || 'kredi')
+        : null;
 }

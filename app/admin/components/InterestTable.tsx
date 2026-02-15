@@ -5,12 +5,6 @@ import * as XLSX from 'xlsx';
 import { useRouter } from 'next/navigation';
 import clsx from 'clsx';
 import { toast } from 'sonner';
-import { createClient } from '@supabase/supabase-js';
-
-// Initialize Supabase Client for Client Side operations (if needed, or use actions)
-// For simple delete, we can use an action.
-
-// Action import (we will create this next)
 import { deleteInterest } from '../actions';
 
 export default function InterestTable({

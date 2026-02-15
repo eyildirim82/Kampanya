@@ -1,6 +1,8 @@
 'use client';
 
-import { TrashIcon, PlusIcon } from 'lucide-react'; // Using lucide-react as found in package.json
+import { useState, useEffect } from 'react';
+import { TrashIcon, PlusIcon, Library, X, Search } from 'lucide-react';
+import { getFieldTemplates } from '../app/admin/actions';
 
 export type FormFieldType = 'text' | 'number' | 'email' | 'tel' | 'textarea' | 'select' | 'checkbox' | 'date';
 
@@ -20,7 +22,26 @@ interface FormBuilderProps {
     onChange: (fields: FormField[]) => void;
 }
 
+interface LibraryTemplate {
+    id: string;
+    label: string;
+    type: string;
+    options: string[];
+    is_required: boolean;
+}
+
 export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
+    const [libraryTemplates, setLibraryTemplates] = useState<LibraryTemplate[]>([]);
+    const [isLibraryOpen, setIsLibraryOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+
+    useEffect(() => {
+        const loadLibrary = async () => {
+            const data = await getFieldTemplates();
+            setLibraryTemplates(data);
+        };
+        loadLibrary();
+    }, []);
 
     const addField = () => {
         const newField: FormField = {
@@ -32,6 +53,20 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
             width: 'full'
         };
         onChange([...fields, newField]);
+    };
+
+    const addFromLibrary = (template: LibraryTemplate) => {
+        const newField: FormField = {
+            id: crypto.randomUUID(),
+            label: template.label,
+            name: `${template.label.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${Date.now()}`,
+            type: template.type === 'input' ? 'text' : template.type as FormFieldType,
+            required: template.is_required || false,
+            options: template.options || [],
+            width: 'full'
+        };
+        onChange([...fields, newField]);
+        setIsLibraryOpen(false);
     };
 
     const updateField = (id: string, updates: Partial<FormField>) => {
@@ -53,18 +88,32 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
         onChange(newFields);
     };
 
+    const filteredTemplates = libraryTemplates.filter(t =>
+        t.label.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     return (
         <div className="space-y-4">
             <div className="flex justify-between items-center bg-gray-50 p-3 rounded-lg border">
                 <span className="text-sm font-medium text-gray-700">Form Tasarımı ({fields.length} Alan)</span>
-                <button
-                    onClick={addField}
-                    type="button"
-                    className="flex items-center gap-1 text-xs bg-[#002855] text-white px-3 py-1.5 rounded hover:bg-[#003366] transition-colors"
-                >
-                    <PlusIcon className="w-3 h-3" />
-                    Alan Ekle
-                </button>
+                <div className="flex gap-2">
+                    <button
+                        onClick={() => setIsLibraryOpen(true)}
+                        type="button"
+                        className="flex items-center gap-1 text-xs bg-indigo-600 text-white px-3 py-1.5 rounded hover:bg-indigo-700 transition-colors"
+                    >
+                        <Library className="w-3 h-3" />
+                        Kütüphaneden Seç
+                    </button>
+                    <button
+                        onClick={addField}
+                        type="button"
+                        className="flex items-center gap-1 text-xs bg-[#002855] text-white px-3 py-1.5 rounded hover:bg-[#003a75] transition-colors"
+                    >
+                        <PlusIcon className="w-3 h-3" />
+                        Alan Ekle
+                    </button>
+                </div>
             </div>
 
             <div className="space-y-3">
@@ -85,7 +134,6 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pr-8">
-                            {/* Label & Name */}
                             <div className="space-y-2">
                                 <div>
                                     <label className="block text-xs text-gray-500">Etiket (Görünen İsim)</label>
@@ -101,13 +149,12 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                                     <input
                                         type="text"
                                         value={field.name}
-                                        onChange={(e) => updateField(field.id, { name: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '_') })}
+                                        onChange={(e) => updateField(field.id, { name: e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '_') })}
                                         className="w-full text-xs font-mono text-gray-600 border-b border-gray-200 focus:border-[#002855] outline-none py-1"
                                     />
                                 </div>
                             </div>
 
-                            {/* Type & Width */}
                             <div className="space-y-2">
                                 <div className="flex gap-2">
                                     <div className="flex-1">
@@ -131,7 +178,7 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                                         <label className="block text-xs text-gray-500">Genişlik</label>
                                         <select
                                             value={field.width || 'full'}
-                                            onChange={(e) => updateField(field.id, { width: e.target.value as any })}
+                                            onChange={(e) => updateField(field.id, { width: e.target.value as 'full' | 'half' | 'third' })}
                                             className="w-full text-sm border-b border-gray-200 focus:border-[#002855] outline-none py-1 bg-transparent"
                                         >
                                             <option value="full">Tam</option>
@@ -153,7 +200,6 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                             </div>
                         </div>
 
-                        {/* Options for Select */}
                         {field.type === 'select' && (
                             <div className="mt-3 pt-3 border-t border-gray-100">
                                 <label className="block text-xs text-gray-500 mb-1">Seçenekler (Virgülle Ayırın)</label>
@@ -167,7 +213,6 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                             </div>
                         )}
 
-                        {/* Placeholder */}
                         {(field.type === 'text' || field.type === 'email' || field.type === 'tel' || field.type === 'textarea') && (
                             <div className="mt-2">
                                 <input
@@ -182,6 +227,81 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                     </div>
                 ))}
             </div>
+
+            {/* Library Modal */}
+            {isLibraryOpen && (
+                <div className="fixed inset-0 z-[60] overflow-y-auto">
+                    <div className="flex items-center justify-center min-h-screen px-4">
+                        <div className="fixed inset-0 bg-black/50 transition-opacity" onClick={() => setIsLibraryOpen(false)}></div>
+
+                        <div className="relative bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[80vh] flex flex-col overflow-hidden border-t-8 border-indigo-600">
+                            <div className="p-4 border-b flex justify-between items-center bg-gray-50">
+                                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                                    <Library className="w-5 h-5 text-indigo-600" />
+                                    Alan Kütüphanesi
+                                </h3>
+                                <button onClick={() => setIsLibraryOpen(false)} className="text-gray-400 hover:text-gray-600">
+                                    <X className="w-6 h-6" />
+                                </button>
+                            </div>
+
+                            <div className="p-4 border-b bg-white">
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    <input
+                                        type="text"
+                                        placeholder="Alanlarda ara..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm transition-all"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto p-2 space-y-2 bg-gray-50/50">
+                                {filteredTemplates.length === 0 ? (
+                                    <div className="py-12 text-center text-gray-500 italic">
+                                        Uygun alan bulunamadı.
+                                    </div>
+                                ) : (
+                                    filteredTemplates.map((template) => (
+                                        <button
+                                            key={template.id}
+                                            onClick={() => addFromLibrary(template)}
+                                            className="w-full text-left p-4 rounded-lg border bg-white hover:border-indigo-500 hover:shadow-md transition-all group"
+                                        >
+                                            <div className="flex justify-between items-start">
+                                                <div>
+                                                    <p className="font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">
+                                                        {template.label}
+                                                    </p>
+                                                    <div className="mt-1 flex gap-2">
+                                                        <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-gray-100 text-gray-600 border">
+                                                            {template.type}
+                                                        </span>
+                                                        {template.is_required && (
+                                                            <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-red-50 text-red-600 border border-red-100">
+                                                                Zorunlu
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                                <PlusIcon className="w-5 h-5 text-gray-300 group-hover:text-indigo-600" />
+                                            </div>
+                                        </button>
+                                    ))
+                                )}
+                            </div>
+
+                            <div className="p-4 border-t bg-gray-50 text-center">
+                                <p className="text-xs text-gray-500">
+                                    Kütüphaneyi yönetmek için <a href="/admin/fields" target="_blank" className="text-indigo-600 hover:underline">Alan Kütüphanesi</a> sayfasını kullanın.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

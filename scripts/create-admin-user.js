@@ -1,26 +1,36 @@
-
+/**
+ * İlk admin kullanıcıyı oluşturur (Supabase Auth + public.admins).
+ * Önce: npx supabase start  ve  supabase/migrations  uygulanmış olmalı (admins tablosu).
+ * .env.local'de: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (npx supabase status → Secret).
+ * Çalıştırma: node scripts/create-admin-user.js
+ */
 const { createClient } = require('@supabase/supabase-js');
 const dotenv = require('dotenv');
 const fs = require('fs');
 const path = require('path');
 
-// Load environment variables from .env.local
-const envPath = path.resolve(__dirname, '../.env.local');
+const envLocal = path.resolve(__dirname, '../.env.local');
+const envRoot = path.resolve(__dirname, '../.env');
+const envPath = fs.existsSync(envLocal) ? envLocal : envRoot;
+if (!fs.existsSync(envPath)) {
+    console.error('Error: .env.local or .env not found. Add NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.');
+    process.exit(1);
+}
 const envConfig = dotenv.parse(fs.readFileSync(envPath));
 
-// Configuration
 const SUPABASE_URL = envConfig.NEXT_PUBLIC_SUPABASE_URL;
 const SERVICE_ROLE_KEY = envConfig.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
-    console.error('Error: missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env.local');
+    console.error('Error: NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY required in .env.local (Secret key: npx supabase status)');
     process.exit(1);
 }
 
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
     auth: {
         autoRefreshToken: false,
-        persistSession: false
+        persistSession: false,
+        detectSessionInUrl: false
     }
 });
 
@@ -32,6 +42,10 @@ async function createAdmin() {
 
     // 1. Check if user already exists
     const { data: users, error: listError } = await supabase.auth.admin.listUsers();
+    if (listError) {
+        console.error('Error listing users:', listError.message || JSON.stringify(listError));
+        return;
+    }
 
     let userId;
     const existingUser = users?.users?.find(u => u.email === ADMIN_EMAIL);
@@ -49,7 +63,8 @@ async function createAdmin() {
         });
 
         if (createError) {
-            console.error('Error creating user:', createError.message);
+            console.error('Error creating user:', createError.message || createError.error_description || createError.msg || String(createError));
+            console.error('Full error:', JSON.stringify(createError, null, 2));
             return;
         }
         userId = newUser.user.id;

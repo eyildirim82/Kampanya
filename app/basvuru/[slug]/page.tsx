@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation';
 import ApplicationForm from '../form';
 import { Card } from '@/components/ui/Card';
 import { PrivateCardBenefits } from '@/components/PrivateCardBenefits';
-import { getCampaignIdBySlug } from '../campaign';
+import { getCampaignBySlug } from '../campaign';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,9 +14,9 @@ export default async function CampaignApplicationPage({
     params: Promise<{ slug: string }>;
 }) {
     const { slug } = await params;
-    const campaignId = await getCampaignIdBySlug(slug);
+    const campaign = await getCampaignBySlug(slug);
 
-    if (!campaignId) {
+    if (!campaign) {
         notFound();
     }
 
@@ -62,7 +62,7 @@ export default async function CampaignApplicationPage({
                         </Card>
                     }
                 >
-                    <ApplicationForm campaignId={campaignId} />
+                    <ApplicationForm campaign={campaign} />
                 </Suspense>
 
                 <div className="my-10">

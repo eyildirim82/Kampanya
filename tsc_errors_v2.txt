@@ -1,2 +1,0 @@
-app/admin/campaigns/page.tsx(49,1): error TS1160: Unterminated template literal.
-app/admin/dashboard/page.tsx(62,27): error TS17002: Expected corresponding JSX closing tag for 'a'.

@@ -19,10 +19,12 @@ interface DynamicFormProps {
         placeholder?: string;
     }>;
     campaignId?: string;
+    /** Session token from TCKN step (required for /kampanya/[slug] flow) */
+    sessionToken?: string;
     initialData?: Record<string, unknown>;
 }
 
-export default function DynamicForm({ schema, campaignId }: DynamicFormProps) {
+export default function DynamicForm({ schema, campaignId, sessionToken }: DynamicFormProps) {
     const [isSuccess, setIsSuccess] = useState(false);
 
     // Dynamic Schema Generation
@@ -105,9 +107,13 @@ export default function DynamicForm({ schema, campaignId }: DynamicFormProps) {
             toast.error('Kampanya ID bulunamadı.');
             return;
         }
+        if (!sessionToken) {
+            toast.error('Lütfen önce T.C. Kimlik No ile doğrulama yapınız.');
+            return;
+        }
 
         try {
-            const result = await submitDynamicApplication(campaignId, data);
+            const result = await submitDynamicApplication(campaignId, data, sessionToken);
 
             if (result.success) {
                 toast.success(result.message);
@@ -131,7 +137,7 @@ export default function DynamicForm({ schema, campaignId }: DynamicFormProps) {
                     </svg>
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-3">Başvurunuz Alındı!</h3>
-                <p className="text-lg text-gray-600 max-w-md mx-auto">
+                <p className="text-lg text-gray-800 max-w-md mx-auto">
                     Başvurunuz başarıyla sistemimize kaydedilmiştir. İlginiz için teşekkür ederiz.
                 </p>
                 <button
@@ -156,7 +162,7 @@ export default function DynamicForm({ schema, campaignId }: DynamicFormProps) {
                     const hasError = !!errors[field.name];
 
                     return (
-                        <div key={field.id} className={`${widthClass} col-span-1`}>
+                        <div key={field.id ?? field.name} className={`${widthClass} col-span-1`}>
                             <label className="block text-sm font-medium text-gray-700 mb-1.5">
                                 {field.label} {field.required && <span className="text-red-500">*</span>}
                             </label>
@@ -195,13 +201,13 @@ export default function DynamicForm({ schema, campaignId }: DynamicFormProps) {
                                         <input
                                             type="checkbox"
                                             {...register(field.name)}
-                                            id={`field_${field.id}`}
+                                            id={`field_${field.id ?? field.name}`}
                                             className={`w-4 h-4 text-[#002855] border-gray-300 rounded focus:ring-[#002855] ${hasError ? 'border-red-500' : ''
                                                 }`}
                                         />
                                     </div>
                                     <div className="text-sm">
-                                        <label htmlFor={`field_${field.id}`} className="font-medium text-gray-700 select-none cursor-pointer">
+                                        <label htmlFor={`field_${field.id ?? field.name}`} className="font-medium text-gray-700 select-none cursor-pointer">
                                             {field.placeholder || field.label}
                                         </label>
                                         {hasError && <p className="text-red-500 text-xs mt-1">{errors[field.name]?.message as string}</p>}

@@ -119,7 +119,7 @@ export default function SorgulaPage() {
                                     <div className="flex justify-between items-start">
                                         <div>
                                             <p className="font-bold text-gray-900">{result.campaignName}</p>
-                                            <p className="text-xs text-gray-500 mt-1">Başvuru Tarihi: {result.date}</p>
+                                            <p className="text-xs text-gray-700 mt-1">Başvuru Tarihi: {result.date}</p>
                                         </div>
                                         <StatusBadge status={result.status} />
                                     </div>

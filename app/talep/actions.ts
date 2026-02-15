@@ -3,20 +3,13 @@
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { headers } from 'next/headers';
+import { tcknSchema, fullNameSchema } from '@/lib/schemas';
 import { resolveCampaignId } from '../basvuru/campaign';
+import { getSupabaseClient } from '@/lib/supabase-client';
 
-// Initialize Supabase Client
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();
-if (!supabaseUrl || !supabaseKey) {
-    throw new Error('Supabase environment variables are missing.');
-}
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-// Validation Schema
 const interestSchema = z.object({
-    tckn: z.string().length(11, "TCKN 11 haneli olmalıdır."),
-    fullName: z.string().min(2, "Ad Soyad en az 2 karakter olmalıdır."),
+    tckn: tcknSchema,
+    fullName: fullNameSchema,
     email: z.string().email("Geçerli bir e-posta adresi giriniz."),
     phone: z.string().optional().or(z.literal('')),
     note: z.string().optional(),
@@ -32,6 +25,7 @@ type InterestState = {
 
 // Added whitelist check
 export async function submitInterest(prevState: InterestState, formData: FormData): Promise<InterestState> {
+    const supabase = getSupabaseClient();
     const headersList = await headers();
     const ip = headersList.get('x-forwarded-for')?.split(',')[0]?.trim() || '127.0.0.1';
 
@@ -70,12 +64,10 @@ export async function submitInterest(prevState: InterestState, formData: FormDat
             return { success: false, message: 'Derneğimizde bulunan borcunuz nedeniyle işleminize devam edilememektedir.' };
         }
 
-        // 1. Rate Limiting check
+        // 1. Rate limiting: max 3 requests per hour per TCKN/action
         const { data: isAllowed, error: rateError } = await supabase.rpc('check_rate_limit', {
-            p_ip_address: ip,
-            p_endpoint: 'submit_interest',
-            p_max_requests: 5,   // 5 requests
-            p_window_minutes: 60 // per hour
+            p_tckn: data.tckn,
+            p_action: 'submit_interest',
         });
 
         if (rateError) {

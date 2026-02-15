@@ -5,7 +5,7 @@ const DEMO_NAME = 'Fatma Demir';
 
 test.describe('Kredi Başvuru Formu E2E Testi', () => {
     test.beforeEach(async ({ page }) => {
-        await page.goto('/kredi');
+        await page.goto('/kampanya/kredi');
         await expect(page.getByText(/Kredi Başvuru Formu/i)).toBeVisible({ timeout: 15000 });
     });
 

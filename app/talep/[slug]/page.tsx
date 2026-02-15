@@ -42,7 +42,7 @@ export default async function InterestPage({
                         <h2 className="text-xl font-bold text-gray-900 border-b pb-4 mb-4">
                             Talep Formu
                         </h2>
-                        <p className="text-gray-500 text-sm">
+                        <p className="text-gray-700 text-sm">
                             Aşağıdaki formu doldurarak kampanya hakkında bilgi almak istediğinizi bize iletebilirsiniz.
                         </p>
                     </div>
@@ -51,7 +51,7 @@ export default async function InterestPage({
                 </div>
             </main>
 
-            <footer className="bg-white border-t border-gray-200 py-8 text-center text-gray-500 text-sm mt-auto">
+            <footer className="bg-white border-t border-gray-200 py-8 text-center text-gray-700 text-sm mt-auto">
                 <p>&copy; {new Date().getFullYear()} Türkiye Havayolu Pilotları Derneği</p>
             </footer>
         </div>

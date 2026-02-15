@@ -21,6 +21,23 @@ interface LogEntry {
   error?: Error;
 }
 
+const PII_KEYS = ['tckn', 'tc', 'phone', 'email', 'full_name', 'fullName', 'identityNumber', 'member_email', 'token', 'otp', 'sessionToken'];
+
+function redactPii(obj: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(obj)) {
+    const keyLower = k.toLowerCase();
+    if (PII_KEYS.some((p) => keyLower.includes(p.toLowerCase()) || k === p)) {
+      out[k] = '[REDACTED]';
+    } else if (v && typeof v === 'object' && !Array.isArray(v) && !(v instanceof Error)) {
+      out[k] = redactPii(v as Record<string, unknown>);
+    } else {
+      out[k] = v;
+    }
+  }
+  return out;
+}
+
 class Logger {
   private formatLog(entry: LogEntry): string {
     const { level, message, timestamp, context, error } = entry;
@@ -28,12 +45,13 @@ class Logger {
     let logMessage = `[${timestamp}] [${level.toUpperCase()}] ${message}`;
 
     if (context && Object.keys(context).length > 0) {
-      logMessage += ` | Context: ${JSON.stringify(context)}`;
+      const safeContext = redactPii(context as Record<string, unknown>);
+      logMessage += ` | Context: ${JSON.stringify(safeContext)}`;
     }
 
     if (error) {
       logMessage += ` | Error: ${error.message}`;
-      if (error.stack) {
+      if (error.stack && process.env.NODE_ENV === 'development') {
         logMessage += ` | Stack: ${error.stack}`;
       }
     }

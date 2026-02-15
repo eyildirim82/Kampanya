@@ -1,68 +1,52 @@
 'use server';
 
 import { createClient } from '@supabase/supabase-js';
+import { z } from 'zod';
 
-const supabaseUrl = process.env.SUPABASE_INTERNAL_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+import { getSupabaseUrl } from '@/lib/supabase-url';
+import { tcknSchema, phoneSchema } from '@/lib/schemas';
+
+const sorgulaFormSchema = z.object({ tckn: tcknSchema, phone: phoneSchema });
 
 export async function checkApplicationStatus(prevState: unknown, formData: FormData) {
     const tckn = String(formData.get('tckn') || '').trim();
     const phone = String(formData.get('phone') || '').trim();
 
-    if (!tckn || tckn.length !== 11) {
-        return { success: false, message: 'Lütfen geçerli bir T.C. Kimlik Numarası giriniz.' };
+    const parsed = sorgulaFormSchema.safeParse({ tckn, phone });
+    if (!parsed.success) {
+        const first = parsed.error.flatten().fieldErrors;
+        const tcknErr = first.tckn?.[0];
+        const phoneErr = first.phone?.[0];
+        const message = tcknErr ?? phoneErr ?? 'Lütfen form alanlarını kontrol ediniz.';
+        return { success: false, message };
     }
+    const { tckn: validTckn, phone: validPhone } = parsed.data;
 
-    if (!phone || phone.length < 10) {
-        return { success: false, message: 'Lütfen geçerli bir telefon numarası giriniz.' };
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    // Query for application matching BOTH TCKN and Phone
-    // We intentionally do NOT use the Service Role key here (or we limit query strictly)
-    // But since RLS might be active, we might need Service Role if "anon" can't read.
-    // However, "anon" usually can't read all applications. 
-    // So we should use a controlled query with Service Role, OR a specific RPC.
-    // For safety and simplicity in this architecture without user auth, 
-    // we use Service Role but logic-bound to exact match.
-
-    // Better: Use Service Role but select only status fields.
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!serviceRoleKey) {
         return { success: false, message: 'Sistem hatası: Konfigürasyon eksik.' };
     }
 
-    const adminClient = createClient(supabaseUrl, serviceRoleKey);
+    const client = createClient(getSupabaseUrl(), serviceRoleKey);
 
-    const { data: applications, error } = await adminClient
-        .from('applications')
-        .select(`
-            id,
-            created_at,
-            status,
-            campaign_id,
-            campaigns ( name )
-        `)
-        .eq('tckn', tckn)
-        .eq('phone', phone)
-        .order('created_at', { ascending: false });
+    const { data: rows, error } = await client.rpc('get_application_status_by_tckn_phone', {
+        p_tckn: validTckn,
+        p_phone: validPhone,
+    });
 
     if (error) {
-        console.error('Status Query Error:', error);
         return { success: false, message: 'Sorgulama sırasında bir hata oluştu.' };
     }
 
-    if (!applications || applications.length === 0) {
+    if (!rows || rows.length === 0) {
         return { success: false, message: 'Bu bilgilerle eşleşen bir başvuru bulunamadı.' };
     }
 
-    // Map status to user friendly text
-    const results = applications.map((app: any) => ({
-        id: app.id,
-        date: new Date(app.created_at).toLocaleDateString('tr-TR'),
-        campaignName: app.campaigns?.name || 'Genel Başvuru',
-        status: app.status
+    const results = rows.map((row: { id: string; created_at: string; status: string; campaign_name: string }) => ({
+        id: row.id,
+        date: new Date(row.created_at).toLocaleDateString('tr-TR'),
+        campaignName: row.campaign_name || 'Genel Başvuru',
+        status: row.status,
     }));
 
     return { success: true, data: results };

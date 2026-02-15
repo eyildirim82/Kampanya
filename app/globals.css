@@ -58,7 +58,7 @@
 
   /* Background Colors */
   --background: #ffffff;
-  --foreground: #111827;
+  --foreground: #0f172a;
   --surface: #f9fafb;
   --surface-overlay: rgba(255, 255, 255, 0.9);
 
@@ -202,6 +202,38 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Metin okunaklılığı: varsayılan yazı rengi koyu */
+.prose,
+.prose p,
+.prose li,
+.prose span {
+  color: #1e293b;
+}
+.prose strong {
+  color: #0f172a;
+}
+.prose h1, .prose h2, .prose h3 {
+  color: #0f172a;
+}
+
+/* Form alanlarında yazılan metnin her zaman görünür olması */
+input,
+textarea,
+select {
+  color: #0f172a !important;
+  background-color: #ffffff !important;
+}
+input::placeholder,
+textarea::placeholder {
+  color: #64748b;
+}
+input:disabled,
+textarea:disabled,
+select:disabled {
+  background-color: #f1f5f9 !important;
+  color: #475569 !important;
 }
 
 /* ===================================

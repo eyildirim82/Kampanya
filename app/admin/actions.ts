@@ -8,8 +8,8 @@ import { logger } from '@/lib/logger';
 
 import { sendEmail } from '@/lib/smtp';
 
-const supabaseUrl = process.env.SUPABASE_INTERNAL_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+import { getSupabaseUrl } from '@/lib/supabase-url';
+import { getSupabaseClient } from '@/lib/supabase-client';
 
 // Helper to get authenticated client
 async function getAdminClient() {
@@ -19,7 +19,7 @@ async function getAdminClient() {
 
     if (!token || !refreshToken) return null;
 
-    const client = createClient(supabaseUrl, supabaseKey);
+    const client = getSupabaseClient();
 
     // Set the session using access and refresh tokens
     const { error } = await client.auth.setSession({
@@ -56,7 +56,7 @@ export async function adminLogin(prevState: unknown, formData: FormData) {
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
 
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = getSupabaseClient();
 
     const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -73,12 +73,9 @@ export async function adminLogin(prevState: unknown, formData: FormData) {
         return { success: false, message: 'Oturum açılamadı.' };
     }
 
-    console.log('[Login Debug] User ID:', session.user.id);
-    console.log('[Login Debug] Email:', session.user.email);
-
     // Verify Admin Role in DB
     // Use a client with the user's token
-    const userClient = createClient(supabaseUrl, supabaseKey, {
+    const userClient = createClient(getSupabaseUrl(), process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!.trim(), {
         global: { headers: { Authorization: `Bearer ${session.access_token}` } }
     });
 
@@ -87,9 +84,6 @@ export async function adminLogin(prevState: unknown, formData: FormData) {
         .select('id, role')
         .eq('id', session.user.id)
         .single();
-
-    console.log('[Login Debug] Admin Data:', adminData);
-    console.log('[Login Debug] Admin Error:', adminError);
 
     if (adminError || !adminData) {
         // Sign out if not admin
@@ -831,12 +825,8 @@ export async function getCampaignsWithDetails() {
 }
 
 export async function getCampaignById(id: string) {
-    console.log('[DEBUG] getCampaignById called with ID:', id);
     const adminSupabase = await getAdminClient();
-    if (!adminSupabase) {
-        console.error('[DEBUG] getCampaignById: adminSupabase client is null (Auth failed)');
-        return null;
-    }
+    if (!adminSupabase) return null;
 
     const { data, error } = await adminSupabase
         .from('campaigns')
@@ -850,12 +840,7 @@ export async function getCampaignById(id: string) {
         .eq('id', id)
         .single();
 
-    if (error) {
-        console.error('[DEBUG] getCampaignById Error details:', JSON.stringify(error, null, 2));
-        return null;
-    }
-
-    console.log('[DEBUG] getCampaignById success. Data found:', !!data);
+    if (error) return null;
     return data;
 }
 
@@ -1028,29 +1013,37 @@ export async function getCampaignStats() {
     const adminSupabase = await getAdminClient();
     if (!adminSupabase) return [];
 
-    // 1. Get all campaigns
+    const { data: rpcRows, error: rpcError } = await adminSupabase.rpc('get_campaign_stats');
+    if (!rpcError && rpcRows && rpcRows.length >= 0) {
+        return rpcRows.map((row: { id: string; name: string; code: string; total: number; approved: number; rejected: number; pending: number; conversion_rate: string }) => ({
+            id: row.id,
+            name: row.name,
+            code: row.code,
+            total: Number(row.total),
+            approved: Number(row.approved),
+            rejected: Number(row.rejected),
+            pending: Number(row.pending),
+            conversionRate: row.conversion_rate ?? '0.0',
+        }));
+    }
+
+    // Fallback: RPC yoksa veya hata varsa mevcut aggregate (migration uygulanmamış olabilir)
     const { data: campaigns, error: campError } = await adminSupabase
         .from('campaigns')
         .select('id, name, campaign_code');
-
     if (campError || !campaigns) return [];
 
-    // 2. Get all applications (lightweight: only essential fields)
-    // For larger scale, this should be an RPC or use .csv export
     const { data: apps, error: appError } = await adminSupabase
         .from('applications')
         .select('campaign_id, status');
-
     if (appError || !apps) return [];
 
-    // 3. Aggregate
-    const stats = campaigns.map(camp => {
-        const campApps = apps.filter(a => a.campaign_id === camp.id);
+    const stats = campaigns.map((camp: { id: string; name: string; campaign_code: string }) => {
+        const campApps = apps.filter((a: { campaign_id: string }) => a.campaign_id === camp.id);
         const total = campApps.length;
-        const approved = campApps.filter(a => a.status === 'APPROVED').length;
-        const rejected = campApps.filter(a => a.status === 'REJECTED').length;
-        const pending = campApps.filter(a => ['PENDING', 'REVIEWING'].includes(a.status)).length;
-
+        const approved = campApps.filter((a: { status: string }) => a.status === 'APPROVED').length;
+        const rejected = campApps.filter((a: { status: string }) => a.status === 'REJECTED').length;
+        const pending = campApps.filter((a: { status: string }) => ['PENDING', 'REVIEWING'].includes(a.status)).length;
         return {
             id: camp.id,
             name: camp.name,
@@ -1059,12 +1052,10 @@ export async function getCampaignStats() {
             approved,
             rejected,
             pending,
-            conversionRate: total > 0 ? ((approved / total) * 100).toFixed(1) : '0.0'
+            conversionRate: total > 0 ? ((approved / total) * 100).toFixed(1) : '0.0',
         };
     });
-
-    // Sort by total applications desc
-    return stats.sort((a, b) => b.total - a.total);
+    return stats.sort((a: { total: number }, b: { total: number }) => b.total - a.total);
 }
 
 
@@ -1213,5 +1204,75 @@ export async function deleteInstitution(id: string) {
     }
 
     return { success: true, message: 'Kurum silindi.' };
+}
+
+// ----------------------------------------------------------------------
+// FIELD LIBRARY (field_templates)
+// ----------------------------------------------------------------------
+
+export async function getFieldTemplates() {
+    const adminSupabase = await getAdminClient();
+    if (!adminSupabase) return [];
+
+    const { data, error } = await adminSupabase
+        .from('field_templates')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        console.error("Fetch Field Templates Error:", error);
+        return [];
+    }
+
+    return data || [];
+}
+
+export async function upsertFieldTemplate(prevState: unknown, formData: FormData) {
+    const adminSupabase = await getAdminClient();
+    if (!adminSupabase) return { success: false, message: 'Auth required' };
+
+    const id = formData.get('id') as string;
+    const label = formData.get('label') as string;
+    const type = formData.get('type') as string;
+    const optionsRaw = formData.get('options') as string;
+    const isRequired = formData.get('isRequired') === 'on';
+
+    if (!label || !type) {
+        return { success: false, message: 'Label and Type are required.' };
+    }
+
+    let options: string[] = [];
+    if (optionsRaw) {
+        options = optionsRaw.split(',').map(o => o.trim()).filter(Boolean);
+    }
+
+    const payload = {
+        label,
+        type,
+        options,
+        is_required: isRequired,
+    };
+
+    let error;
+    if (id) {
+        const result = await adminSupabase.from('field_templates').update(payload).eq('id', id);
+        error = result.error;
+    } else {
+        const result = await adminSupabase.from('field_templates').insert(payload);
+        error = result.error;
+    }
+
+    if (error) return { success: false, message: error.message };
+    return { success: true, message: id ? 'Şablon güncellendi.' : 'Şablon eklendi.' };
+}
+
+export async function deleteFieldTemplate(id: string) {
+    const adminSupabase = await getAdminClient();
+    if (!adminSupabase) return { success: false, message: 'Auth required' };
+
+    const { error } = await adminSupabase.from('field_templates').delete().eq('id', id);
+
+    if (error) return { success: false, message: error.message };
+    return { success: true, message: 'Şablon silindi.' };
 }
 

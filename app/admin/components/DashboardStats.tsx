@@ -1,6 +1,7 @@
 'use client';
 
 import { Users, FileText, CheckCircle, Clock } from 'lucide-react';
+import { Card, CardHeader } from '@/components/ui/Card';
 
 interface DashboardStatsProps {
     stats: {
@@ -19,7 +20,7 @@ export default function DashboardStats({ stats }: DashboardStatsProps) {
             icon: Users,
             color: 'text-blue-600',
             bg: 'bg-blue-50',
-            border: 'border-blue-200'
+            border: 'border-blue-200',
         },
         {
             label: 'Bekleyen Onay',
@@ -27,7 +28,7 @@ export default function DashboardStats({ stats }: DashboardStatsProps) {
             icon: Clock,
             color: 'text-yellow-600',
             bg: 'bg-yellow-50',
-            border: 'border-yellow-200'
+            border: 'border-yellow-200',
         },
         {
             label: 'Aktif Kampanya',
@@ -35,7 +36,7 @@ export default function DashboardStats({ stats }: DashboardStatsProps) {
             icon: CheckCircle,
             color: 'text-green-600',
             bg: 'bg-green-50',
-            border: 'border-green-200'
+            border: 'border-green-200',
         },
         {
             label: 'Ön Talepler',
@@ -43,25 +44,28 @@ export default function DashboardStats({ stats }: DashboardStatsProps) {
             icon: FileText,
             color: 'text-purple-600',
             bg: 'bg-purple-50',
-            border: 'border-purple-200'
-        }
+            border: 'border-purple-200',
+        },
     ];
 
     return (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             {cards.map((card, index) => (
-                <div
+                <Card
                     key={index}
-                    className={`bg-white rounded-xl shadow-sm border ${card.border} p-5 flex items-center justify-between transition-transform hover:scale-[1.02]`}
+                    variant="elevated"
+                    padding="md"
+                    className={`flex flex-row items-center justify-between transition-transform hover:scale-[1.02] border-l-4 ${card.border}`}
                 >
-                    <div>
-                        <p className="text-sm font-medium text-gray-500 mb-1">{card.label}</p>
-                        <p className="text-2xl font-bold text-gray-900">{card.value}</p>
+                    <CardHeader
+                        title={String(card.value)}
+                        subtitle={card.label}
+                        className="mb-0"
+                    />
+                    <div className={`p-3 rounded-full shrink-0 ${card.bg}`}>
+                        <card.icon className={`w-6 h-6 ${card.color}`} aria-hidden />
                     </div>
-                    <div className={`p-3 rounded-full ${card.bg}`}>
-                        <card.icon className={`w-6 h-6 ${card.color}`} />
-                    </div>
-                </div>
+                </Card>
             ))}
         </div>
     );

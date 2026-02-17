@@ -1,6 +1,7 @@
 import { unstable_noStore as noStore } from 'next/cache';
 import { getActiveCampaigns, slugify } from './basvuru/campaign';
 import Link from 'next/link';
+import { Plane } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,56 +10,97 @@ export default async function Home() {
   const campaigns = await getActiveCampaigns();
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen flex flex-col">
       {/* Hero Section */}
-      <div className="bg-[#002855] text-white py-20 px-4 text-center">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight">
-            Türkiye Havayolu Pilotları Derneği
+      <section className="relative h-[500px] flex items-center justify-center overflow-hidden">
+        {/* Background Base */}
+        <div className="absolute inset-0 bg-talpa-bg"></div>
+
+        {/* Dynamic Background Elements */}
+        <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
+        <div className="absolute inset-0 bg-gradient-radar opacity-20 animate-radar-sweep"></div>
+
+        {/* Glowing Orbs */}
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-talpa-accent/20 rounded-full blur-[100px] animate-pulse-slow"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-deniz-red/10 rounded-full blur-[120px] animate-pulse-slow delay-1000"></div>
+
+        {/* Content */}
+        <div className="relative z-10 text-center px-4 max-w-5xl mx-auto space-y-8">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-talpa-accent text-xs font-mono tracking-widest uppercase mb-4 animate-fade-in-up">
+            <span className="w-2 h-2 rounded-full bg-deniz-red animate-pulse"></span>
+            Kampanya Portalı
+          </div>
+
+          <h1 className="text-4xl md:text-6xl font-black tracking-tight text-white mb-6 drop-shadow-2xl animate-fade-in-up stagger-1">
+            <span className="gradient-text-hero">TÜRKİYE HAVAYOLU</span>
+            <br />
+            <span className="text-white">PİLOTLARI DERNEĞİ</span>
           </h1>
-          <p className="text-xl md:text-2xl text-gray-100 max-w-2xl mx-auto font-medium">
-            Üyelerimize özel ayrıcalıklı dünyayı keşfedin.
+
+          <p className="text-lg md:text-2xl text-slate-300 max-w-2xl mx-auto font-light leading-relaxed animate-fade-in-up stagger-2">
+            DenizBank ayrıcalıkları ile üyelerimize özel fırsatlar,
+            <br className="hidden md:block" />
+            prestijli dünyanıza değer katan avantajlar.
           </p>
         </div>
-      </div>
+
+        {/* Bottom Fade */}
+        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-gray-50 to-transparent"></div>
+      </section>
 
       {/* Campaigns Grid */}
-      <main className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 -mt-10 mb-20">
+      <main className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 -mt-20 relative z-20 pb-20">
         {campaigns.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {campaigns.map((campaign) => {
+            {campaigns.map((campaign, index) => {
               const content = campaign.page_content || {};
               const title = content.heroTitle || campaign.title || campaign.name || 'Kampanya';
               const subtitle = content.heroSubtitle || 'Detaylar için tıklayınız.';
-              const image = content.bannerImage || 'https://placehold.co/600x300/e2e8f0/1e293b?text=TALPA+Kampanya';
+              const image = content.bannerImage || 'https://placehold.co/600x300/00152e/e2e8f0?text=TALPA+Kampanya';
               const slug = campaign.slug || slugify(campaign.campaign_code || campaign.name || '');
 
               return (
-                <div key={campaign.id} className="bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 flex flex-col">
+                <div
+                  key={campaign.id}
+                  className={`group bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 flex flex-col border border-slate-100 animate-fade-in-up`}
+                  style={{ animationDelay: `${(index + 3) * 100}ms` }}
+                >
                   {/* Image */}
-                  <div className="h-48 bg-gray-200 relative overflow-hidden group">
+                  <div className="h-56 bg-slate-200 relative overflow-hidden">
                     <img
                       src={image}
                       alt={title}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-talpa-bg/90 via-talpa-bg/20 to-transparent opacity-80 group-hover:opacity-60 transition-opacity duration-300"></div>
+
+                    {/* Badge */}
+                    <div className="absolute top-4 right-4 bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg">
+                      AKTİF
+                    </div>
+
+                    {/* Logo Overlay */}
+                    <div className="absolute bottom-4 left-4 text-white opacity-90 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                      <Plane className="h-8 w-8 text-white/50 mb-1" />
+                    </div>
                   </div>
 
                   {/* Content */}
-                  <div className="p-6 flex-grow flex flex-col">
-                    <h2 className="text-xl font-bold text-gray-900 mb-2 line-clamp-2">
+                  <div className="p-8 flex-grow flex flex-col">
+                    <h2 className="text-2xl font-bold text-talpa-navy mb-3 line-clamp-2 leading-tight group-hover:text-deniz-red transition-colors">
                       {title}
                     </h2>
-                    <p className="text-gray-800 mb-6 line-clamp-3 text-sm flex-grow">
+                    <p className="text-slate-600 mb-8 line-clamp-3 text-sm leading-relaxed flex-grow">
                       {subtitle}
                     </p>
 
                     <Link
                       href={`/kampanya/${slug}`}
-                      className="block w-full py-3 bg-[#002855] text-white text-center rounded-lg font-semibold hover:bg-[#003366] transition-colors shadow-lg shadow-indigo-900/20"
+                      className="block w-full py-4 bg-talpa-bg text-white text-center rounded-xl font-bold tracking-wide hover:bg-deniz-red transition-all shadow-lg shadow-talpa-navy/20 group-hover:shadow-deniz-red/30 relative overflow-hidden"
                     >
-                      Başvuru Yap &rarr;
+                      <span className="relative z-10 flex items-center justify-center gap-2">
+                        BAŞVURU YAP <span className="group-hover:translate-x-1 transition-transform">→</span>
+                      </span>
                     </Link>
                   </div>
                 </div>
@@ -66,24 +108,19 @@ export default async function Home() {
             })}
           </div>
         ) : (
-          <div className="bg-white p-12 rounded-2xl shadow-lg text-center max-w-lg mx-auto mt-10">
-            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <svg className="w-10 h-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
+          <div className="bg-white p-12 rounded-3xl shadow-talpa text-center max-w-lg mx-auto mt-10 border border-slate-100 animate-fade-in-up">
+            <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 relative">
+              <div className="absolute inset-0 rounded-full border border-slate-100 animate-ping opacity-20"></div>
+              <Plane className="w-10 h-10 text-slate-300 transform -rotate-45" />
             </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Aktif Kampanya Bulunmuyor</h3>
-            <p className="text-gray-700">
-              Şu anda aktif bir kampanya bulunmamaktadır. Lütfen daha sonra tekrar kontrol ediniz.
+            <h3 className="text-2xl font-bold text-talpa-navy mb-3">Aktif Kampanya Bulunmuyor</h3>
+            <p className="text-slate-500 leading-relaxed">
+              Şu anda aktif bir kampanya bulunmamaktadır. <br />
+              Yeni fırsatlar için lütfen daha sonra tekrar kontrol ediniz.
             </p>
           </div>
         )}
       </main>
-
-      {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 py-8 text-center text-gray-700 text-sm">
-        <p>&copy; {new Date().getFullYear()} Türkiye Havayolu Pilotları Derneği. Tüm hakları saklıdır.</p>
-      </footer>
     </div>
   );
 }

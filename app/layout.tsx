@@ -1,26 +1,31 @@
 import type { Metadata } from "next";
-import Image from "next/image";
-import { Geist, Geist_Mono } from "next/font/google";
+// import Image from "next/image"; // Removed as old footer is being replaced
+import { Inter, JetBrains_Mono } from "next/font/google"; // Changed fonts
 import "./globals.css";
 import { ensureConfigValid } from "@/lib/config-validation";
 import { Toaster } from "sonner";
 import { PerformanceMeasurePatch } from "@/components/PerformanceMeasurePatch";
+import PublicHeader from "@/components/theme/PublicHeader";
+import Footer from "@/components/theme/Footer";
 
-
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-geist-sans", // Keeping variable name compatible with globals.css or updating globals? 
+  // globals.css uses --font-geist-sans mapping. I will map Inter to it to minimize globals churn, or better, update globals mapping.
+  // Actually, globals.css says: --font-sans: var(--font-geist-sans); 
+  // I will just use the same variable name for now to avoid breaking other things, or better yet, I'll allow the override.
+  // Let's stick to the variable name used in globals.css for less friction, OR update the variable name passed to body.
+  // I'll keep the variable name '--font-geist-sans' mapped to Inter for now, effectively "aliasing" it.
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
+const jetbrainsMono = JetBrains_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "TALPA x DenizBank Private Kart | Özel Avantajlar",
-  description: "TALPA ve DenizBank işbirliği ile sunulan Private Kart avantajları: IGA Lounge, TAV Passport, restoran ve otel indirimleri. Yıllık kart ücreti yok!",
+  title: "TALPA | Kampanya Portalı",
+  description: "TALPA ve DenizBank işbirliği ile sunulan Private Kart avantajları.",
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },
@@ -43,38 +48,24 @@ export default function RootLayout({
       ensureConfigValid();
     } catch (error) {
       console.error("Config validation failed:", error);
-      // Build sırasında tamamen patlamaması için throw'u kaldırıp sadece logluyoruz.
-      // Ya da production runtime'da yine patlamasını isteyebiliriz ama build'i bozuyorsa dikkatli olmalıyız.
-      // Şimdilik hatayı yakalayıp logluyoruz, böylece sayfa oluşumu devam edebilir.
     }
   }
 
   return (
-    <html lang="tr">
+    <html lang="tr" className="scroll-smooth">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${inter.variable} ${jetbrainsMono.variable} antialiased bg-noise selection:bg-deniz-red selection:text-white min-h-screen flex flex-col`}
       >
         <PerformanceMeasurePatch />
         <Toaster richColors position="top-center" />
-        {children}
 
-        {/* Footer */}
-        <footer className="w-full bg-white border-t border-gray-200 mt-12">
-          <div className="max-w-7xl mx-auto px-4 py-8">
-            <div className="flex justify-center">
-              <Image
-                src="/denizbank-3.jpg"
-                alt="DenizBank Private Kart"
-                width={896}
-                height={500}
-                className="w-full max-w-4xl h-auto rounded-lg shadow-lg"
-              />
-            </div>
-            <div className="text-center mt-6 text-sm text-gray-700">
-              <p>© 2026 TALPA - Türkiye Havayolu Pilotları Derneği</p>
-            </div>
-          </div>
-        </footer>
+        <PublicHeader />
+
+        <main className="flex-grow">
+          {children}
+        </main>
+
+        <Footer />
       </body>
     </html>
   );

@@ -64,7 +64,8 @@ export async function adminLogin(prevState: unknown, formData: FormData) {
     });
 
     if (error || !data.session) {
-        return { success: false, message: 'Giriş yapılamadı.' };
+        const detail = error?.message ? ` ${error.message}` : '';
+        return { success: false, message: `Giriş yapılamadı.${detail}` };
     }
 
     // Let's rely on the returned session.
@@ -91,9 +92,10 @@ export async function adminLogin(prevState: unknown, formData: FormData) {
         return { success: false, message: `Bu alana erişim yetkiniz yok. (${session.user.email})` };
     }
 
+    const isProduction = process.env.NODE_ENV === 'production';
     const cookieStore = await cookies();
-    cookieStore.set('sb-access-token', session.access_token, { path: '/', httpOnly: true, secure: true, maxAge: 604800 });
-    cookieStore.set('sb-refresh-token', session.refresh_token, { path: '/', httpOnly: true, secure: true, maxAge: 604800 });
+    cookieStore.set('sb-access-token', session.access_token, { path: '/', httpOnly: true, secure: isProduction, maxAge: 604800 });
+    cookieStore.set('sb-refresh-token', session.refresh_token, { path: '/', httpOnly: true, secure: isProduction, maxAge: 604800 });
 
     return { success: true, message: 'Giriş başarılı.', redirectUrl: '/admin/dashboard' };
 }

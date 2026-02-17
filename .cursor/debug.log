@@ -1,6 +1,228 @@
-{"location":"app/basvuru/campaign.ts:getActiveCampaigns","message":"getActiveCampaigns result from Supabase","data":{"count":0,"slugs":[],"names":[]},"timestamp":1771067843965,"hypothesisId":"H2"}
-{"location":"app/basvuru/campaign.ts:getActiveCampaigns","message":"getActiveCampaigns result from Supabase","data":{"count":0,"slugs":[],"names":[]},"timestamp":1771067844060,"hypothesisId":"H2"}
-{"location":"app/page.tsx:Home","message":"Home ran, campaigns loaded","data":{"count":0,"items":[]},"timestamp":1771067844062,"hypothesisId":"H1_H2_H3"}
-{"location":"app/page.tsx:Home","message":"Home ran, campaigns loaded","data":{"count":0,"items":[]},"timestamp":1771067843968,"hypothesisId":"H1_H2_H3"}
-{"location":"app/basvuru/campaign.ts:getActiveCampaigns","message":"getActiveCampaigns result from Supabase","data":{"count":0,"slugs":[],"names":[]},"timestamp":1771067849359,"hypothesisId":"H2"}
-{"location":"app/page.tsx:Home","message":"Home ran, campaigns loaded","data":{"count":0,"items":[]},"timestamp":1771067849365,"hypothesisId":"H1_H2_H3"}
+{"location":"actions.ts:adminLogin:entry","message":"Login attempt","data":{"emailPresent":true,"passwordPresent":true,"supabaseUrl":"http://127.0.0.1:54321"},"hypothesisId":"A,E","timestamp":1771225938916}
+{"location":"actions.ts:adminLogin:afterSignIn","message":"Auth result","data":{"hasError":false,"hasSession":true},"hypothesisId":"A","timestamp":1771225939326}
+{"location":"actions.ts:adminLogin:afterAdminsSelect","message":"Admin check result","data":{"hasAdminError":false,"hasAdminData":true,"userId":"1b11799e-4998-4d68-b25f-74f55ab646c5"},"hypothesisId":"B","timestamp":1771225940413}
+{"location":"actions.ts:adminLogin:success","message":"Returning success","data":{"isProduction":false,"cookiesSet":true},"hypothesisId":"C","timestamp":1771225940421}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771225944990}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771225944994}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771225944999}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771225945004}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771225945287}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771225945290}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771225945289}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771225945292}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771225957061}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771225957241}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771225993647}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771225993777}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771225993981}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771225994131}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226000001}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226000183}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226000351}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226000491}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226000636}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226000789}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226000953}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226001095}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226001180}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226001317}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226001390}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226001514}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226068704}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226068836}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226070197}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226070202}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226070207}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226070212}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226070415}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226070418}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226070417}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226070419}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226076157}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226076164}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226076169}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226076173}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226076420}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226076422}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226076423}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226076421}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226078670}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226078675}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226078679}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226078684}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226078862}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226078864}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226078866}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226078863}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226080545}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226080551}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226080556}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226080562}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226080774}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226080776}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226080777}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226080779}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226082058}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226082062}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226082066}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226082070}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226082246}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226082247}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226082248}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226082249}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226085039}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226085159}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226086466}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226086469}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226086473}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226086477}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226086648}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226086650}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226086651}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226086652}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226089369}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226089374}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226089484}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226089487}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226089536}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226089537}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226089625}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226089626}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226099574}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226099578}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226099689}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226099693}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226099760}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226099762}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226099856}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226099858}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226101317}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226101321}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226101432}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226101436}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226101491}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226101493}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226101603}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226101606}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226102479}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226102490}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226102486}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226102494}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226102683}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226102685}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226102686}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226102688}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226106549}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226106646}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226106698}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226106792}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226111399}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226111402}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226111407}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771226111410}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226111616}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226111619}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226111618}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771226111621}
+{"location":"actions.ts:adminLogin:entry","message":"Login attempt","data":{"emailPresent":true,"passwordPresent":true,"supabaseUrl":"http://127.0.0.1:54321"},"hypothesisId":"A,E","timestamp":1771227045163}
+{"location":"actions.ts:adminLogin:afterSignIn","message":"Auth result","data":{"hasError":false,"hasSession":true},"hypothesisId":"A","timestamp":1771227045459}
+{"location":"actions.ts:adminLogin:afterAdminsSelect","message":"Admin check result","data":{"hasAdminError":false,"hasAdminData":true,"userId":"1b11799e-4998-4d68-b25f-74f55ab646c5"},"hypothesisId":"B","timestamp":1771227045819}
+{"location":"actions.ts:adminLogin:success","message":"Returning success","data":{"isProduction":false,"cookiesSet":true},"hypothesisId":"C","timestamp":1771227045825}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227046015}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227046023}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227046029}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227046035}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227046250}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227046252}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227046254}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227046256}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227049470}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227049583}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227052039}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227052043}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227052046}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227052050}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227052202}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227052204}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227052205}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227052207}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227053204}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227053208}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227053351}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227053352}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227057783}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227057875}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227057932}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227058016}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227062573}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227062651}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227062742}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227062809}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227068261}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227068265}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227068269}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227068272}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227068426}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227068428}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227068429}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227068430}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227071241}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227071328}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227071368}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227071438}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227072445}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227072448}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227072451}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227072454}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227072577}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227072579}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227072580}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227072581}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227075132}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227075238}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227078397}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227078486}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227078573}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227078672}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227087632}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227087710}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227087789}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227087886}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227089924}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227090068}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227090151}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227090239}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227094434}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227094513}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227094586}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227094680}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227096402}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227096485}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227096560}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227096661}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227100166}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227100248}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227100317}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227100415}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227108784}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227108788}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227108791}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227108794}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227108928}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227108930}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227108930}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227108931}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227111523}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227111590}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227111631}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227111700}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227112884}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227112886}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227112888}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227112890}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227113014}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227113016}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227113015}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227113018}
+{"location":"actions.ts:getAdminClient","message":"Session restore attempt","data":{"hasToken":true,"hasRefreshToken":true,"tokenLen":815},"hypothesisId":"D","timestamp":1771227114915}
+{"location":"actions.ts:getAdminClient:setSession","message":"setSession result","data":{"hasError":false},"hypothesisId":"D","timestamp":1771227115011}

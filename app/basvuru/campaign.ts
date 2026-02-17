@@ -82,24 +82,3 @@ export async function getCampaignBySlug(slug: string): Promise<CampaignRecord | 
     return matched || null;
 }
 
-const CREDIT_CAMPAIGN_CODE =
-    process.env.NEXT_PUBLIC_CREDIT_CAMPAIGN_CODE || 'CREDIT_2026';
-
-/** Aktif kredi kampanyasının slug'ını döner (redirect için). */
-export async function getCreditCampaignSlug(): Promise<string | null> {
-    noStore();
-    const campaigns = await getActiveCampaigns();
-    const c = campaigns.find(
-        (campaign) => campaign.campaign_code === CREDIT_CAMPAIGN_CODE
-    );
-    if (c?.slug) return c.slug;
-    const byName = campaigns.find((campaign) =>
-        (campaign.name || campaign.title || '')
-            .toLocaleLowerCase('tr-TR')
-            .includes('kredi')
-    );
-    if (byName?.slug) return byName.slug;
-    return byName
-        ? slugify(byName.campaign_code || byName.name || 'kredi')
-        : null;
-}

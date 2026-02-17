@@ -4,45 +4,29 @@ import { useActionState } from 'react';
 import { checkApplicationStatus } from './actions';
 import Image from 'next/image';
 import Link from 'next/link';
+import { Input } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { Badge } from '@/components/ui/Badge';
+import { Alert } from '@/components/ui/Alert';
 
-// Simple Input Component
-function Input({ name, label, type = "text", placeholder, required = false, maxLength }: { name: string, label: string, type?: string, placeholder?: string, required?: boolean, maxLength?: number }) {
-    return (
-        <div>
-            <label htmlFor={name} className="block text-sm font-medium text-gray-700">
-                {label} {required && <span className="text-red-500">*</span>}
-            </label>
-            <div className="mt-1">
-                <input
-                    type={type}
-                    name={name}
-                    id={name}
-                    required={required}
-                    maxLength={maxLength}
-                    className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md p-3 border"
-                    placeholder={placeholder}
-                />
-            </div>
-        </div>
-    );
+function statusToVariant(status: string): 'default' | 'success' | 'warning' | 'error' {
+    const s = status?.toLowerCase();
+    if (s === 'approved') return 'success';
+    if (s === 'rejected') return 'error';
+    if (s === 'pending' || s === 'reviewing') return 'warning';
+    return 'default';
 }
 
-// Status Badge Component
-function StatusBadge({ status }: { status: string }) {
-    const STATUS_MAP: Record<string, { label: string, color: string, bg: string }> = {
-        'pending': { label: 'Değerlendiriliyor', color: 'text-yellow-800', bg: 'bg-yellow-100' },
-        'approved': { label: 'Onaylandı', color: 'text-green-800', bg: 'bg-green-100' },
-        'rejected': { label: 'Reddedildi', color: 'text-red-800', bg: 'bg-red-100' },
-        'draft': { label: 'Taslak', color: 'text-gray-800', bg: 'bg-gray-100' },
+function statusLabel(status: string): string {
+    const map: Record<string, string> = {
+        pending: 'Değerlendiriliyor',
+        approved: 'Onaylandı',
+        rejected: 'Reddedildi',
+        draft: 'Taslak',
+        reviewing: 'İnceleniyor',
     };
-
-    const config = STATUS_MAP[status?.toLowerCase()] || { label: status, color: 'text-gray-800', bg: 'bg-gray-100' };
-
-    return (
-        <span className={`inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium ${config.bg} ${config.color}`}>
-            {config.label}
-        </span>
-    );
+    return map[status?.toLowerCase()] ?? status;
 }
 
 export default function SorgulaPage() {
@@ -70,7 +54,7 @@ export default function SorgulaPage() {
             </div>
 
             <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-                <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+                <Card variant="elevated" padding="lg" className="py-8 px-4 sm:px-10">
                     <form action={formAction} className="space-y-6">
                         <Input
                             name="tckn"
@@ -79,7 +63,6 @@ export default function SorgulaPage() {
                             maxLength={11}
                             required
                         />
-
                         <Input
                             name="phone"
                             label="Telefon Numarası"
@@ -87,41 +70,46 @@ export default function SorgulaPage() {
                             placeholder="Örn: 532 123 45 67"
                             required
                         />
-
-                        <div>
-                            <button
-                                type="submit"
-                                disabled={isPending}
-                                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                {isPending ? 'Sorgulanıyor...' : 'Sorgula'}
-                            </button>
-                        </div>
+                        <Button
+                            type="submit"
+                            disabled={isPending}
+                            isLoading={isPending}
+                            className="w-full"
+                            variant="primary"
+                            size="md"
+                        >
+                            Sorgula
+                        </Button>
                     </form>
 
                     {state && !state.success && (
-                        <div className="mt-6 bg-red-50 border-l-4 border-red-400 p-4">
-                            <div className="flex">
-                                <div className="ml-3">
-                                    <p className="text-sm text-red-700">
-                                        {state.message}
-                                    </p>
-                                </div>
-                            </div>
+                        <div className="mt-6">
+                            <Alert variant="destructive" title="Sorgu Hatası">
+                                {state.message}
+                            </Alert>
                         </div>
                     )}
 
                     {state && state.success && state.data && (
                         <div className="mt-8 space-y-4">
-                            <h3 className="text-lg font-medium text-gray-900 border-b pb-2">Başvuru Sonuçları</h3>
-                            {state.data.map((result: any) => (
-                                <div key={result.id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                                    <div className="flex justify-between items-start">
+                            <h3 className="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2">
+                                Başvuru Sonuçları
+                            </h3>
+                            {state.data.map((result: { id: string; campaignName: string; date: string; status: string }) => (
+                                <div
+                                    key={result.id}
+                                    className="bg-gray-50 rounded-xl p-4 border border-gray-200"
+                                >
+                                    <div className="flex justify-between items-start gap-2">
                                         <div>
                                             <p className="font-bold text-gray-900">{result.campaignName}</p>
-                                            <p className="text-xs text-gray-700 mt-1">Başvuru Tarihi: {result.date}</p>
+                                            <p className="text-xs text-gray-700 mt-1">
+                                                Başvuru Tarihi: {result.date}
+                                            </p>
                                         </div>
-                                        <StatusBadge status={result.status} />
+                                        <Badge variant={statusToVariant(result.status)} size="sm">
+                                            {statusLabel(result.status)}
+                                        </Badge>
                                     </div>
                                 </div>
                             ))}
@@ -129,11 +117,14 @@ export default function SorgulaPage() {
                     )}
 
                     <div className="mt-6 text-center">
-                        <Link href="/" className="font-medium text-indigo-600 hover:text-indigo-500 text-sm">
+                        <Link
+                            href="/"
+                            className="font-medium text-[#002855] hover:text-[#0066cc] text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[#002855] focus-visible:ring-offset-2 rounded"
+                        >
                             &larr; Ana Sayfaya Dön
                         </Link>
                     </div>
-                </div>
+                </Card>
             </div>
         </div>
     );

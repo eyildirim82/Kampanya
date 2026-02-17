@@ -88,12 +88,17 @@ export default function InterestForm({ campaignId }: { campaignId: string }) {
                 <p className="text-green-700">
                     İlginiz için teşekkür ederiz. Kampanya detayları netleştiğinde sizinle iletişime geçeceğiz.
                 </p>
-                <button
-                    onClick={() => window.location.href = '/'}
-                    className="mt-6 text-green-700 font-medium hover:text-green-900 underline"
-                >
-                    Ana Sayfaya Dön
-                </button>
+                <div className="mt-6 flex flex-wrap justify-center gap-4">
+                    <button
+                        onClick={() => window.location.href = '/'}
+                        className="text-green-700 font-medium hover:text-green-900 underline"
+                    >
+                        Ana Sayfaya Dön
+                    </button>
+                    <a href="/sorgula" className="text-green-700 font-medium hover:text-green-900 underline">
+                        Başvuru Sorgula
+                    </a>
+                </div>
             </div>
         );
     }

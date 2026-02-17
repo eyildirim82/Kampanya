@@ -34,11 +34,6 @@ export default async function DashboardPage({
 
     const { data: applications, count } = result;
 
-    // Identify current campaign type
-    const creditCampaignCode = process.env.NEXT_PUBLIC_CREDIT_CAMPAIGN_CODE || 'CREDIT_2026';
-    const currentCampaign = allCampaigns.find(c => c.id === validCampaignId);
-    const isCreditCampaign = currentCampaign?.campaign_code === creditCampaignCode || currentCampaign?.name?.includes('Kredi');
-
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Header */}
@@ -139,7 +134,6 @@ export default async function DashboardPage({
                             totalCount={count}
                             currentPage={currentPage}
                             campaignId={validCampaignId}
-                            isCreditCampaign={isCreditCampaign}
                         />
                     </div>
                 </div>

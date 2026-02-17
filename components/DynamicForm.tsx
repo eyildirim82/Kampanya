@@ -6,6 +6,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { toast } from 'sonner';
 import { submitDynamicApplication } from '../app/actions';
+import Input from './theme/Input';
+import Button from './theme/Button';
+import Alert from './theme/Alert';
 
 interface DynamicFormProps {
     schema: Array<{
@@ -130,19 +133,19 @@ export default function DynamicForm({ schema, campaignId, sessionToken }: Dynami
 
     if (isSuccess) {
         return (
-            <div className="text-center py-10 animate-in fade-in zoom-in duration-500">
-                <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-sm">
+            <div className="text-center py-10 animate-fade-in-up">
+                <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-glow">
                     <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-3">Başvurunuz Alındı!</h3>
-                <p className="text-lg text-gray-800 max-w-md mx-auto">
+                <p className="text-lg text-gray-600 max-w-md mx-auto">
                     Başvurunuz başarıyla sistemimize kaydedilmiştir. İlginiz için teşekkür ederiz.
                 </p>
                 <button
                     onClick={() => window.location.reload()}
-                    className="mt-8 text-sm font-medium text-[#002855] hover:text-[#004080] underline underline-offset-4"
+                    className="mt-8 text-sm font-medium text-talpa-blue-600 hover:text-talpa-blue-800 underline underline-offset-4 transition-colors"
                 >
                     Yeni Başvuru Yap
                 </button>
@@ -151,7 +154,7 @@ export default function DynamicForm({ schema, campaignId, sessionToken }: Dynami
     }
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 animate-fade-in-up">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {schema.map((field) => {
                     const widthClass =
@@ -160,40 +163,45 @@ export default function DynamicForm({ schema, campaignId, sessionToken }: Dynami
                                 'md:col-span-2';
 
                     const hasError = !!errors[field.name];
+                    const errorMessage = errors[field.name]?.message as string;
 
                     return (
                         <div key={field.id ?? field.name} className={`${widthClass} col-span-1`}>
-                            <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                                {field.label} {field.required && <span className="text-red-500">*</span>}
-                            </label>
-
                             {field.type === 'textarea' ? (
-                                <textarea
-                                    {...register(field.name)}
-                                    placeholder={field.placeholder}
-                                    rows={4}
-                                    className={`w-full border rounded-lg px-4 py-2.5 outline-none transition-all ${hasError
-                                            ? 'border-red-500 focus:ring-2 focus:ring-red-200'
-                                            : 'border-gray-300 focus:border-[#002855] focus:ring-2 focus:ring-[#002855]/20'
-                                        }`}
-                                />
-                            ) : field.type === 'select' ? (
-                                <div className="relative">
-                                    <select
+                                <div className="flex flex-col gap-1.5 w-full">
+                                    <label className="text-sm font-medium text-slate-700">
+                                        {field.label} {field.required && <span className="text-deniz-red ml-1">*</span>}
+                                    </label>
+                                    <textarea
                                         {...register(field.name)}
-                                        className={`w-full border rounded-lg px-4 py-2.5 outline-none appearance-none bg-white transition-all ${hasError
-                                                ? 'border-red-500 focus:ring-2 focus:ring-red-200'
-                                                : 'border-gray-300 focus:border-[#002855] focus:ring-2 focus:ring-[#002855]/20'
-                                            }`}
-                                    >
-                                        <option value="">Seçiniz...</option>
-                                        {field.options?.map((opt, i) => (
-                                            <option key={i} value={opt}>{opt}</option>
-                                        ))}
-                                    </select>
-                                    <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                                        <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                                        placeholder={field.placeholder}
+                                        rows={4}
+                                        className={`flex w-full rounded-lg border bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-talpa-navy focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all text-slate-900 ${hasError ? 'border-deniz-red focus-visible:ring-deniz-red' : 'border-slate-200 focus:border-talpa-navy'}`}
+                                        aria-invalid={hasError}
+                                    />
+                                    {hasError && <p className="text-sm font-medium text-deniz-red animate-pulse">{errorMessage}</p>}
+                                </div>
+                            ) : field.type === 'select' ? (
+                                <div className="flex flex-col gap-1.5 w-full">
+                                    <label className="text-sm font-medium text-slate-700">
+                                        {field.label} {field.required && <span className="text-deniz-red ml-1">*</span>}
+                                    </label>
+                                    <div className="relative">
+                                        <select
+                                            {...register(field.name)}
+                                            className={`flex h-11 w-full rounded-lg border bg-white px-3 py-2 text-sm ring-offset-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-talpa-navy focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all text-slate-900 appearance-none ${hasError ? 'border-deniz-red focus-visible:ring-deniz-red' : 'border-slate-200 focus:border-talpa-navy'}`}
+                                            aria-invalid={hasError}
+                                        >
+                                            <option value="">Seçiniz...</option>
+                                            {field.options?.map((opt, i) => (
+                                                <option key={i} value={opt}>{opt}</option>
+                                            ))}
+                                        </select>
+                                        <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                                            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                                        </div>
                                     </div>
+                                    {hasError && <p className="text-sm font-medium text-deniz-red animate-pulse">{errorMessage}</p>}
                                 </div>
                             ) : field.type === 'checkbox' ? (
                                 <div className="flex items-start gap-3 mt-1 p-1">
@@ -202,36 +210,25 @@ export default function DynamicForm({ schema, campaignId, sessionToken }: Dynami
                                             type="checkbox"
                                             {...register(field.name)}
                                             id={`field_${field.id ?? field.name}`}
-                                            className={`w-4 h-4 text-[#002855] border-gray-300 rounded focus:ring-[#002855] ${hasError ? 'border-red-500' : ''
-                                                }`}
+                                            className={`w-4 h-4 text-talpa-navy border-gray-300 rounded focus:ring-talpa-navy cursor-pointer ${hasError ? 'border-deniz-red' : ''}`}
                                         />
                                     </div>
                                     <div className="text-sm">
                                         <label htmlFor={`field_${field.id ?? field.name}`} className="font-medium text-gray-700 select-none cursor-pointer">
                                             {field.placeholder || field.label}
                                         </label>
-                                        {hasError && <p className="text-red-500 text-xs mt-1">{errors[field.name]?.message as string}</p>}
+                                        {hasError && <p className="text-deniz-red text-xs mt-1 font-medium">{errorMessage}</p>}
                                     </div>
                                 </div>
                             ) : (
-                                <input
+                                <Input
+                                    label={field.label}
                                     type={field.type}
-                                    {...register(field.name)}
                                     placeholder={field.placeholder}
-                                    className={`w-full border rounded-lg px-4 py-2.5 outline-none transition-all ${hasError
-                                            ? 'border-red-500 focus:ring-2 focus:ring-red-200'
-                                            : 'border-gray-300 focus:border-[#002855] focus:ring-2 focus:ring-[#002855]/20'
-                                        }`}
+                                    error={errorMessage}
+                                    required={field.required}
+                                    {...register(field.name)}
                                 />
-                            )}
-
-                            {field.type !== 'checkbox' && hasError && (
-                                <p className="text-red-500 text-xs mt-1.5 flex items-center gap-1">
-                                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    {errors[field.name]?.message as string}
-                                </p>
                             )}
                         </div>
                     );
@@ -239,20 +236,16 @@ export default function DynamicForm({ schema, campaignId, sessionToken }: Dynami
             </div>
 
             <div className="pt-6">
-                <button
+                <Button
                     type="submit"
+                    variant="primary"
+                    size="lg"
+                    fullWidth
+                    isLoading={isSubmitting}
                     disabled={isSubmitting}
-                    className="w-full bg-[#002855] text-white font-bold py-3.5 px-6 rounded-xl hover:bg-[#003366] active:scale-[0.99] transition-all disabled:opacity-70 disabled:active:scale-100 shadow-md hover:shadow-lg flex items-center justify-center gap-2"
                 >
-                    {isSubmitting ? (
-                        <>
-                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                            İşleniyor...
-                        </>
-                    ) : (
-                        'Başvuruyu Tamamla'
-                    )}
-                </button>
+                    Başvuruyu Tamamla
+                </Button>
             </div>
         </form>
     );

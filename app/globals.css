@@ -38,6 +38,12 @@
   --denizbank-red-800: #5d020b;
   --denizbank-red-900: #2f0106;
 
+  /* Legacy Mappings for Compatibility */
+  --talpa-bg: #00152e;
+  --talpa-panel: #002855;
+  --talpa-surface: #001e3b;
+  --talpa-accent: #38bdf8;
+
   /* Neutral Colors */
   --gray-50: #f9fafb;
   --gray-100: #f3f4f6;
@@ -138,6 +144,9 @@
   /* Colored Shadows */
   --shadow-talpa: 0 10px 40px -10px rgba(0, 40, 85, 0.3);
   --shadow-denizbank: 0 10px 40px -10px rgba(227, 6, 19, 0.3);
+  --shadow-glow: 0 0 15px rgba(56, 189, 248, 0.3);
+  --shadow-glow-red: 0 0 15px rgba(227, 6, 19, 0.3);
+  --shadow-instrument: 0 0 0 1px rgba(255, 255, 255, 0.05), 0 4px 6px -1px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 
   /* ===================================
      DESIGN TOKENS - Border Radius
@@ -147,7 +156,7 @@
   --radius-md: 0.5rem;
   /* 8px */
   --radius-lg: 0.75rem;
-  /* 12px */
+  /* 12px (was 16px in some contexts, standardizing to 12px) */
   --radius-xl: 1rem;
   /* 16px */
   --radius-2xl: 1.5rem;
@@ -172,8 +181,62 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+
+  /* Custom Colors */
+  --color-talpa-bg: var(--talpa-bg);
+  --color-talpa-panel: var(--talpa-panel);
+  --color-talpa-surface: var(--talpa-surface);
+  --color-talpa-accent: var(--talpa-accent);
+  --color-deniz-red: var(--denizbank-red-500);
+  --color-deniz-dark: var(--denizbank-red-600);
+  --color-talpa-navy: var(--talpa-navy-600);
+
+  /* Animations */
+  --animate-fade-in-up: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  --animate-pulse-slow: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-pulse-glow: pulseGlow 3s ease-in-out infinite;
+  --animate-radar-sweep: radarSweep 4s linear infinite;
+
+  /* Keyframes */
+  @keyframes fadeInUp {
+    0% {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes pulseGlow {
+
+    0%,
+    100% {
+      box-shadow: 0 0 5px rgba(56, 189, 248, 0.1), inset 0 0 0 rgba(56, 189, 248, 0);
+    }
+
+    50% {
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.4), inset 0 0 10px rgba(56, 189, 248, 0.1);
+    }
+  }
+
+  @keyframes radarSweep {
+    0% {
+      transform: translateX(-100%);
+    }
+
+    100% {
+      transform: translateX(200%);
+    }
+  }
+
+  /* Background Images */
+  --image-grid-pattern: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03' fill-rule='evenodd'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E");
+  --image-gradient-radar: linear-gradient(90deg, transparent 0%, rgba(56, 189, 248, 0.1) 50%, transparent 100%);
 }
 
 /* Dark Mode Support */
@@ -204,6 +267,38 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Noise Texture Overlay */
+.bg-noise::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 50;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--talpa-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
 /* Metin okunaklılığı: varsayılan yazı rengi koyu */
 .prose,
 .prose p,
@@ -211,10 +306,14 @@ body {
 .prose span {
   color: #1e293b;
 }
+
 .prose strong {
   color: #0f172a;
 }
-.prose h1, .prose h2, .prose h3 {
+
+.prose h1,
+.prose h2,
+.prose h3 {
   color: #0f172a;
 }
 
@@ -225,10 +324,12 @@ select {
   color: #0f172a !important;
   background-color: #ffffff !important;
 }
+
 input::placeholder,
 textarea::placeholder {
   color: #64748b;
 }
+
 input:disabled,
 textarea:disabled,
 select:disabled {

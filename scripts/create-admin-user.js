@@ -84,14 +84,12 @@ async function createAdmin() {
     if (existingAdmin) {
         console.log('User is already in admins table.');
     } else {
+        // Minimal insert: id + role (local schema may only have id, created_at, role)
         const { error: insertError } = await supabase
             .from('admins')
             .insert({
                 id: userId,
-                email: ADMIN_EMAIL,
-                full_name: 'System Administrator',
-                role: 'super_admin',
-                is_active: true
+                role: 'admin'
             });
 
         if (insertError) {

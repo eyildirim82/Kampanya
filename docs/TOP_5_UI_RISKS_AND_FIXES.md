@@ -26,7 +26,7 @@ Bu sayfalarda artık route değişiminde Next.js otomatik olarak ilgili `loading
 
 ## 2. Erişilebilirlik: Input bileşeninde label–input ilişkisi
 
-**Risk:** `components/ui/Input.tsx` içinde `label` var ama input’a `id` verilmiyor ve label’da `htmlFor` yok. Ekran okuyucu kullanıcıları hangi etiketin hangi alana ait olduğunu anlayamıyor.
+**Risk:** `components/theme/Input.tsx` içinde `label` var ama input’a `id` verilmiyor ve label’da `htmlFor` yoksa, ekran okuyucu kullanıcıları hangi etiketin hangi alana ait olduğunu anlayamıyor.
 
 **Yapılan düzeltmeler:**
 - `useId()` ile benzersiz `id` üretildi; `props.id` gelirse o kullanılıyor.

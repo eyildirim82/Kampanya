@@ -131,7 +131,7 @@ export default function DynamicFormRenderer({
                         <div key={field.id} className="w-full space-y-1.5">
                             <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
                                 {field.label}
-                                {field.is_required && <span className="text-deniz-red ml-1">*</span>}
+                                {field.is_required && <span className="text-[var(--brand-primary)] ml-1">*</span>}
                             </label>
 
                             {field.type === 'textarea' ? (
@@ -142,19 +142,20 @@ export default function DynamicFormRenderer({
                                     className={twMerge(
                                         "w-full px-4 py-2.5 rounded-xl border transition-all outline-none resize-none bg-white text-slate-900",
                                         hasError
-                                            ? "border-deniz-red focus:ring-2 focus:ring-deniz-red"
-                                            : "border-slate-200 focus:border-talpa-navy focus:ring-2 focus:ring-talpa-navy"
+                                            ? "border-[var(--brand-primary)] focus:ring-2 focus:ring-[var(--brand-primary)]"
+                                            : "border-slate-200 focus:border-[var(--brand-secondary)] focus:ring-2 focus:ring-[var(--brand-secondary)]"
                                     )}
                                 />
                             ) : (
                                 <div className="relative group">
                                     <select
                                         {...register(field.id)}
+                                        aria-label={field.label}
                                         className={twMerge(
                                             "w-full px-4 py-2.5 rounded-xl border transition-all outline-none appearance-none bg-white text-slate-900",
                                             hasError
-                                                ? "border-deniz-red focus:ring-2 focus:ring-deniz-red"
-                                                : "border-slate-200 focus:border-talpa-navy focus:ring-2 focus:ring-talpa-navy"
+                                                ? "border-[var(--brand-primary)] focus:ring-2 focus:ring-[var(--brand-primary)]"
+                                                : "border-slate-200 focus:border-[var(--brand-secondary)] focus:ring-2 focus:ring-[var(--brand-secondary)]"
                                         )}
                                     >
                                         <option value="">Seçiniz...</option>
@@ -177,7 +178,7 @@ export default function DynamicFormRenderer({
                             )}
 
                             {hasError && (
-                                <p className="text-sm font-medium text-deniz-red animate-pulse" role="alert">
+                                <p className="text-sm font-medium text-[var(--brand-primary)]" role="alert">
                                     {errorMessage}
                                 </p>
                             )}

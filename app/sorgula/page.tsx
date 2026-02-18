@@ -1,130 +1,120 @@
 'use client';
 
-import { useActionState } from 'react';
-import { checkApplicationStatus } from './actions';
-import Image from 'next/image';
-import Link from 'next/link';
-import { Input } from '@/components/ui/Input';
-import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
-import { Alert } from '@/components/ui/Alert';
+import { useState } from 'react';
+import { queryApplicationStatus } from '@/app/actions';
+import { Input } from '@/components/theme/Input';
+import { Button } from '@/components/theme/Button';
+import { Card } from '@/components/theme/Card';
+import { Badge } from '@/components/theme/Badge';
 
-function statusToVariant(status: string): 'default' | 'success' | 'warning' | 'error' {
-    const s = status?.toLowerCase();
-    if (s === 'approved') return 'success';
-    if (s === 'rejected') return 'error';
-    if (s === 'pending' || s === 'reviewing') return 'warning';
-    return 'default';
-}
+export default function InquiryPage() {
+    const [tckn, setTckn] = useState('');
+    const [phone, setPhone] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [result, setResult] = useState<any>(null);
+    const [error, setError] = useState<string | null>(null);
 
-function statusLabel(status: string): string {
-    const map: Record<string, string> = {
-        pending: 'Değerlendiriliyor',
-        approved: 'Onaylandı',
-        rejected: 'Reddedildi',
-        draft: 'Taslak',
-        reviewing: 'İnceleniyor',
+    const handleQuery = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setError(null);
+        setResult(null);
+
+        try {
+            const response = await queryApplicationStatus(tckn, phone);
+            if (response.success) {
+                setResult(response.applications);
+            } else {
+                setError(response.message);
+            }
+        } catch {
+            setError('Bir hata oluştu. Lütfen tekrar deneyiniz.');
+        } finally {
+            setLoading(false);
+        }
     };
-    return map[status?.toLowerCase()] ?? status;
-}
 
-export default function SorgulaPage() {
-    const [state, formAction, isPending] = useActionState(checkApplicationStatus, null);
+    const getStatusBadge = (status: string) => {
+        switch (status) {
+            case 'APPROVED': return <Badge variant="success">Onaylandı</Badge>;
+            case 'REJECTED': return <Badge variant="danger">Reddedildi</Badge>;
+            case 'PENDING': return <Badge variant="warning">Onay Bekliyor</Badge>;
+            case 'REVIEWING': return <Badge variant="info">İnceleniyor</Badge>;
+            default: return <Badge variant="default">{status}</Badge>;
+        }
+    };
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-            <div className="sm:mx-auto sm:w-full sm:max-w-md">
-                <div className="flex justify-center mb-6">
-                    <Image
-                        src="/images/talpa-logo.png"
-                        alt="TALPA Logo"
-                        width={180}
-                        height={80}
-                        className="h-16 w-auto"
-                        priority
-                    />
+        <div className="min-h-screen bg-talpa-bg flex flex-col items-center justify-center p-4">
+            <div className="w-full max-w-md space-y-8 animate-fade-in-up">
+                <div className="text-center">
+                    <h1 className="text-3xl font-bold text-white mb-2">Başvuru Sorgulama</h1>
+                    <p className="text-slate-400">Başvurunuzun güncel durumunu öğrenin</p>
                 </div>
-                <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                    Başvuru Sorgulama
-                </h2>
-                <p className="mt-2 text-center text-sm text-gray-600">
-                    TCKN ve Telefon numaranız ile başvurunuzun durumunu öğrenin.
-                </p>
-            </div>
 
-            <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-                <Card variant="elevated" padding="lg" className="py-8 px-4 sm:px-10">
-                    <form action={formAction} className="space-y-6">
+                <Card className="p-6 md:p-8 bg-white shadow-xl rounded-2xl">
+                    <form onSubmit={handleQuery} className="space-y-4">
                         <Input
-                            name="tckn"
+                            id="tckn"
                             label="T.C. Kimlik Numarası"
-                            placeholder="11 haneli TCKN giriniz"
+                            value={tckn}
+                            onChange={(e) => setTckn(e.target.value.replace(/\D/g, '').slice(0, 11))}
                             maxLength={11}
+                            placeholder="11 haneli numaranız"
                             required
                         />
                         <Input
-                            name="phone"
+                            id="phone"
                             label="Telefon Numarası"
                             type="tel"
-                            placeholder="Örn: 532 123 45 67"
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                            placeholder="05xxxxxxxxx"
+                            hint="Başvuruda kullandığınız numara"
                             required
                         />
+
                         <Button
                             type="submit"
-                            disabled={isPending}
-                            isLoading={isPending}
-                            className="w-full"
-                            variant="primary"
-                            size="md"
+                            fullWidth
+                            isLoading={loading}
+                            disabled={tckn.length !== 11 || !phone}
                         >
                             Sorgula
                         </Button>
                     </form>
 
-                    {state && !state.success && (
-                        <div className="mt-6">
-                            <Alert variant="destructive" title="Sorgu Hatası">
-                                {state.message}
-                            </Alert>
+                    {error && (
+                        <div className="mt-6 p-4 bg-red-50 border border-red-100 rounded-lg text-red-600 text-sm text-center animate-in fade-in slide-in-from-top-2">
+                            {error}
                         </div>
                     )}
 
-                    {state && state.success && state.data && (
-                        <div className="mt-8 space-y-4">
-                            <h3 className="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2">
-                                Başvuru Sonuçları
-                            </h3>
-                            {state.data.map((result: { id: string; campaignName: string; date: string; status: string }) => (
-                                <div
-                                    key={result.id}
-                                    className="bg-gray-50 rounded-xl p-4 border border-gray-200"
-                                >
-                                    <div className="flex justify-between items-start gap-2">
-                                        <div>
-                                            <p className="font-bold text-gray-900">{result.campaignName}</p>
-                                            <p className="text-xs text-gray-700 mt-1">
-                                                Başvuru Tarihi: {result.date}
-                                            </p>
-                                        </div>
-                                        <Badge variant={statusToVariant(result.status)} size="sm">
-                                            {statusLabel(result.status)}
-                                        </Badge>
+                    {result && (
+                        <div className="mt-8 space-y-4 animate-in fade-in slide-in-from-bottom-2">
+                            <h3 className="font-semibold text-talpa-navy border-b border-slate-100 pb-2">Sonuçlar</h3>
+                            {result.map((app: any) => (
+                                <div key={app.id} className="p-4 bg-slate-50 rounded-lg border border-slate-100 flex justify-between items-center group hover:border-talpa-blue-200 transition-colors">
+                                    <div>
+                                        <p className="font-medium text-slate-700">{app.campaignName}</p>
+                                        <p className="text-xs text-slate-400 mt-1">
+                                            {new Date(app.createdAt).toLocaleDateString('tr-TR')}
+                                        </p>
+                                    </div>
+                                    <div className="flex flex-col items-end">
+                                        {getStatusBadge(app.status)}
                                     </div>
                                 </div>
                             ))}
                         </div>
                     )}
-
-                    <div className="mt-6 text-center">
-                        <Link
-                            href="/"
-                            className="font-medium text-[#002855] hover:text-[#0066cc] text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-[#002855] focus-visible:ring-offset-2 rounded"
-                        >
-                            &larr; Ana Sayfaya Dön
-                        </Link>
-                    </div>
                 </Card>
+
+                <div className="text-center">
+                    <a href="/" className="text-slate-400 hover:text-white text-sm transition-colors">
+                        ← Ana Sayfaya Dön
+                    </a>
+                </div>
             </div>
         </div>
     );

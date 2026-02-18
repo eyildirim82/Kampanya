@@ -9,7 +9,7 @@
 | Öğe | Değer |
 |-----|--------|
 | **Login** | `/admin/login` |
-| **Dashboard** | `/admin/dashboard` |
+| **Dashboard** | `/admin` |
 | **Diğer sayfalar** | `/admin/campaigns`, `/admin/interests`, `/admin/settings`, `/admin/whitelist`, `/admin/fields`, `/admin/institutions` vb. |
 | **Backend** | `app/admin/actions.ts` (tüm server actions) |
 | **Kimlik doğrulama** | Supabase Auth (e-posta/şifre) + `admins` tablosu; cookie: sb-access-token, sb-refresh-token |
@@ -33,7 +33,7 @@ Korunan sayfalarda cookie yoksa `redirect('/admin/login')` yapılır.
 2. **Supabase:** getSupabaseClient().auth.signInWithPassword({ email, password }). Hata veya !data.session → "Giriş yapılamadı." + error.message.
 3. **Admin kontrolü:** session.access_token ile createClient(anon key, { headers: { Authorization: Bearer ... } }). from('admins').select('id, role').eq('id', session.user.id).single(). adminError veya !adminData → signOut, "Bu alana erişim yetkiniz yok."
 4. **Cookie:** sb-access-token, sb-refresh-token set (path /, httpOnly, secure in production, maxAge 604800).
-5. Dönüş: { success: true, message: 'Giriş başarılı.', redirectUrl: '/admin/dashboard' }.
+5. Dönüş: { success: true, message: 'Giriş başarılı.', redirectUrl: '/admin' }.
 
 ---
 
@@ -48,8 +48,8 @@ Korunan sayfalarda cookie yoksa `redirect('/admin/login')` yapılır.
 
 ### 4.1 Sayfa yapısı
 
-- **Rota:** `/admin/dashboard`
-- **Sayfa:** `app/admin/dashboard/page.tsx` (server). searchParams: campaignId, page (pagination).
+- **Rota:** `/admin`
+- **Sayfa:** `app/admin/page.tsx` (server). searchParams: campaignId (filter).
 
 **Veri:** Promise.all([ getApplications(campaignId, page), getCampaigns(), getDashboardStats(), getCampaignStats() ]).
 
@@ -71,8 +71,8 @@ Korunan sayfalarda cookie yoksa `redirect('/admin/login')` yapılır.
 
 ### 4.5 Kampanya sekmeleri
 
-- "Tümü" → /admin/dashboard (campaignId yok).
-- Her kampanya için link: /admin/dashboard?campaignId={id}. Aktif sekme campaignId ile eşleşir.
+- "Tümü" → /admin (campaignId yok).
+- Her kampanya için link: /admin?campaignId={id}. Aktif sekme campaignId ile eşleşir.
 
 ### 4.6 Başvuru tablosu (ApplicationTable)
 

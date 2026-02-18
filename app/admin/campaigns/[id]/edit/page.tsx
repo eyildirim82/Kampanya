@@ -33,7 +33,7 @@ export default async function EditCampaignPage({
             <header className="bg-white shadow">
                 <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
                     <div>
-                        <h1 className="text-3xl font-bold text-[#002855]">
+                        <h1 className="text-3xl font-bold text-talpa-navy">
                             Kampanya Düzenle
                         </h1>
                         <p className="mt-1 text-sm text-gray-500">
@@ -42,7 +42,7 @@ export default async function EditCampaignPage({
                     </div>
                     <a
                         href={`/admin/campaigns/${id}`}
-                        className="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
+                        className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
                     >
                         Form/İçerik Yapılandırma →
                     </a>

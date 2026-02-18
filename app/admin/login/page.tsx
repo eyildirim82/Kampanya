@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react';
 import { adminLogin } from '../actions';
+import { Input } from '@/components/theme/Input';
 import clsx from 'clsx';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -54,30 +55,26 @@ export default function AdminLoginPage() {
 
                 <form className="mt-8 space-y-6" action={formAction}>
                     <div className="space-y-4">
-                        <div>
-                            <label htmlFor="email-address" className="block text-sm font-medium text-slate-700 mb-1">E-posta Adresi</label>
-                            <input
-                                id="email-address"
-                                name="email"
-                                type="email"
-                                autoComplete="email"
-                                required
-                                className="appearance-none block w-full px-4 py-3 border border-slate-300 placeholder-slate-400 text-slate-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-talpa-navy focus:border-talpa-navy focus:z-10 sm:text-sm transition-all"
-                                placeholder="ornek@talpa.org"
-                            />
-                        </div>
-                        <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1">Şifre</label>
-                            <input
-                                id="password"
-                                name="password"
-                                type="password"
-                                autoComplete="current-password"
-                                required
-                                className="appearance-none block w-full px-4 py-3 border border-slate-300 placeholder-slate-400 text-slate-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-talpa-navy focus:border-talpa-navy focus:z-10 sm:text-sm transition-all"
-                                placeholder="••••••••"
-                            />
-                        </div>
+                        <Input
+                            id="email-address"
+                            name="email"
+                            type="email"
+                            label="E-posta Adresi"
+                            autoComplete="email"
+                            required
+                            placeholder="ornek@talpa.org"
+                            leftIcon="mail"
+                        />
+                        <Input
+                            id="password"
+                            name="password"
+                            type="password"
+                            label="Şifre"
+                            autoComplete="current-password"
+                            required
+                            placeholder="••••••••"
+                            leftIcon="lock"
+                        />
                     </div>
 
                     <div>

@@ -95,9 +95,6 @@ export default function InterestForm({ campaignId }: { campaignId: string }) {
                     >
                         Ana Sayfaya Dön
                     </button>
-                    <a href="/sorgula" className="text-green-700 font-medium hover:text-green-900 underline">
-                        Başvuru Sorgula
-                    </a>
                 </div>
             </div>
         );
@@ -115,7 +112,7 @@ export default function InterestForm({ campaignId }: { campaignId: string }) {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Ad Soyad *</label>
                 <input
                     {...register('fullName')}
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#002855] outline-none transition-all"
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all"
                     placeholder="Adınız Soyadınız"
                 />
                 {errors.fullName && <p className="text-xs text-red-500 mt-1">{errors.fullName.message}</p>}
@@ -126,7 +123,7 @@ export default function InterestForm({ campaignId }: { campaignId: string }) {
                 <input
                     {...register('email')}
                     type="email"
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#002855] outline-none transition-all"
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all"
                     placeholder="ornek@email.com"
                 />
                 {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>}
@@ -136,7 +133,7 @@ export default function InterestForm({ campaignId }: { campaignId: string }) {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Telefon (İsteğe bağlı)</label>
                 <input
                     {...register('phone')}
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#002855] outline-none transition-all"
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all"
                     placeholder="05XX XXX XX XX"
                 />
                 {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone.message}</p>}
@@ -147,7 +144,7 @@ export default function InterestForm({ campaignId }: { campaignId: string }) {
                 <input
                     {...register('tckn')}
                     maxLength={11}
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#002855] outline-none transition-all"
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all"
                     placeholder="***********"
                 />
                 <p className="text-xs text-gray-700 mt-1">Üye doğrulaması için gereklidir.</p>
@@ -159,7 +156,7 @@ export default function InterestForm({ campaignId }: { campaignId: string }) {
                 <textarea
                     {...register('note')}
                     rows={3}
-                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[#002855] outline-none transition-all"
+                    className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all"
                     placeholder="Varsa eklemek istedikleriniz..."
                 />
             </div>
@@ -169,7 +166,7 @@ export default function InterestForm({ campaignId }: { campaignId: string }) {
                 disabled={isSubmitting}
                 className={clsx(
                     "w-full py-3 px-4 rounded-lg text-white font-medium transition-colors shadow-md",
-                    isSubmitting ? "bg-gray-400 cursor-not-allowed" : "bg-[#002855] hover:bg-[#003366]"
+                    isSubmitting ? "bg-gray-400 cursor-not-allowed" : "bg-talpa-navy hover:bg-talpa-navy/80"
                 )}
             >
                 {isSubmitting ? 'Gönderiliyor...' : 'Talep Oluştur'}

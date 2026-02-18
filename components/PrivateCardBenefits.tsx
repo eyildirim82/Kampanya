@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card } from './ui/Card';
+import { Card } from './theme/Card';
 
 interface DiscountCategoryProps {
     percentage: string;
@@ -29,13 +29,13 @@ const DiscountCategory: React.FC<DiscountCategoryProps> = ({
     };
 
     return (
-        <Card variant="elevated" padding="sm" hoverable className="transition-all duration-300">
+        <Card variant="default" padding="sm" interactive={true} className="transition-all duration-300">
             <div className={`font-bold text-2xl mb-1 ${colors[color]}`}>{percentage}</div>
             <div className="text-gray-800 font-semibold text-sm mb-3">{title}</div>
             <div className="space-y-1">
-                <div className="text-[10px] text-gray-400 uppercase tracking-wider">Minimum Harcama</div>
+                <div className="text-xs text-gray-400 uppercase tracking-wider">Minimum Harcama</div>
                 <div className="text-xs font-medium text-gray-600">{minSpend}</div>
-                <div className="text-[10px] text-gray-400 uppercase tracking-wider mt-2">Maksimum İndirim</div>
+                <div className="text-xs text-gray-400 uppercase tracking-wider mt-2">Maksimum İndirim</div>
                 <div className={`text-xs font-medium ${maxColors[color]}`}>{maxDiscount}</div>
             </div>
         </Card>

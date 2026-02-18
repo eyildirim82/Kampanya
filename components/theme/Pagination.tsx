@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import Icon from './Icon';
 
 export interface PaginationProps {
     currentPage: number;
@@ -9,7 +9,6 @@ export interface PaginationProps {
     totalCount: number;
     pageSize: number;
     onPageChange: (page: number) => void;
-    /** Optional aria-label for the nav element */
     ariaLabel?: string;
 }
 
@@ -27,13 +26,13 @@ export function Pagination({
     if (totalPages <= 1) return null;
 
     return (
-        <div className="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6 rounded-b-xl">
+        <div className="flex items-center justify-between border-t border-gray-200 dark:border-white/10 bg-white dark:bg-surface-dark px-4 py-3 sm:px-6 rounded-b-xl">
             <div className="flex flex-1 justify-between sm:hidden">
                 <button
                     type="button"
                     onClick={() => onPageChange(Math.max(1, currentPage - 1))}
                     disabled={currentPage === 1}
-                    className="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#002855] focus-visible:ring-offset-2"
+                    className="relative inline-flex items-center rounded-md border border-gray-300 dark:border-white/10 bg-white dark:bg-surface-dark px-4 py-2 text-sm font-medium text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-white/5 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 >
                     Önceki
                 </button>
@@ -41,13 +40,13 @@ export function Pagination({
                     type="button"
                     onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
                     disabled={currentPage === totalPages}
-                    className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#002855] focus-visible:ring-offset-2"
+                    className="relative ml-3 inline-flex items-center rounded-md border border-gray-300 dark:border-white/10 bg-white dark:bg-surface-dark px-4 py-2 text-sm font-medium text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-white/5 disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 >
                     Sonraki
                 </button>
             </div>
             <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-                <p className="text-sm text-gray-700">
+                <p className="text-sm text-gray-700 dark:text-slate-400">
                     Toplam <span className="font-medium">{totalCount}</span> kayıttan{' '}
                     <span className="font-medium">{start}</span> ile <span className="font-medium">{end}</span> arası gösteriliyor
                 </p>
@@ -56,22 +55,22 @@ export function Pagination({
                         type="button"
                         onClick={() => onPageChange(currentPage - 1)}
                         disabled={currentPage === 1}
-                        className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-[#002855]"
+                        className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 dark:ring-white/10 hover:bg-gray-50 dark:hover:bg-white/5 focus:z-20 focus:outline-offset-0 disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-primary"
                     >
                         <span className="sr-only">Önceki</span>
-                        <ChevronLeft className="h-5 w-5" aria-hidden />
+                        <Icon name="chevron_left" size="md" />
                     </button>
-                    <span className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300">
+                    <span className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 dark:text-white ring-1 ring-inset ring-gray-300 dark:ring-white/10">
                         {currentPage} / {totalPages}
                     </span>
                     <button
                         type="button"
                         onClick={() => onPageChange(currentPage + 1)}
                         disabled={currentPage === totalPages}
-                        className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-[#002855]"
+                        className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 dark:ring-white/10 hover:bg-gray-50 dark:hover:bg-white/5 focus:z-20 focus:outline-offset-0 disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-primary"
                     >
                         <span className="sr-only">Sonraki</span>
-                        <ChevronRight className="h-5 w-5" aria-hidden />
+                        <Icon name="chevron_right" size="md" />
                     </button>
                 </nav>
             </div>

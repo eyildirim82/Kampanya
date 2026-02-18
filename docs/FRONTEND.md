@@ -376,7 +376,7 @@ className={clsx(
 
 ### UI Components
 
-**Location**: `components/ui/`
+**Location**: `components/theme/`
 
 **Primitives**:
 - `Button.tsx`: Reusable button with variants

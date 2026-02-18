@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { TrashIcon, PlusIcon, Library, X, Search } from 'lucide-react';
+import Icon from '@/components/theme/Icon';
 import { getFieldTemplates } from '../app/admin/actions';
 
 export type FormFieldType = 'text' | 'number' | 'email' | 'tel' | 'textarea' | 'select' | 'checkbox' | 'date';
@@ -100,17 +100,17 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                     <button
                         onClick={() => setIsLibraryOpen(true)}
                         type="button"
-                        className="flex items-center gap-1 text-xs bg-indigo-600 text-white px-3 py-1.5 rounded hover:bg-indigo-700 transition-colors"
+                        className="flex items-center gap-1 text-xs bg-talpa-navy text-white px-3 py-1.5 rounded hover:bg-talpa-navy/80 transition-colors"
                     >
-                        <Library className="w-3 h-3" />
+                        <Icon name="local_library" size="xs" />
                         Kütüphaneden Seç
                     </button>
                     <button
                         onClick={addField}
                         type="button"
-                        className="flex items-center gap-1 text-xs bg-[#002855] text-white px-3 py-1.5 rounded hover:bg-[#003a75] transition-colors"
+                        className="flex items-center gap-1 text-xs bg-talpa-navy text-white px-3 py-1.5 rounded hover:bg-talpa-navy/80 transition-colors"
                     >
-                        <PlusIcon className="w-3 h-3" />
+                        <Icon name="add" size="xs" />
                         Alan Ekle
                     </button>
                 </div>
@@ -124,12 +124,12 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                 )}
 
                 {fields.map((field, idx) => (
-                    <div key={field.id} className="bg-white border rounded-lg p-4 shadow-sm relative group hover:border-[#002855] transition-colors">
+                    <div key={field.id} className="bg-white border rounded-lg p-4 shadow-sm relative group hover:border-primary transition-colors">
                         <div className="absolute right-2 top-2 flex gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
                             <button onClick={() => moveField(idx, 'up')} className="p-1 text-gray-400 hover:text-gray-600" title="Yukarı">↑</button>
                             <button onClick={() => moveField(idx, 'down')} className="p-1 text-gray-400 hover:text-gray-600" title="Aşağı">↓</button>
                             <button onClick={() => removeField(field.id)} className="p-1 text-red-400 hover:text-red-600" title="Sil">
-                                <TrashIcon className="w-4 h-4" />
+                                <Icon name="delete" size="sm" />
                             </button>
                         </div>
 
@@ -141,7 +141,7 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                                         type="text"
                                         value={field.label}
                                         onChange={(e) => updateField(field.id, { label: e.target.value })}
-                                        className="w-full text-sm font-medium border-b border-gray-200 focus:border-[#002855] outline-none py-1"
+                                        className="w-full text-sm font-medium border-b border-gray-200 focus:border-primary outline-none py-1"
                                     />
                                 </div>
                                 <div>
@@ -150,7 +150,7 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                                         type="text"
                                         value={field.name}
                                         onChange={(e) => updateField(field.id, { name: e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '_') })}
-                                        className="w-full text-xs font-mono text-gray-600 border-b border-gray-200 focus:border-[#002855] outline-none py-1"
+                                        className="w-full text-xs font-mono text-gray-600 border-b border-gray-200 focus:border-primary outline-none py-1"
                                     />
                                 </div>
                             </div>
@@ -162,7 +162,7 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                                         <select
                                             value={field.type}
                                             onChange={(e) => updateField(field.id, { type: e.target.value as FormFieldType })}
-                                            className="w-full text-sm border-b border-gray-200 focus:border-[#002855] outline-none py-1 bg-transparent"
+                                            className="w-full text-sm border-b border-gray-200 focus:border-primary outline-none py-1 bg-transparent"
                                         >
                                             <option value="text">Metin</option>
                                             <option value="email">E-posta</option>
@@ -179,7 +179,7 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                                         <select
                                             value={field.width || 'full'}
                                             onChange={(e) => updateField(field.id, { width: e.target.value as 'full' | 'half' | 'third' })}
-                                            className="w-full text-sm border-b border-gray-200 focus:border-[#002855] outline-none py-1 bg-transparent"
+                                            className="w-full text-sm border-b border-gray-200 focus:border-primary outline-none py-1 bg-transparent"
                                         >
                                             <option value="full">Tam</option>
                                             <option value="half">Yarım (1/2)</option>
@@ -193,7 +193,7 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                                         checked={field.required}
                                         onChange={(e) => updateField(field.id, { required: e.target.checked })}
                                         id={`req_${field.id}`}
-                                        className="rounded text-[#002855]"
+                                        className="rounded text-talpa-navy"
                                     />
                                     <label htmlFor={`req_${field.id}`} className="text-xs text-gray-600 cursor-pointer">Zorunlu Alan</label>
                                 </div>
@@ -230,30 +230,30 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
 
             {/* Library Modal */}
             {isLibraryOpen && (
-                <div className="fixed inset-0 z-[60] overflow-y-auto">
+                <div className="fixed inset-0 z-modal overflow-y-auto">
                     <div className="flex items-center justify-center min-h-screen px-4">
                         <div className="fixed inset-0 bg-black/50 transition-opacity" onClick={() => setIsLibraryOpen(false)}></div>
 
-                        <div className="relative bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[80vh] flex flex-col overflow-hidden border-t-8 border-indigo-600">
+                        <div className="relative bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[80vh] flex flex-col overflow-hidden border-t-8 border-primary">
                             <div className="p-4 border-b flex justify-between items-center bg-gray-50">
                                 <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                                    <Library className="w-5 h-5 text-indigo-600" />
+                                    <Icon name="local_library" size="md" className="text-primary" />
                                     Alan Kütüphanesi
                                 </h3>
                                 <button onClick={() => setIsLibraryOpen(false)} className="text-gray-400 hover:text-gray-600">
-                                    <X className="w-6 h-6" />
+                                    <Icon name="close" size="md" />
                                 </button>
                             </div>
 
                             <div className="p-4 border-b bg-white">
                                 <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                                    <Icon name="search" size="sm" className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                                     <input
                                         type="text"
                                         placeholder="Alanlarda ara..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm transition-all"
+                                        className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm transition-all"
                                     />
                                 </div>
                             </div>
@@ -268,11 +268,11 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                                         <button
                                             key={template.id}
                                             onClick={() => addFromLibrary(template)}
-                                            className="w-full text-left p-4 rounded-lg border bg-white hover:border-indigo-500 hover:shadow-md transition-all group"
+                                            className="w-full text-left p-4 rounded-lg border bg-white hover:border-primary hover:shadow-md transition-all group"
                                         >
                                             <div className="flex justify-between items-start">
                                                 <div>
-                                                    <p className="font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">
+                                                    <p className="font-bold text-gray-900 group-hover:text-primary transition-colors">
                                                         {template.label}
                                                     </p>
                                                     <div className="mt-1 flex gap-2">
@@ -286,7 +286,7 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
                                                         )}
                                                     </div>
                                                 </div>
-                                                <PlusIcon className="w-5 h-5 text-gray-300 group-hover:text-indigo-600" />
+                                                <Icon name="add" size="md" className="text-gray-300 group-hover:text-primary" />
                                             </div>
                                         </button>
                                     ))
@@ -295,7 +295,7 @@ export default function FormBuilder({ fields, onChange }: FormBuilderProps) {
 
                             <div className="p-4 border-t bg-gray-50 text-center">
                                 <p className="text-xs text-gray-500">
-                                    Kütüphaneyi yönetmek için <a href="/admin/fields" target="_blank" className="text-indigo-600 hover:underline">Alan Kütüphanesi</a> sayfasını kullanın.
+                                    Kütüphaneyi yönetmek için <a href="/admin/fields" target="_blank" className="text-primary hover:underline">Alan Kütüphanesi</a> sayfasını kullanın.
                                 </p>
                             </div>
                         </div>

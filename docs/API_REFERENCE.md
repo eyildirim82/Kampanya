@@ -25,7 +25,7 @@ FormData {
 {
   success: boolean;
   message: string;
-  redirectUrl?: string; // '/admin/dashboard' on success
+  redirectUrl?: string; // '/admin' on success
 }
 ```
 

@@ -4,6 +4,7 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
 import { logger } from '@/lib/logger';
 
 import { sendEmail } from '@/lib/smtp';
@@ -12,7 +13,7 @@ import { getSupabaseUrl } from '@/lib/supabase-url';
 import { getSupabaseClient } from '@/lib/supabase-client';
 
 // Helper to get authenticated client
-async function getAdminClient() {
+export async function getAdminClient() {
     const cookieStore = await cookies();
     const token = cookieStore.get('sb-access-token')?.value;
     const refreshToken = cookieStore.get('sb-refresh-token')?.value;
@@ -56,6 +57,8 @@ export async function adminLogin(prevState: unknown, formData: FormData) {
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
 
+    console.log(`[DEBUG] adminLogin: email="${email}", passwordLength=${password?.length || 0}`);
+
     const supabase = getSupabaseClient();
 
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -97,7 +100,7 @@ export async function adminLogin(prevState: unknown, formData: FormData) {
     cookieStore.set('sb-access-token', session.access_token, { path: '/', httpOnly: true, secure: isProduction, maxAge: 604800 });
     cookieStore.set('sb-refresh-token', session.refresh_token, { path: '/', httpOnly: true, secure: isProduction, maxAge: 604800 });
 
-    return { success: true, message: 'Giriş başarılı.', redirectUrl: '/admin/dashboard' };
+    return { success: true, message: 'Giriş başarılı.', redirectUrl: '/admin' };
 }
 
 export async function adminLogout() {
@@ -844,6 +847,38 @@ export async function getCampaignById(id: string) {
 
     if (error) return null;
     return data;
+}
+
+export async function updateCampaignConfigAction(id: string, payload: any) {
+    const adminSupabase = await getAdminClient();
+    if (!adminSupabase) return { success: false, message: 'Auth error' };
+
+    const dbPayload: any = {};
+    if (payload?.title) dbPayload.name = payload.title;
+    if (payload?.slug) dbPayload.slug = payload.slug;
+    if (payload?.description !== undefined) dbPayload.description = payload.description || null;
+
+    if (payload?.formSchema) {
+        dbPayload.form_schema = payload.formSchema;
+    }
+
+    if (payload?.pageContent) {
+        dbPayload.page_content = payload.pageContent;
+    }
+
+    const { error } = await adminSupabase
+        .from('campaigns')
+        .update(dbPayload)
+        .eq('id', id);
+
+    if (error) {
+        console.error('Update Campaign Error:', error);
+        return { success: false, message: 'Güncelleme hatası: ' + error.message };
+    }
+
+    revalidatePath(`/admin/campaigns/${id}`);
+    revalidatePath('/admin/campaigns');
+    return { success: true, message: 'Başarıyla güncellendi.' };
 }
 
 export async function createCampaignEnhanced(prevState: unknown, formData: FormData) {

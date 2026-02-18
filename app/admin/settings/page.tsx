@@ -16,10 +16,10 @@ export default function SettingsPage() {
             <header className="bg-white shadow">
                 <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
                     <div className="flex items-center gap-4">
-                        <Link href="/admin/dashboard" className="text-gray-500 hover:text-gray-700">
+                        <Link href="/admin" className="text-gray-500 hover:text-gray-700">
                             &larr; Pano
                         </Link>
-                        <h1 className="text-3xl font-bold text-[#002855]">
+                        <h1 className="text-3xl font-bold text-talpa-navy">
                             Ayarlar
                         </h1>
                     </div>
@@ -49,8 +49,8 @@ export default function SettingsPage() {
                                 <button
                                     onClick={() => setActiveTab('campaigns')}
                                     className={`border-b-2 pb-2 text-sm font-medium ${activeTab === 'campaigns'
-                                            ? 'border-indigo-600 text-indigo-700'
-                                            : 'border-transparent text-gray-500 hover:text-gray-700'
+                                            ? 'border-primary text-talpa-navy'
+                                            : 'border-transparent text-gray-500 hover:text-talpa-navy hover:border-primary/60'
                                         }`}
                                 >
                                     Kampanyalar
@@ -58,8 +58,8 @@ export default function SettingsPage() {
                                 <button
                                     onClick={() => setActiveTab('templates')}
                                     className={`border-b-2 pb-2 text-sm font-medium ${activeTab === 'templates'
-                                            ? 'border-indigo-600 text-indigo-700'
-                                            : 'border-transparent text-gray-500 hover:text-gray-700'
+                                            ? 'border-primary text-talpa-navy'
+                                            : 'border-transparent text-gray-500 hover:text-talpa-navy hover:border-primary/60'
                                         }`}
                                 >
                                     Mail Şablonları
@@ -67,8 +67,8 @@ export default function SettingsPage() {
                                 <button
                                     onClick={() => setActiveTab('tester')}
                                     className={`border-b-2 pb-2 text-sm font-medium ${activeTab === 'tester'
-                                            ? 'border-indigo-600 text-indigo-700'
-                                            : 'border-transparent text-gray-500 hover:text-gray-700'
+                                            ? 'border-primary text-talpa-navy'
+                                            : 'border-transparent text-gray-500 hover:text-talpa-navy hover:border-primary/60'
                                         }`}
                                 >
                                     Test Gönderimi

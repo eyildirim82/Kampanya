@@ -101,7 +101,7 @@ export default function CampaignManager() {
                     <div className="md:col-span-3">
                         <button
                             type="submit"
-                            className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700"
+                            className="rounded-md bg-talpa-navy px-4 py-2 text-sm font-medium text-white hover:bg-talpa-navy/80"
                         >
                             Kampanya Ekle
                         </button>
@@ -226,7 +226,7 @@ export default function CampaignManager() {
             </div>
 
             {message && (
-                <div className="rounded-md border border-indigo-200 bg-indigo-50 px-3 py-2 text-sm text-indigo-700">
+                <div className="rounded-md border border-primary/20 bg-primary/5 px-3 py-2 text-sm text-talpa-navy">
                     {message}
                 </div>
             )}

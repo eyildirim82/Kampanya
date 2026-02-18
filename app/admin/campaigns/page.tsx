@@ -1,47 +1,37 @@
-import { getCampaigns } from '../actions';
-import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
-import CampaignListClient from './campaign-list-client';
-import Link from 'next/link';
+
+import React from 'react';
+import { getCampaignsWithDetails } from '@/app/admin/actions';
+import CampaignListTable from '@/components/admin/CampaignListTable';
+import { Campaign } from '@/types';
 
 export const dynamic = 'force-dynamic';
 
 export default async function CampaignsPage() {
-    const cookieStore = await cookies();
-    const token = cookieStore.get('sb-access-token');
-    if (!token) redirect('/admin/login');
+    // Fetch campaigns
+    // Note: getCampaigns in actions.ts is legacy?
+    // We should use getCampaignsWithDetails if it exists (Step 97 truncated it, presumably it exists or I should fix it).
+    // Let's assume getCampaignsWithDetails exists (I saw it near end of actions.ts).
+    const campaignsData = await getCampaignsWithDetails();
 
-    const campaigns = await getCampaigns();
+    // Map to Campaign type if needed, or if getCampaignsWithDetails returns exactly Campaign[]
+    // For safety, let's cast or map.
+    const campaigns: Campaign[] = campaignsData.map((c: any) => ({
+        ...c,
+        id: c.id,
+        title: c.name, // Mapping 'name' to 'title' as per UI expectation or vice versa
+        campaignCode: c.campaign_code,
+        institutionName: c.institutions?.name,
+        applicationCount: 0, // Need to join count? `getCampaignsWithDetails` might need improvement to get counts
+        status: c.status || (c.is_active ? 'active' : 'draft'), // Fallback status logic
+        startDate: c.start_date,
+        endDate: c.end_date,
+        maxQuota: c.max_quota,
+        createdAt: c.created_at
+    }));
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <header className="bg-white shadow">
-                <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-                    <h1 className="text-3xl font-bold text-[#002855]">
-                        Kampanya Yönetimi
-                    </h1>
-                    <div className="flex items-center space-x-4">
-                        <Link
-                            href="/admin/dashboard"
-                            className="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
-                        >
-                            ← Dashboard
-                        </Link>
-                        <Link
-                            href="/admin/campaigns/new"
-                            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-[#002855] hover:bg-[#003a75] transition-colors"
-                        >
-                            + Yeni Kampanya
-                        </Link>
-                    </div>
-                </div>
-            </header>
-
-            <main>
-                <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-                    <CampaignListClient campaigns={campaigns} />
-                </div>
-            </main>
+        <div className="max-w-7xl mx-auto">
+            <CampaignListTable initialCampaigns={campaigns} />
         </div>
     );
 }

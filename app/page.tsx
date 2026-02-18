@@ -1,7 +1,7 @@
 import { unstable_noStore as noStore } from 'next/cache';
 import { getActiveCampaigns, slugify } from './basvuru/campaign';
 import Link from 'next/link';
-import { Plane } from 'lucide-react';
+import Icon from '@/components/theme/Icon';
 
 export const dynamic = 'force-dynamic';
 
@@ -81,7 +81,7 @@ export default async function Home() {
 
                     {/* Logo Overlay */}
                     <div className="absolute bottom-4 left-4 text-white opacity-90 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                      <Plane className="h-8 w-8 text-white/50 mb-1" />
+                      <Icon name="flight_takeoff" size="lg" className="text-white/50 mb-1" />
                     </div>
                   </div>
 
@@ -111,7 +111,7 @@ export default async function Home() {
           <div className="bg-white p-12 rounded-3xl shadow-talpa text-center max-w-lg mx-auto mt-10 border border-slate-100 animate-fade-in-up">
             <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 relative">
               <div className="absolute inset-0 rounded-full border border-slate-100 animate-ping opacity-20"></div>
-              <Plane className="w-10 h-10 text-slate-300 transform -rotate-45" />
+              <Icon name="flight_takeoff" size="xl" className="text-slate-300 -rotate-45" />
             </div>
             <h3 className="text-2xl font-bold text-talpa-navy mb-3">Aktif Kampanya Bulunmuyor</h3>
             <p className="text-slate-500 leading-relaxed">

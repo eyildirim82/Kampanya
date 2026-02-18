@@ -173,11 +173,11 @@ export default function TemplateTester() {
                 <button
                     onClick={handleSend}
                     disabled={isSending}
-                    className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 disabled:opacity-60"
+                    className="rounded-md bg-talpa-navy px-4 py-2 text-sm font-medium text-white hover:bg-talpa-navy/80 disabled:opacity-60"
                 >
                     {isSending ? 'Gönderiliyor...' : 'Test E-postası Gönder'}
                 </button>
-                {statusMessage && <p className="text-sm text-indigo-700">{statusMessage}</p>}
+                {statusMessage && <p className="text-sm text-talpa-navy">{statusMessage}</p>}
             </div>
         </div>
     );

@@ -1,44 +1,74 @@
-import { getActiveInstitutions, createCampaignEnhanced } from '../../actions';
-import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
-import CampaignForm from '../campaign-form';
+'use client';
 
-export const dynamic = 'force-dynamic';
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Icon from '@/components/theme/Icon';
+import Link from 'next/link';
+import Button from '@/components/theme/Button';
+import Card from '@/components/theme/Card';
+import Input from '@/components/theme/Input';
+import Alert from '@/components/theme/Alert';
+import { createCampaignAction } from '../create-action';
 
-export default async function NewCampaignPage() {
-    const cookieStore = await cookies();
-    const token = cookieStore.get('sb-access-token');
-    if (!token) redirect('/admin/login');
+export default function NewCampaignPage() {
+    const router = useRouter();
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
-    const institutions = await getActiveInstitutions();
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        setLoading(true);
+        setError(null);
 
-    async function handleCreate(formData: FormData) {
-        'use server';
-        return createCampaignEnhanced(null, formData);
-    }
+        const formData = new FormData(e.currentTarget);
+        const result = await createCampaignAction(formData);
+
+        if (result.success) {
+            router.push(`/admin/campaigns/${result.campaignId}`);
+        } else {
+            setError(result.message || 'Bir hata oluştu.');
+            setLoading(false);
+        }
+    };
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <header className="bg-white shadow">
-                <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-                    <h1 className="text-3xl font-bold text-[#002855]">
-                        Yeni Kampanya Oluştur
-                    </h1>
-                    <p className="mt-1 text-sm text-gray-500">
-                        Kampanya taslak olarak oluşturulur. Yayına almak için listedenaktifleştirin.
-                    </p>
-                </div>
-            </header>
+        <div className="max-w-2xl mx-auto space-y-6">
+            <div className="flex items-center gap-4">
+                <Link href="/admin/campaigns" className="text-slate-500 hover:text-talpa-navy">
+                    <Icon name="arrow_back" size="md" />
+                </Link>
+                <h1 className="text-2xl font-bold text-slate-900">Yeni Kampanya Oluştur</h1>
+            </div>
 
-            <main>
-                <div className="max-w-3xl mx-auto py-6 sm:px-6 lg:px-8">
-                    <CampaignForm
-                        institutions={institutions}
-                        mode="create"
-                        submitAction={handleCreate}
+            {error && <Alert variant="error">{error}</Alert>}
+
+            <Card>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <Input
+                        name="title"
+                        label="Kampanya Başlığı"
+                        placeholder="Örn: 2024 Özel Kredi Kampanyası"
+                        required
                     />
-                </div>
-            </main>
+
+                    <Input
+                        name="campaignCode"
+                        label="Kampanya Kodu (Opsiyonel)"
+                        placeholder="Örn: KRD-2024-001"
+                        helperText="Boş bırakılırsa otomatik oluşturulur."
+                    />
+
+                    <div className="pt-4 flex justify-end">
+                        <Button
+                            type="submit"
+                            isLoading={loading}
+                            leftIcon={<Icon name="add" size="sm" />}
+                        >
+                            Oluştur ve Düzenlemeye Başla
+                        </Button>
+                    </div>
+                </form>
+            </Card>
         </div>
     );
 }

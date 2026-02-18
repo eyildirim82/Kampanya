@@ -84,7 +84,7 @@ export default function CampaignFormWrapper({ campaignId, schema }: CampaignForm
                     value={tckn}
                     onChange={(e) => setTckn(e.target.value.replace(/\D/g, '').slice(0, 11))}
                     placeholder="11 haneli numara"
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-[#002855] focus:ring-2 focus:ring-[#002855]/20"
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2.5 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                     disabled={isChecking}
                 />
                 {error && (
@@ -94,7 +94,7 @@ export default function CampaignFormWrapper({ campaignId, schema }: CampaignForm
             <button
                 type="submit"
                 disabled={isChecking || tckn.replace(/\D/g, '').length !== 11}
-                className="w-full bg-[#002855] text-white font-bold py-3.5 px-6 rounded-xl hover:bg-[#003366] disabled:opacity-70 disabled:cursor-not-allowed transition-all"
+                className="w-full bg-talpa-navy text-white font-bold py-3.5 px-6 rounded-xl hover:bg-talpa-navy/80 disabled:opacity-70 disabled:cursor-not-allowed transition-all"
             >
                 {isChecking ? 'Doğrulanıyor...' : 'Devam Et'}
             </button>

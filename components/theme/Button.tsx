@@ -1,15 +1,19 @@
+'use client';
+
 import React, { ButtonHTMLAttributes } from 'react';
-import { Loader2 } from 'lucide-react';
-import clsx from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import Icon from './Icon';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-    variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'outline';
-    size?: 'sm' | 'md' | 'lg';
+    variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline';
+    size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
     isLoading?: boolean;
     fullWidth?: boolean;
     leftIcon?: React.ReactNode;
     rightIcon?: React.ReactNode;
+    icon?: string;
+    iconPosition?: 'left' | 'right';
+    animated?: boolean;
 }
 
 const Button: React.FC<ButtonProps> = ({
@@ -20,34 +24,48 @@ const Button: React.FC<ButtonProps> = ({
     fullWidth = false,
     leftIcon,
     rightIcon,
+    icon,
+    iconPosition = 'left',
+    animated = false,
     className = '',
     disabled,
     ...props
 }) => {
-    const baseStyles = "inline-flex items-center justify-center font-medium tracking-tight transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-talpa-accent focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 disabled:opacity-50 disabled:pointer-events-none rounded-lg active:scale-95 relative overflow-hidden";
+    const baseStyles = "inline-flex items-center justify-center font-bold tracking-tight transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none rounded-xl relative overflow-hidden";
 
     const variants = {
-        // Primary: Deniz Red for Critical Actions (Cockpit Switch feel)
-        primary: "bg-deniz-red text-white hover:bg-deniz-dark border border-transparent shadow-[0_0_15px_rgba(227,6,19,0.4)] hover:shadow-[0_0_25px_rgba(227,6,19,0.6)]",
-        // Secondary: Glass/Navy for Navigation/Info
-        secondary: "bg-white/10 text-white backdrop-blur-md border border-white/10 hover:bg-white/20 hover:border-white/30 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]",
-        // Danger: Darker red
-        danger: "bg-red-900/50 text-red-200 border border-red-800 hover:bg-red-900",
-        // Ghost: Text only
-        ghost: "text-slate-400 hover:text-white hover:bg-white/5",
-        // Outline: Tech Blue
-        outline: "border border-talpa-accent/50 text-talpa-accent hover:bg-talpa-accent/10 hover:border-talpa-accent"
+        primary: "bg-primary text-white hover:bg-primary/90 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 hover:scale-[1.02] active:scale-[0.98]",
+        secondary: "bg-white/5 text-white border border-white/10 hover:bg-white/10 hover:border-white/20 backdrop-blur-md",
+        ghost: "text-primary hover:bg-primary/5 dark:text-primary-light dark:hover:bg-primary/10",
+        danger: "bg-red-500 text-white hover:bg-red-600 shadow-lg shadow-red-500/20",
+        outline: "border-2 border-slate-200 dark:border-white/10 text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-white/5",
     };
 
     const sizes = {
-        sm: "h-8 px-3 text-xs uppercase tracking-wider font-bold",
-        md: "h-11 px-6 text-sm",
-        lg: "h-14 px-8 text-base font-semibold"
+        xs: "h-7 px-2.5 text-[10px] uppercase tracking-wider rounded-lg gap-1",
+        sm: "h-9 px-4 text-xs uppercase tracking-wider gap-1.5",
+        md: "h-11 px-6 text-sm gap-2",
+        lg: "h-14 px-8 text-base gap-2.5",
+        xl: "h-16 px-10 text-lg gap-3",
+    };
+
+    const iconSizeMap: Record<string, string> = {
+        xs: 'xs',
+        sm: 'sm',
+        md: 'sm',
+        lg: 'md',
+        xl: 'md',
     };
 
     const widthClass = fullWidth ? "w-full" : "";
 
-    // Merge classes using twMerge to handle conflicts elegantly
+    const renderIcon = () => {
+        if (icon) {
+            return <Icon name={icon} size={iconSizeMap[size] as 'xs' | 'sm' | 'md'} />;
+        }
+        return null;
+    };
+
     const buttonClass = twMerge(baseStyles, variants[variant], sizes[size], widthClass, className);
 
     return (
@@ -56,17 +74,20 @@ const Button: React.FC<ButtonProps> = ({
             disabled={disabled || isLoading}
             {...props}
         >
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {!isLoading && leftIcon && <span className="mr-2.5 opacity-90">{leftIcon}</span>}
+            {isLoading && (
+                <Icon name="progress_activity" className="animate-spin" size={iconSizeMap[size] as 'xs' | 'sm' | 'md'} />
+            )}
+            {!isLoading && iconPosition === 'left' && (leftIcon || renderIcon())}
+            {!isLoading && leftIcon && !icon && iconPosition === 'left' && null}
             <span className="relative z-10">{children}</span>
-            {!isLoading && rightIcon && <span className="ml-2.5 opacity-90">{rightIcon}</span>}
+            {!isLoading && iconPosition === 'right' && (rightIcon || (icon && iconPosition === 'right' ? renderIcon() : null))}
 
-            {/* Shine Effect for Primary */}
-            {variant === 'primary' && !isLoading && !disabled && (
-                <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12" />
+            {animated && variant === 'primary' && !isLoading && !disabled && (
+                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
             )}
         </button>
     );
 };
 
+export { Button };
 export default Button;

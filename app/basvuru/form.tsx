@@ -7,14 +7,14 @@ import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { submitApplication, verifyTcknAction } from './actions';
 import { toast } from 'sonner';
-import { Alert } from '@/components/ui/Alert';
+import { Alert } from '@/components/theme/Alert';
 import Link from 'next/link';
 import { CampaignRecord } from './campaign';
 import DynamicFormRenderer, { FormField } from '@/components/DynamicFormRenderer';
 import Card from '@/components/theme/Card';
 import Button from '@/components/theme/Button';
 import Input from '@/components/theme/Input';
-import { Check, Plane, ChevronLeft, Search } from 'lucide-react';
+import Icon from '@/components/theme/Icon';
 
 // Base Schema with updated fields
 const baseSchema = z.object({
@@ -188,10 +188,10 @@ export default function ApplicationForm({ campaign }: { campaign: CampaignRecord
 
     if (submitSuccess) {
         return (
-            <Card variant="tech" className="max-w-xl mx-auto mt-8 animate-in fade-in zoom-in duration-300">
+            <Card variant="dark" className="max-w-xl mx-auto mt-8 animate-in fade-in zoom-in duration-300">
                 <div className="flex flex-col items-center justify-center text-center">
                     <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(16,185,129,0.2)] border border-emerald-500/20">
-                        <Check className="w-10 h-10 text-emerald-500" />
+                        <Icon name="check" size="xl" className="text-emerald-500" />
                     </div>
                     <h3 className="text-3xl font-bold text-white mb-3">
                         Başvurunuz Alındı!
@@ -212,11 +212,6 @@ export default function ApplicationForm({ campaign }: { campaign: CampaignRecord
                                 Ana Sayfaya Dön
                             </Button>
                         </Link>
-                        <Link href="/sorgula" className="w-full sm:w-auto">
-                            <Button fullWidth variant="outline">
-                                Başvuru Sorgula
-                            </Button>
-                        </Link>
                     </div>
                 </div>
             </Card>
@@ -225,11 +220,11 @@ export default function ApplicationForm({ campaign }: { campaign: CampaignRecord
 
     // RENDER
     return (
-        <Card variant="tech" className="max-w-2xl mx-auto mt-8">
+        <Card variant="dark" className="max-w-2xl mx-auto mt-8">
             <div className="mb-8 border-b border-white/10 pb-6">
                 <div className="flex items-center justify-center gap-3 mb-4">
                     <div className="w-12 h-12 bg-white/5 rounded-xl flex items-center justify-center border border-white/10 shadow-[0_0_15px_rgba(56,189,248,0.2)]">
-                        <Plane className="w-6 h-6 text-white transform -rotate-45" />
+                        <Icon name="flight_takeoff" size="md" className="text-white -rotate-45" />
                     </div>
                 </div>
                 <h2 className="text-2xl md:text-3xl font-bold text-center">
@@ -293,7 +288,7 @@ export default function ApplicationForm({ campaign }: { campaign: CampaignRecord
                             onClick={() => setStage('INIT')}
                             className="text-sm text-slate-500 hover:text-white transition-colors flex items-center justify-center gap-1 mx-auto group"
                         >
-                            <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+                            <Icon name="chevron_left" size="sm" className="group-hover:-translate-x-0.5 transition-transform" />
                             Çıkış / Başa Dön
                         </button>
                     </div>
@@ -303,7 +298,7 @@ export default function ApplicationForm({ campaign }: { campaign: CampaignRecord
             {/* Disclaimer Section */}
             <div className="mt-8 p-5 bg-white/5 rounded-xl border border-white/10">
                 <h4 className="text-sm font-bold text-slate-300 mb-3 flex items-center gap-2">
-                    <Search className="w-4 h-4 text-amber-500" />
+                    <Icon name="search" size="sm" className="text-amber-500" />
                     Önemli Uyarı ve Sorumluluk Reddi
                 </h4>
                 <div className="text-xs text-slate-500 leading-relaxed space-y-2">

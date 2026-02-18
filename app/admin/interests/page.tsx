@@ -1,47 +1,35 @@
-import { getCampaigns, getInterests } from '../actions';
-import InterestTable from '../components/InterestTable';
-import CampaignSelector from '../components/CampaignSelector';
 
-export const dynamic = 'force-dynamic';
+import React from 'react';
+import { getCampaigns } from '@/app/admin/actions';
+import { getInterests } from '@/app/admin/actions';
+import InterestTable from '@/components/admin/InterestTable';
+import { Interest } from '@/types';
 
-export default async function AdminInterestsPage({
-    searchParams,
-}: {
+interface PageProps {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}) {
-    const params = await searchParams;
-    const campaignId = (params.campaignId as string) || 'all';
-    const page = parseInt((params.page as string) || '1');
+}
 
-    // Parallel Fetch
-    const [campaigns, { data: interests, count }] = await Promise.all([
-        getCampaigns(),
-        getInterests(campaignId, page)
-    ]);
+export default async function InterestsPage(props: PageProps) {
+    const searchParams = await props.searchParams;
+    const campaignId = typeof searchParams.campaignId === 'string' ? searchParams.campaignId : undefined;
+
+    const { data } = await getInterests(campaignId, 1, 5000);
+    const interests: Interest[] = (data || []).map((item: any) => ({
+        id: item.id,
+        fullName: item.full_name,
+        email: item.email,
+        phone: item.phone,
+        tckn: item.tckn,
+        note: item.note,
+        createdAt: item.created_at,
+        campaignId: item.campaign_id,
+        campaignName: item.campaigns?.title || item.campaigns?.name
+    }));
+    const campaigns = await getCampaigns();
 
     return (
-        <div className="p-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Talep Yönetimi</h1>
-                    <p className="text-gray-500 mt-1">
-                        Kampanyalar için oluşturulan ön talepleri buradan yönetebilirsiniz.
-                    </p>
-                </div>
-
-                <div className="w-full md:w-64">
-                    <CampaignSelector
-                        campaigns={campaigns}
-                    />
-                </div>
-            </div>
-
-            <InterestTable
-                interests={interests}
-                totalCount={count}
-                currentPage={page}
-                campaignId={campaignId}
-            />
+        <div className="max-w-7xl mx-auto">
+            <InterestTable initialInterests={interests} campaigns={campaigns} />
         </div>
     );
 }

@@ -80,7 +80,7 @@ export default function CampaignListClient({ campaigns }: { campaigns: Campaign[
                 <div className="mt-6">
                     <Link
                         href="/admin/campaigns/new"
-                        className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-[#002855] hover:bg-[#003a75]"
+                        className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-talpa-navy hover:bg-talpa-navy/80"
                     >
                         + Yeni Kampanya
                     </Link>
@@ -165,7 +165,7 @@ export default function CampaignListClient({ campaigns }: { campaigns: Campaign[
                                     ))}
                                     <Link
                                         href={`/admin/campaigns/${campaign.id}`}
-                                        className="text-xs px-2 py-1 rounded border border-indigo-300 text-indigo-700 hover:bg-indigo-50 transition-colors"
+                                        className="text-xs px-2 py-1 rounded border border-primary/30 text-talpa-navy hover:bg-primary/5 transition-colors"
                                     >
                                         Düzenle
                                     </Link>

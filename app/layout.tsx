@@ -1,21 +1,21 @@
 import type { Metadata } from "next";
-// import Image from "next/image"; // Removed as old footer is being replaced
-import { Inter, JetBrains_Mono } from "next/font/google"; // Changed fonts
+import { Inter, Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { ensureConfigValid } from "@/lib/config-validation";
 import { Toaster } from "sonner";
 import { PerformanceMeasurePatch } from "@/components/PerformanceMeasurePatch";
-import PublicHeader from "@/components/theme/PublicHeader";
-import Footer from "@/components/theme/Footer";
+import { ThemeProvider } from "@/components/theme/ThemeProvider";
+import { AppShell } from "@/components/layout/AppShell";
 
 const inter = Inter({
-  variable: "--font-geist-sans", // Keeping variable name compatible with globals.css or updating globals? 
-  // globals.css uses --font-geist-sans mapping. I will map Inter to it to minimize globals churn, or better, update globals mapping.
-  // Actually, globals.css says: --font-sans: var(--font-geist-sans); 
-  // I will just use the same variable name for now to avoid breaking other things, or better yet, I'll allow the override.
-  // Let's stick to the variable name used in globals.css for less friction, OR update the variable name passed to body.
-  // I'll keep the variable name '--font-geist-sans' mapped to Inter for now, effectively "aliasing" it.
+  variable: "--font-inter",
   subsets: ["latin"],
+});
+
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space-grotesk",
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
 });
 
 const jetbrainsMono = JetBrains_Mono({
@@ -52,20 +52,32 @@ export default function RootLayout({
   }
 
   return (
-    <html lang="tr" className="scroll-smooth">
+    <html lang="tr" className="scroll-smooth" suppressHydrationWarning>
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
+          rel="stylesheet"
+        />
+        <script dangerouslySetInnerHTML={{ __html: `
+          try {
+            const t = localStorage.getItem('theme-preference');
+            const isDark = t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            document.documentElement.classList.toggle('dark', isDark);
+            document.documentElement.classList.toggle('light', !isDark);
+          } catch(e) {}
+        `}} />
+      </head>
       <body
-        className={`${inter.variable} ${jetbrainsMono.variable} antialiased bg-noise selection:bg-deniz-red selection:text-white min-h-screen flex flex-col`}
+        className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} antialiased selection:bg-primary selection:text-white min-h-screen flex flex-col`}
       >
-        <PerformanceMeasurePatch />
-        <Toaster richColors position="top-center" />
+        <ThemeProvider>
+          <PerformanceMeasurePatch />
+          <Toaster richColors position="top-center" />
 
-        <PublicHeader />
-
-        <main className="flex-grow">
-          {children}
-        </main>
-
-        <Footer />
+          <AppShell>
+            {children}
+          </AppShell>
+        </ThemeProvider>
       </body>
     </html>
   );

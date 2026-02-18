@@ -2,9 +2,9 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
-import { Alert } from '@/components/ui/Alert';
-import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
+import { Alert } from '@/components/theme/Alert';
+import { Button } from '@/components/theme/Button';
+import { Card } from '@/components/theme/Card';
 
 export default function AdminError({
   error,
@@ -20,8 +20,8 @@ export default function AdminError({
   }, [error]);
 
   return (
-    <div className="min-h-[60vh] flex flex-col items-center justify-center px-4 bg-gray-50">
-      <Card variant="elevated" padding="lg" className="max-w-md w-full">
+    <div className="min-h-[60vh] flex flex-col items-center justify-center px-4 bg-gray-50 dark:bg-background-dark">
+      <Card variant="default" padding="lg" className="max-w-md w-full">
         <Alert variant="destructive" title="Yönetim panelinde hata">
           Bu sayfa yüklenirken bir sorun oluştu. Tekrar deneyin veya panele dönün.
         </Alert>
@@ -35,7 +35,7 @@ export default function AdminError({
           >
             Tekrar Dene
           </Button>
-          <Link href="/admin/dashboard" aria-label="Yönetim paneline dön" className="inline-block">
+          <Link href="/admin" aria-label="Yönetim paneline dön" className="inline-block">
             <Button variant="secondary" size="md" className="w-full sm:w-auto">
               Panele Dön
             </Button>

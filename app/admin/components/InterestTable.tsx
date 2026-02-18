@@ -126,7 +126,7 @@ export default function InterestTable({
                 <input
                     type="text"
                     placeholder="Ara (İsim, E-posta, TCKN)..."
-                    className="px-4 py-2 border rounded-lg w-full sm:w-64 focus:ring-2 focus:ring-[#002855] outline-none text-gray-900"
+                    className="px-4 py-2 border rounded-lg w-full sm:w-64 focus:ring-2 focus:ring-primary outline-none text-gray-900"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />

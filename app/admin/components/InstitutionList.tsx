@@ -1,9 +1,30 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Pencil, Trash2, Building, CheckCircle, XCircle } from 'lucide-react';
+import Image from 'next/image';
+import Icon from '@/components/theme/Icon';
+import { Modal } from '@/components/theme/Modal';
+import { Button } from '@/components/theme/Button';
 import { toast } from 'sonner';
 import { deleteInstitution, upsertInstitution } from '../actions';
+
+function InstitutionLogo({ src, alt }: { src: string; alt: string }) {
+    const [error, setError] = useState(false);
+    if (error) {
+        return <Icon name="account_balance" size="md" className="text-gray-400" />;
+    }
+    return (
+        <Image
+            src={src}
+            alt={alt}
+            width={40}
+            height={40}
+            className="w-full h-full object-contain p-1"
+            unoptimized
+            onError={() => setError(true)}
+        />
+    );
+}
 
 interface Institution {
     id: string;
@@ -99,9 +120,9 @@ export default function InstitutionList({ initialInstitutions }: { initialInstit
                     <h3 className="font-semibold text-gray-700">Kurum Listesi</h3>
                     <button
                         onClick={() => openModal()}
-                        className="bg-[#002855] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[#003366] flex items-center gap-2"
+                        className="bg-talpa-navy text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-talpa-navy/80 flex items-center gap-2"
                     >
-                        <Plus size={16} />
+                        <Icon name="add" size="sm" />
                         Yeni Kurum
                     </button>
                 </div>
@@ -129,11 +150,11 @@ export default function InstitutionList({ initialInstitutions }: { initialInstit
                                     <tr key={inst.id} className="hover:bg-gray-50 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400">
+                                                <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 overflow-hidden">
                                                     {inst.logo_url ? (
-                                                        <img src={inst.logo_url} alt={inst.name} className="w-full h-full object-contain p-1" />
+                                                        <InstitutionLogo src={inst.logo_url} alt={inst.name} />
                                                     ) : (
-                                                        <Building size={20} />
+                                                        <Icon name="account_balance" size="md" />
                                                     )}
                                                 </div>
                                                 <span className="font-medium text-gray-900">{inst.name}</span>
@@ -148,11 +169,11 @@ export default function InstitutionList({ initialInstitutions }: { initialInstit
                                         <td className="px-6 py-4">
                                             {inst.is_active ? (
                                                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                                                    <CheckCircle size={12} /> Aktif
+                                                    <Icon name="check_circle" size="xs" /> Aktif
                                                 </span>
                                             ) : (
                                                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
-                                                    <XCircle size={12} /> Pasif
+                                                    <Icon name="cancel" size="xs" /> Pasif
                                                 </span>
                                             )}
                                         </td>
@@ -163,14 +184,14 @@ export default function InstitutionList({ initialInstitutions }: { initialInstit
                                                     className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                                                     title="Düzenle"
                                                 >
-                                                    <Pencil size={16} />
+                                                    <Icon name="edit" size="sm" />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(inst.id)}
                                                     className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                                                     title="Sil"
                                                 >
-                                                    <Trash2 size={16} />
+                                                    <Icon name="delete" size="sm" />
                                                 </button>
                                             </div>
                                         </td>
@@ -182,100 +203,91 @@ export default function InstitutionList({ initialInstitutions }: { initialInstit
                 </div>
             </div>
 
-            {/* Modal */}
-            {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
-                    <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
-                        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                            <h3 className="font-bold text-gray-900">
-                                {editingId ? 'Kurumu Düzenle' : 'Yeni Kurum Ekle'}
-                            </h3>
-                            <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600">
-                                <XCircle size={20} />
-                            </button>
-                        </div>
-
-                        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Kurum Adı</label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={formData.name}
-                                    onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                    className="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#002855]"
-                                    placeholder="Örn: DenizBank"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Kurum Kodu</label>
-                                <input
-                                    type="text"
-                                    required
-                                    value={formData.code}
-                                    onChange={e => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-                                    className="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#002855]"
-                                    placeholder="Örn: DENIZBANK"
-                                />
-                                <p className="text-xs text-gray-500 mt-1">Sistem içi benzersiz kod.</p>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">İletişim E-posta</label>
-                                <input
-                                    type="email"
-                                    value={formData.contactEmail}
-                                    onChange={e => setFormData({ ...formData, contactEmail: e.target.value })}
-                                    className="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#002855]"
-                                    placeholder="iletisim@denizbank.com"
-                                />
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Logo URL</label>
-                                <input
-                                    type="url"
-                                    value={formData.logoUrl}
-                                    onChange={e => setFormData({ ...formData, logoUrl: e.target.value })}
-                                    className="w-full border rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-[#002855]"
-                                    placeholder="https://..."
-                                />
-                            </div>
-
-                            <div className="flex items-center gap-2 pt-2">
-                                <input
-                                    type="checkbox"
-                                    id="isActive"
-                                    checked={formData.isActive}
-                                    onChange={e => setFormData({ ...formData, isActive: e.target.checked })}
-                                    className="w-4 h-4 text-[#002855] rounded focus:ring-[#002855]"
-                                />
-                                <label htmlFor="isActive" className="text-sm font-medium text-gray-700 select-none cursor-pointer">
-                                    Aktif Durumda
-                                </label>
-                            </div>
-
-                            <div className="pt-4 flex justify-end gap-3">
-                                <button
-                                    type="button"
-                                    onClick={() => setIsModalOpen(false)}
-                                    className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm font-medium transition-colors"
-                                >
-                                    İptal
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={loading}
-                                    className="px-6 py-2 bg-[#002855] text-white rounded-lg text-sm font-bold hover:bg-[#003366] disabled:opacity-70 transition-colors flex items-center gap-2"
-                                >
-                                    {loading ? 'Kaydediliyor...' : 'Kaydet'}
-                                </button>
-                            </div>
-                        </form>
+            <Modal
+                open={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                title={editingId ? 'Kurumu Düzenle' : 'Yeni Kurum Ekle'}
+                footer={
+                    <>
+                        <Button variant="outline" size="sm" onClick={() => setIsModalOpen(false)}>
+                            İptal
+                        </Button>
+                        <Button
+                            variant="primary"
+                            size="sm"
+                            isLoading={loading}
+                            onClick={() => {
+                                const form = document.getElementById('institution-form') as HTMLFormElement;
+                                form?.requestSubmit();
+                            }}
+                        >
+                            Kaydet
+                        </Button>
+                    </>
+                }
+            >
+                <form id="institution-form" onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Kurum Adı</label>
+                        <input
+                            type="text"
+                            required
+                            value={formData.name}
+                            onChange={e => setFormData({ ...formData, name: e.target.value })}
+                            className="w-full border border-gray-300 dark:border-white/10 rounded-xl px-3 py-2 text-sm bg-white dark:bg-surface-dark outline-none focus:ring-2 focus:ring-primary"
+                            placeholder="Örn: DenizBank"
+                        />
                     </div>
-                </div>
-            )}
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Kurum Kodu</label>
+                        <input
+                            type="text"
+                            required
+                            value={formData.code}
+                            onChange={e => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
+                            className="w-full border border-gray-300 dark:border-white/10 rounded-xl px-3 py-2 text-sm bg-white dark:bg-surface-dark outline-none focus:ring-2 focus:ring-primary"
+                            placeholder="Örn: DENIZBANK"
+                        />
+                        <p className="text-xs text-gray-500 mt-1">Sistem içi benzersiz kod.</p>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">İletişim E-posta</label>
+                        <input
+                            type="email"
+                            value={formData.contactEmail}
+                            onChange={e => setFormData({ ...formData, contactEmail: e.target.value })}
+                            className="w-full border border-gray-300 dark:border-white/10 rounded-xl px-3 py-2 text-sm bg-white dark:bg-surface-dark outline-none focus:ring-2 focus:ring-primary"
+                            placeholder="iletisim@denizbank.com"
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Logo URL</label>
+                        <input
+                            type="url"
+                            value={formData.logoUrl}
+                            onChange={e => setFormData({ ...formData, logoUrl: e.target.value })}
+                            className="w-full border border-gray-300 dark:border-white/10 rounded-xl px-3 py-2 text-sm bg-white dark:bg-surface-dark outline-none focus:ring-2 focus:ring-primary"
+                            placeholder="https://..."
+                        />
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-2">
+                        <input
+                            type="checkbox"
+                            id="isActive"
+                            checked={formData.isActive}
+                            onChange={e => setFormData({ ...formData, isActive: e.target.checked })}
+                            className="w-4 h-4 text-primary rounded focus:ring-primary"
+                        />
+                        <label htmlFor="isActive" className="text-sm font-medium text-gray-700 dark:text-slate-300 select-none cursor-pointer">
+                            Aktif Durumda
+                        </label>
+                    </div>
+                </form>
+            </Modal>
         </>
     );
 }

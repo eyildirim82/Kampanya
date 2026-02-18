@@ -74,7 +74,7 @@ export default function CampaignForm({ institutions, defaultValues, mode, submit
                     id="name"
                     required
                     defaultValue={defaultValues?.name || ''}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border"
                     placeholder="ör. DenizBank Private Card Kampanyası"
                 />
             </div>
@@ -89,7 +89,7 @@ export default function CampaignForm({ institutions, defaultValues, mode, submit
                     name="campaignCode"
                     id="campaignCode"
                     defaultValue={defaultValues?.campaign_code || ''}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border font-mono"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border font-mono"
                     placeholder="Boş bırakılırsa addan otomatik üretilir"
                 />
                 <p className="mt-1 text-xs text-gray-500">ör. PRIVATE_CARD_2026</p>
@@ -104,7 +104,7 @@ export default function CampaignForm({ institutions, defaultValues, mode, submit
                     name="institutionId"
                     id="institutionId"
                     defaultValue={defaultValues?.institution_id || ''}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border"
                 >
                     <option value="">— Kurum seçin —</option>
                     {institutions.map((inst) => (
@@ -125,7 +125,7 @@ export default function CampaignForm({ institutions, defaultValues, mode, submit
                     id="description"
                     rows={3}
                     defaultValue={defaultValues?.description || ''}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border"
                     placeholder="Kampanya açıklaması (isteğe bağlı)"
                 />
             </div>
@@ -141,7 +141,7 @@ export default function CampaignForm({ institutions, defaultValues, mode, submit
                         name="startDate"
                         id="startDate"
                         defaultValue={defaultValues?.start_date || ''}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border"
                     />
                 </div>
                 <div>
@@ -153,7 +153,7 @@ export default function CampaignForm({ institutions, defaultValues, mode, submit
                         name="endDate"
                         id="endDate"
                         defaultValue={defaultValues?.end_date || ''}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border"
                     />
                 </div>
             </div>
@@ -169,7 +169,7 @@ export default function CampaignForm({ institutions, defaultValues, mode, submit
                     id="maxQuota"
                     min="1"
                     defaultValue={defaultValues?.max_quota || ''}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border"
                     placeholder="Boş bırakılırsa sınırsız"
                 />
                 <p className="mt-1 text-xs text-gray-500">Maksimum başvuru sayısı. Boş = sınırsız.</p>
@@ -186,7 +186,7 @@ export default function CampaignForm({ institutions, defaultValues, mode, submit
                 <button
                     type="submit"
                     disabled={isPending}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-[#002855] hover:bg-[#003a75] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition-colors"
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-talpa-navy hover:bg-talpa-navy/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 transition-colors"
                 >
                     {isPending ? 'Kaydediliyor...' : mode === 'create' ? 'Kampanya Oluştur' : 'Güncelle'}
                 </button>

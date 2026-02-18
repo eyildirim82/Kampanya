@@ -6,13 +6,13 @@ import { deleteApplication, getAllApplicationsForExport, bulkUpdateApplicationSt
 import { useRouter } from 'next/navigation';
 import clsx from 'clsx';
 import { toast } from 'sonner';
-import { Modal } from '@/components/ui/Modal';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import Badge from '@/components/theme/Badge';
-import { Pagination } from '@/components/ui/Pagination';
-import { Download } from 'lucide-react';
+import { Modal } from '@/components/theme/Modal';
+import { Card } from '@/components/theme/Card';
+import { Button } from '@/components/theme/Button';
+import { Input } from '@/components/theme/Input';
+import { Badge } from '@/components/theme/Badge';
+import { Pagination } from '@/components/theme/Pagination';
+import Icon from '@/components/theme/Icon';
 
 export default function ApplicationTable({
     applications,
@@ -229,7 +229,7 @@ export default function ApplicationTable({
                     <Button
                         variant="primary"
                         size="sm"
-                        leftIcon={<Download className="w-4 h-4" />}
+                        leftIcon={<Icon name="download" size="sm" />}
                         onClick={() => setShowExportModal(true)}
                     >
                         Dışa Aktar
@@ -250,7 +250,7 @@ export default function ApplicationTable({
                             variant="primary"
                             size="sm"
                             isLoading={isExporting}
-                            leftIcon={isExporting ? undefined : <Download className="w-4 h-4" />}
+                            leftIcon={isExporting ? undefined : <Icon name="download" size="sm" />}
                             onClick={() => handleExport('excel')}
                         >
                             Excel İndir
@@ -273,13 +273,13 @@ export default function ApplicationTable({
                         <div className="grid grid-cols-2 gap-2">
                             <input
                                 type="date"
-                                className="border border-gray-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-[#002855] focus:border-[#002855] outline-none"
+                                className="border border-gray-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
                                 value={exportFilters.startDate}
                                 onChange={e => setExportFilters({ ...exportFilters, startDate: e.target.value })}
                             />
                             <input
                                 type="date"
-                                className="border border-gray-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-[#002855] focus:border-[#002855] outline-none"
+                                className="border border-gray-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
                                 value={exportFilters.endDate}
                                 onChange={e => setExportFilters({ ...exportFilters, endDate: e.target.value })}
                             />
@@ -337,7 +337,7 @@ export default function ApplicationTable({
                 )
             }
 
-            <Card variant="outlined" padding="none" className="overflow-hidden">
+            <Card variant="default" padding="none" className="overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200" role="table">
                         <thead className="bg-gray-50">
@@ -347,24 +347,24 @@ export default function ApplicationTable({
                                         type="checkbox"
                                         onChange={handleSelectAll}
                                         checked={filteredApps.length > 0 && selectedIds.length === filteredApps.length}
-                                        className="w-4 h-4 rounded border-gray-300 text-[#002855] focus:ring-[#002855]"
+                                        className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
                                     />
                                 </th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tarih</th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">TCKN</th>
+                                <th scope="col" className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tarih</th>
+                                <th scope="col" className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">TCKN</th>
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ad Soyad</th>
-                                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Telefon</th>
+                                <th scope="col" className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Telefon</th>
                                 <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Durum</th>
 
                                 {isCreditCampaign ? (
                                     <>
-                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tutar</th>
-                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Müşteri?</th>
+                                        <th scope="col" className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tutar</th>
+                                        <th scope="col" className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Müşteri?</th>
                                     </>
                                 ) : (
                                     <>
-                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Adres</th>
-                                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teslim</th>
+                                        <th scope="col" className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Adres</th>
+                                        <th scope="col" className="hidden md:table-cell px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teslim</th>
                                     </>
                                 )}
 
@@ -386,19 +386,19 @@ export default function ApplicationTable({
                                                 type="checkbox"
                                                 checked={selectedIds.includes(app.id)}
                                                 onChange={() => handleSelectRow(app.id)}
-                                                className="w-4 h-4 rounded border-gray-300 text-[#002855] focus:ring-[#002855]"
+                                                className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
                                             />
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             {new Date(app.created_at).toLocaleDateString()}
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                        <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                                             {app.tckn || '-'}
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                                             {app.full_name || app.form_data?.fullName}
                                         </td>
-                                        <td className="px-6 py-4 text-sm text-gray-500">
+                                        <td className="hidden md:table-cell px-6 py-4 text-sm text-gray-500">
                                             {app.phone || app.form_data?.phone}
                                         </td>
                                         <td className="px-6 py-4 text-sm">
@@ -412,21 +412,21 @@ export default function ApplicationTable({
 
                                         {isCreditCampaign ? (
                                             <>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">
+                                                <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">
                                                     {app.form_data?.requestedAmount
                                                         ? `${parseInt(app.form_data.requestedAmount).toLocaleString('tr-TR')} TL`
                                                         : '-'}
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                     {app.form_data?.isDenizbankCustomer === 'yes' ? 'Evet' : 'Hayır'}
                                                 </td>
                                             </>
                                         ) : (
                                             <>
-                                                <td className="px-6 py-4 text-sm text-gray-500 max-w-[200px]">
+                                                <td className="hidden md:table-cell px-6 py-4 text-sm text-gray-500 max-w-[200px]">
                                                     <div className="truncate" title={app.address}>{app.address || '-'}</div>
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                                <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                     {(app.delivery_method || app.form_data?.deliveryMethod) === 'branch' ? 'Şube' : (app.delivery_method || app.form_data?.deliveryMethod) === 'address' ? 'Adres' : '-'}
                                                 </td>
                                             </>

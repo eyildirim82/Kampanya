@@ -211,7 +211,7 @@ export default function EmailConfig({ campaignId: propCampaignId }: EmailConfigP
                             <select
                                 value={selectedCampaignId}
                                 onChange={(e) => setSelectedCampaignId(e.target.value)}
-                                className="block w-48 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                                className="block w-48 pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md"
                             >
                                 {campaigns.length === 0 && <option value="">Kampanya yok</option>}
                                 {campaigns.map(c => (
@@ -234,7 +234,7 @@ export default function EmailConfig({ campaignId: propCampaignId }: EmailConfigP
                                     {config.subject_template}
                                 </div>
                                 <div className="text-sm text-gray-500 mt-1 flex gap-2 items-center flex-wrap">
-                                    <span className="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded text-xs font-medium">
+                                    <span className="bg-primary/10 text-talpa-navy px-2 py-0.5 rounded text-xs font-medium">
                                         Tetikleyici: {config.trigger_event || 'SUBMISSION'}
                                     </span>
                                     <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs">
@@ -248,7 +248,7 @@ export default function EmailConfig({ campaignId: propCampaignId }: EmailConfigP
                                 </div>
                             </div>
                             <div className="flex gap-2 text-sm">
-                                <button onClick={() => setEditing(config)} className="text-indigo-600 hover:text-indigo-900">Düzenle</button>
+                                <button onClick={() => setEditing(config)} className="text-primary hover:text-primary/80">Düzenle</button>
                                 <button onClick={() => handleDelete(config.id)} className="text-red-600 hover:text-red-900">Sil</button>
                             </div>
                         </div>
@@ -266,7 +266,7 @@ export default function EmailConfig({ campaignId: propCampaignId }: EmailConfigP
                                 setActiveSubject(newConfig.subject_template || '');
                                 setActiveBody(newConfig.body_template || '');
                             }}
-                            className="mt-2 inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200"
+                            className="mt-2 inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-talpa-navy bg-primary/10 hover:bg-primary/15"
                         >
                             + Yeni Kural Ekle
                         </button>
@@ -278,8 +278,8 @@ export default function EmailConfig({ campaignId: propCampaignId }: EmailConfigP
                         <h4 className="text-lg font-medium text-gray-900 mb-6">{editing.id ? 'Kuralı Düzenle' : 'Yeni Kural'}</h4>
 
                         {/* Template Loader - Context Aware */}
-                        <div className="mb-6 p-4 bg-indigo-50 rounded-md border border-indigo-100">
-                            <label className="block text-sm font-bold text-indigo-900 mb-2">Hazır Şablon Yükle ({isCreditCampaign ? 'Kredi' : 'Genel'})</label>
+                        <div className="mb-6 p-4 bg-primary/5 rounded-md border border-primary/15">
+                            <label className="block text-sm font-bold text-talpa-navy mb-2">Hazır Şablon Yükle ({isCreditCampaign ? 'Kredi' : 'Genel'})</label>
                             <div className="flex gap-2 flex-wrap">
                                 <button
                                     type="button"
@@ -322,7 +322,7 @@ export default function EmailConfig({ campaignId: propCampaignId }: EmailConfigP
 
 <p>Başvurunuz en kısa sürede değerlendirilerek sonuç hakkında tarafınıza bilgilendirme yapılacaktır.</p>`
                                     }))}
-                                    className="px-3 py-1.5 bg-white border border-indigo-200 text-indigo-700 text-xs font-bold rounded hover:bg-indigo-50"
+                                    className="px-3 py-1.5 bg-white border border-primary/20 text-talpa-navy text-xs font-bold rounded hover:bg-primary/5"
                                 >
                                     Başvuran: Yeni Başvuru
                                 </button>
@@ -367,7 +367,7 @@ export default function EmailConfig({ campaignId: propCampaignId }: EmailConfigP
 <p>Sistem üzerinden yeni bir kampanya başvurusu alınmıştır.</p>
 <!-- Refer to Applicant Template for layout -->`
                                     }))}
-                                    className="px-3 py-1.5 bg-white border border-indigo-200 text-indigo-700 text-xs font-bold rounded hover:bg-indigo-50"
+                                    className="px-3 py-1.5 bg-white border border-primary/20 text-talpa-navy text-xs font-bold rounded hover:bg-primary/5"
                                 >
                                     Banka: Yeni Başvuru
                                 </button>
@@ -413,7 +413,7 @@ export default function EmailConfig({ campaignId: propCampaignId }: EmailConfigP
                                         ).map(tag => (
                                             <span
                                                 key={tag}
-                                                className="inline-block bg-white border border-gray-300 rounded px-2 py-1 text-xs font-bold text-gray-900 cursor-pointer hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-300 transition-colors"
+                                                className="inline-block bg-white border border-gray-300 rounded px-2 py-1 text-xs font-bold text-gray-900 cursor-pointer hover:bg-primary/5 hover:text-primary hover:border-primary/30 transition-colors"
                                                 onClick={() => navigator.clipboard.writeText(tag)}
                                                 title="Kopyala"
                                             >
@@ -430,7 +430,7 @@ export default function EmailConfig({ campaignId: propCampaignId }: EmailConfigP
                             </div>
 
                             <div className="flex items-center">
-                                <input id="isActive" name="isActive" type="checkbox" defaultChecked={editing.is_active} className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
+                                <input id="isActive" name="isActive" type="checkbox" defaultChecked={editing.is_active} className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded" />
                                 <label htmlFor="isActive" className="ml-2 block text-sm font-bold text-gray-900">Bu kural aktif</label>
                             </div>
 
@@ -439,13 +439,13 @@ export default function EmailConfig({ campaignId: propCampaignId }: EmailConfigP
                                 <button
                                     type="submit"
                                     disabled={!selectedCampaignId}
-                                    className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
+                                    className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-talpa-navy hover:bg-talpa-navy/80 disabled:opacity-50"
                                 >
                                     Kaydet
                                 </button>
                             </div>
 
-                            {message && <p className="text-sm text-center text-indigo-600">{message}</p>}
+                            {message && <p className="text-sm text-center text-primary">{message}</p>}
                         </form>
                     </div>
                 )}

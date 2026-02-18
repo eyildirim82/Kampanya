@@ -23,7 +23,7 @@ export default function CampaignStats({ stats }: { stats: CampaignStat[] }) {
 
             {/* KPI Cards */}
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                <div className="bg-white overflow-hidden shadow rounded-lg border-l-4 border-indigo-500">
+                <div className="bg-white overflow-hidden shadow rounded-lg border-l-4 border-primary">
                     <div className="px-4 py-5 sm:p-6">
                         <dt className="text-sm font-medium text-gray-500 truncate">En Çok Başvuru</dt>
                         <dd className="mt-1 text-2xl font-semibold text-gray-900">{topCampaign.name}</dd>

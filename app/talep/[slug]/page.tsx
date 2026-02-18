@@ -23,8 +23,8 @@ export default async function InterestPage({
     return (
         <div className="min-h-screen bg-gray-50 flex flex-col">
             {/* Hero Section */}
-            <div className="relative bg-[#002855] text-white py-16 flex items-center justify-center">
-                <div className="absolute inset-0 bg-gradient-to-t from-[#002855] to-transparent opacity-80"></div>
+            <div className="relative bg-talpa-navy text-white py-16 flex items-center justify-center">
+                <div className="absolute inset-0 bg-gradient-to-t from-talpa-navy to-transparent opacity-80"></div>
 
                 <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
                     <h1 className="text-3xl md:text-5xl font-bold mb-4 tracking-tight drop-shadow-md">

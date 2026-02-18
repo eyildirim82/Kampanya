@@ -1,7 +1,7 @@
 'use client';
 
-import { Users, FileText, CheckCircle, Clock } from 'lucide-react';
-import { Card, CardHeader } from '@/components/ui/Card';
+import Icon from '@/components/theme/Icon';
+import { Card, CardHeader } from '@/components/theme/Card';
 
 interface DashboardStatsProps {
     stats: {
@@ -17,7 +17,7 @@ export default function DashboardStats({ stats }: DashboardStatsProps) {
         {
             label: 'Toplam Başvuru',
             value: stats.totalApplications,
-            icon: Users,
+            icon: 'group',
             color: 'text-blue-600',
             bg: 'bg-blue-50',
             border: 'border-blue-200',
@@ -25,7 +25,7 @@ export default function DashboardStats({ stats }: DashboardStatsProps) {
         {
             label: 'Bekleyen Onay',
             value: stats.pendingReviews,
-            icon: Clock,
+            icon: 'schedule',
             color: 'text-yellow-600',
             bg: 'bg-yellow-50',
             border: 'border-yellow-200',
@@ -33,7 +33,7 @@ export default function DashboardStats({ stats }: DashboardStatsProps) {
         {
             label: 'Aktif Kampanya',
             value: stats.activeCampaigns,
-            icon: CheckCircle,
+            icon: 'check_circle',
             color: 'text-green-600',
             bg: 'bg-green-50',
             border: 'border-green-200',
@@ -41,7 +41,7 @@ export default function DashboardStats({ stats }: DashboardStatsProps) {
         {
             label: 'Ön Talepler',
             value: stats.totalInterests,
-            icon: FileText,
+            icon: 'description',
             color: 'text-purple-600',
             bg: 'bg-purple-50',
             border: 'border-purple-200',
@@ -53,7 +53,7 @@ export default function DashboardStats({ stats }: DashboardStatsProps) {
             {cards.map((card, index) => (
                 <Card
                     key={index}
-                    variant="elevated"
+                    variant="default"
                     padding="md"
                     className={`flex flex-row items-center justify-between transition-transform hover:scale-[1.02] border-l-4 ${card.border}`}
                 >
@@ -63,7 +63,7 @@ export default function DashboardStats({ stats }: DashboardStatsProps) {
                         className="mb-0"
                     />
                     <div className={`p-3 rounded-full shrink-0 ${card.bg}`}>
-                        <card.icon className={`w-6 h-6 ${card.color}`} aria-hidden />
+                        <Icon name={card.icon} size="md" className={card.color} />
                     </div>
                 </Card>
             ))}

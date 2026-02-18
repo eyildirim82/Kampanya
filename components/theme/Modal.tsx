@@ -2,20 +2,16 @@
 
 import React, { useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { Card } from './Card';
-import { Button } from './Button';
-import { X } from 'lucide-react';
+import Card from './Card';
+import Icon from './Icon';
 
 export interface ModalProps {
     open: boolean;
     onClose: () => void;
     title?: string;
     children: React.ReactNode;
-    /** Footer content (e.g. İptal / Onay buttons). If not provided, no footer. */
     footer?: React.ReactNode;
-    /** Optional aria-describedby for accessibility */
     ariaDescribedBy?: string;
-    /** Optional aria-labelledby (defaults to title id) */
     ariaLabelledBy?: string;
 }
 
@@ -92,7 +88,7 @@ export function Modal({
     const content = (
         <div
             ref={overlayRef}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+            className="fixed inset-0 z-modal flex items-center justify-center p-4 bg-black/50"
             role="dialog"
             aria-modal="true"
             aria-labelledby={ariaLabelledBy ?? titleId}
@@ -101,29 +97,29 @@ export function Modal({
         >
             <Card
                 ref={contentRef}
-                variant="elevated"
+                variant="default"
                 padding="none"
                 className="w-full max-w-md max-h-[90vh] flex flex-col shadow-2xl"
                 onClick={(e) => e.stopPropagation()}
             >
-                <div className="flex items-center justify-between p-4 border-b border-gray-100">
+                <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-white/10">
                     {title && (
-                        <h2 id={titleId} className="text-lg font-bold text-gray-900">
+                        <h2 id={titleId} className="text-lg font-bold text-gray-900 dark:text-white">
                             {title}
                         </h2>
                     )}
                     <button
                         type="button"
                         onClick={onClose}
-                        className="p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#002855] focus-visible:ring-offset-2"
+                        className="p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-white/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                         aria-label="Kapat"
                     >
-                        <X className="w-5 h-5" />
+                        <Icon name="close" size="md" />
                     </button>
                 </div>
                 <div className="p-4 overflow-y-auto flex-1">{children}</div>
                 {footer != null && (
-                    <div className="p-4 border-t border-gray-100 flex justify-end gap-2">
+                    <div className="p-4 border-t border-gray-100 dark:border-white/10 flex justify-end gap-2">
                         {footer}
                     </div>
                 )}

@@ -1,56 +1,90 @@
-import React, { InputHTMLAttributes, forwardRef } from 'react';
+import React, { InputHTMLAttributes, forwardRef, useId } from 'react';
 import { twMerge } from 'tailwind-merge';
+import Icon from './Icon';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
     label?: string;
     error?: string;
+    errorMessage?: string;
     helperText?: string;
-    leftIcon?: React.ReactNode;
+    leftIcon?: string | React.ReactNode;
+    rightIcon?: string | React.ReactNode;
+    variant?: 'default' | 'glass' | 'rounded';
+    inputSize?: 'sm' | 'md' | 'lg';
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(
-    ({ label, error, helperText, className = '', id, leftIcon, ...props }, ref) => {
-        // Generate a secure random ID if not provided, for accessibility linking
-        const inputId = id || props.name || Math.random().toString(36).substr(2, 9);
-        const hasError = !!error;
+    ({ label, error, errorMessage, helperText, className = '', id, leftIcon, rightIcon, variant = 'default', inputSize = 'md', ...props }, ref) => {
+        const generatedId = useId();
+        const inputId = id || props.name || generatedId;
+        const hasError = !!(error || errorMessage);
+        const displayError = error || errorMessage;
+
+        const variantStyles = {
+            default: 'bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-primary focus-visible:ring-primary/20',
+            glass: 'bg-slate-900/50 border-white/10 text-white placeholder:text-gray-500 focus:border-primary focus-visible:ring-primary/30',
+            rounded: 'bg-slate-100 dark:bg-slate-800 border-transparent text-slate-900 dark:text-white placeholder:text-slate-400 rounded-full focus:border-primary focus-visible:ring-primary/20',
+        };
+
+        const sizeStyles = {
+            sm: 'h-9 px-3 text-sm',
+            md: 'h-11 px-4 text-sm',
+            lg: 'h-14 px-4 py-3.5 text-base',
+        };
+
+        const renderIcon = (iconProp: string | React.ReactNode, isError = false) => {
+            if (typeof iconProp === 'string') {
+                return <Icon name={iconProp} size="sm" className={twMerge('text-slate-400 transition-colors group-focus-within:text-primary', isError && 'text-red-400')} />;
+            }
+            return iconProp;
+        };
 
         return (
             <div className="flex flex-col gap-1.5 w-full">
                 {label && (
                     <label
                         htmlFor={inputId}
-                        className="text-sm font-medium text-slate-700 dark:text-slate-300"
+                        className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider ml-1"
                     >
                         {label}
-                        {props.required && <span className="text-deniz-red ml-1">*</span>}
+                        {props.required && <span className="text-primary ml-1">*</span>}
                     </label>
                 )}
-                <div className="relative">
+                <div className="relative group">
                     {leftIcon && (
-                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
-                            {leftIcon}
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 z-10">
+                            {renderIcon(leftIcon)}
                         </div>
                     )}
                     <input
                         ref={ref}
                         id={inputId}
                         className={twMerge(
-                            "flex h-11 w-full rounded-lg border bg-white px-3 py-2 text-sm ring-offset-white file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-talpa-navy focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 transition-all text-slate-900",
-                            leftIcon ? 'pl-10' : '',
-                            hasError ? 'border-deniz-red focus-visible:ring-deniz-red' : 'border-slate-200 focus:border-talpa-navy',
+                            "flex w-full rounded-xl border ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+                            variantStyles[variant],
+                            sizeStyles[inputSize],
+                            leftIcon ? 'pl-11' : '',
+                            rightIcon ? 'pr-11' : '',
+                            hasError ? 'border-red-500/50 focus-visible:ring-red-500/30' : '',
                             className
                         )}
                         aria-invalid={hasError}
                         {...props}
                     />
+                    {rightIcon && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                            {renderIcon(rightIcon, hasError)}
+                        </div>
+                    )}
                 </div>
-                {error && (
-                    <p className="text-sm font-medium text-deniz-red animate-pulse" role="alert">
-                        {error}
+                {displayError && (
+                    <p className="text-[10px] font-medium text-red-400 ml-1 flex items-center gap-1" role="alert">
+                        <Icon name="error" size="xs" />
+                        {displayError}
                     </p>
                 )}
-                {helperText && !error && (
-                    <p className="text-xs text-slate-500">{helperText}</p>
+                {helperText && !hasError && (
+                    <p className="text-xs text-slate-500 ml-1">{helperText}</p>
                 )}
             </div>
         );
@@ -59,4 +93,5 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
 
 Input.displayName = 'Input';
 
+export { Input };
 export default Input;

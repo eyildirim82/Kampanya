@@ -2,6 +2,7 @@
 
 import React, { ButtonHTMLAttributes } from 'react';
 import { twMerge } from 'tailwind-merge';
+import { motion } from 'framer-motion';
 import Icon from './Icon';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -15,6 +16,8 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     iconPosition?: 'left' | 'right';
     animated?: boolean;
 }
+
+const MotionButton = motion.button;
 
 const Button: React.FC<ButtonProps> = ({
     children,
@@ -31,18 +34,18 @@ const Button: React.FC<ButtonProps> = ({
     disabled,
     ...props
 }) => {
-    const baseStyles = "inline-flex items-center justify-center font-bold tracking-tight transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none rounded-xl relative overflow-hidden";
+    const baseStyles = "inline-flex items-center justify-center font-bold tracking-tight transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none rounded-full relative overflow-hidden group";
 
     const variants = {
-        primary: "bg-primary text-white hover:bg-primary/90 shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 hover:scale-[1.02] active:scale-[0.98]",
-        secondary: "bg-white/5 text-white border border-white/10 hover:bg-white/10 hover:border-white/20 backdrop-blur-md",
+        primary: "bg-primary text-white hover:bg-primary/90 shadow-lg shadow-primary/30 hover:shadow-xl",
+        secondary: "bg-white/10 text-foreground/90 border border-white/40 hover:bg-white/20 backdrop-blur-lg dark:text-white",
         ghost: "text-primary hover:bg-primary/5 dark:text-primary-light dark:hover:bg-primary/10",
-        danger: "bg-red-500 text-white hover:bg-red-600 shadow-lg shadow-red-500/20",
-        outline: "border-2 border-slate-200 dark:border-white/10 text-slate-700 dark:text-white hover:bg-slate-50 dark:hover:bg-white/5",
+        danger: "bg-red-500 text-white hover:bg-red-600 shadow-lg shadow-red-500/30",
+        outline: "border-2 border-gray-300/80 dark:border-white/20 text-gray-800 dark:text-white hover:bg-gray-100/60 dark:hover:bg-white/5",
     };
 
     const sizes = {
-        xs: "h-7 px-2.5 text-[10px] uppercase tracking-wider rounded-lg gap-1",
+        xs: "h-7 px-3 text-[10px] uppercase tracking-wider gap-1",
         sm: "h-9 px-4 text-xs uppercase tracking-wider gap-1.5",
         md: "h-11 px-6 text-sm gap-2",
         lg: "h-14 px-8 text-base gap-2.5",
@@ -69,9 +72,12 @@ const Button: React.FC<ButtonProps> = ({
     const buttonClass = twMerge(baseStyles, variants[variant], sizes[size], widthClass, className);
 
     return (
-        <button
+        <MotionButton
             className={buttonClass}
             disabled={disabled || isLoading}
+            whileHover={{ scale: 1.02, y: -1 }}
+            whileTap={{ scale: 0.98, y: 0 }}
+            transition={{ type: "spring", stiffness: 260, damping: 20 }}
             {...props}
         >
             {isLoading && (
@@ -83,9 +89,9 @@ const Button: React.FC<ButtonProps> = ({
             {!isLoading && iconPosition === 'right' && (rightIcon || (icon && iconPosition === 'right' ? renderIcon() : null))}
 
             {animated && variant === 'primary' && !isLoading && !disabled && (
-                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                <div className="absolute inset-0 bg-white/15 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
             )}
-        </button>
+        </MotionButton>
     );
 };
 

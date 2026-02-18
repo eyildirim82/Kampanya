@@ -26,11 +26,11 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(({
     };
 
     const variants = {
-        default: 'bg-white dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-white/10 shadow-sm',
-        glass: 'glass-panel rounded-xl',
-        stat: 'bg-white dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-white/10 shadow-sm hover:shadow-md transition-shadow',
-        interactive: 'bg-white dark:bg-surface-dark rounded-xl border border-slate-200 dark:border-white/10 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer',
-        dark: 'bg-navy-card border border-navy-border rounded-xl shadow-2xl',
+        default: 'bg-surface text-foreground rounded-3xl border border-white/40 dark:border-white/10 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-md',
+        glass: 'bg-white/10 dark:bg-white/5 rounded-3xl border border-white/30 dark:border-white/10 backdrop-blur-xl shadow-[0_18px_55px_rgba(15,23,42,0.25)]',
+        stat: 'bg-surface rounded-3xl border border-white/40 dark:border-white/10 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300',
+        interactive: 'bg-surface rounded-3xl border border-white/40 dark:border-white/10 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer backdrop-blur-md',
+        dark: 'bg-navy-card/90 border border-white/10 rounded-3xl shadow-2xl backdrop-blur-md',
     };
 
     const interactiveClasses = interactive
@@ -71,12 +71,12 @@ export const CardHeader: React.FC<CardHeaderProps> = ({
     return (
         <div className={twMerge('mb-4', className)} {...props}>
             {title && (
-                <h3 className="text-2xl font-bold text-talpa-navy dark:text-white mb-1">
+                <h3 className="text-2xl font-bold text-foreground dark:text-gray-50 mb-1">
                     {title}
                 </h3>
             )}
             {subtitle && (
-                <p className="text-gray-700 dark:text-slate-400 text-sm">{subtitle}</p>
+                <p className="text-gray-700 dark:text-gray-400 text-sm">{subtitle}</p>
             )}
             {children}
         </div>
@@ -105,7 +105,7 @@ export const CardFooter: React.FC<CardFooterProps> = ({
     ...props
 }) => {
     return (
-        <div className={twMerge('mt-6 pt-4 border-t border-gray-100 dark:border-white/10', className)} {...props}>
+        <div className={twMerge('mt-6 pt-4 border-t border-white/40 dark:border-white/10', className)} {...props}>
             {children}
         </div>
     );

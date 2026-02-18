@@ -46,40 +46,26 @@ It is intended as a **starting point for the new owning team** to plan hardening
 
 **Current State**
 
-- Dynamic campaigns use:
-  - `components/DynamicForm.tsx` (client)
-  - `app/kampanya/actions.ts -> submitDynamicApplication` (server action)
-- `submitDynamicApplication`:
-  - Uses **Anon Key** with Supabase client.
-  - Directly calls `.from('applications').insert(payload)` with:
-    - `campaign_id`
-    - `form_data` (raw JSON)
-    - optionally `tckn`
-  - Does **not** enforce:
-    - TCKN Mod10/Mod11 validation
-    - Whitelist membership (`verify_member`)
-    - Rate limiting (`check_rate_limit`)
-    - Duplicate application checks (`check_existing_application` / unique constraints aside)
-    - Consent requirements
+- Dynamic campaigns use `components/DynamicForm.tsx` (client) and server actions that call **`submit_dynamic_application_secure`** RPC (e.g. `app/actions.ts`). Direct `.from('applications').insert()` is no longer used for campaign submissions; anon direct INSERT was removed (migration `20260215135100`). The same RPC enforces whitelist, quota, duplicate check, and campaign status.
+- **Resolved:** Kampanya akışı artık güvenli RPC kullanıyor; dokümantasyon BACKEND.md ve TECHNICAL_HEALTH ile güncellendi.
+
+**Remaining (Documentation)**
+
+- [ ] In `FRONTEND.md`, document that the dynamic campaign flow uses `submit_dynamic_application_secure` with the same business rules as `/basvuru`.
+
+### 2.2a Sorgula TCKN Validasyonu
+
+**Current State**
+
+- `app/actions.ts` içindeki `queryApplicationStatus` TCKN’i yalnızca `length === 11` ile kontrol ediyor. `lib/tckn.validateTckn` veya `lib/schemas.tcknSchema` kullanılmıyor.
 
 **Risks / Impact**
 
-- This path effectively bypasses the strict validation and business rules implemented in the `/basvuru` flow.
-- Malicious or incorrect usage of dynamic campaigns may pollute the `applications` table or violate business/legal rules.
+- Geçersiz TCKN (Mod10/Mod11’e uymayan) ile sorgu yapılabilir; KVKK ve veri tutarlılığı açısından diğer akışlarla uyum sağlanmalı.
 
 **Actions**
 
-- **Short-Term (Documentation / Guardrails)**
-  - [ ] In `FRONTEND.md`, add an explicit **warning** under the Dynamic Campaign Flow section:
-    - Clarify that the dynamic path is **less strict** than `/basvuru`.
-    - State that it must only be used for carefully scoped campaigns, or considered experimental.
-  - [ ] In `BACKEND.md`, note that `submitDynamicApplication` **does not** reuse the secure RPC path and list it as a security gap.
-- **Medium-Term (Refactor / Hardening)**
-  - [ ] Refactor `submitDynamicApplication` to:
-    - Use a **Service Role** Supabase client (server-side only).
-    - Call `submit_application_secure` RPC instead of direct `.insert`.
-    - Inject the same checks: TCKN validation, whitelist verification, rate limiting, duplicate blocking.
-  - [ ] Consider adding a per-campaign flag (e.g. `require_strict_flow`) to enforce reuse of secure logic.
+- [ ] `queryApplicationStatus` içinde TCKN için `validateTckn` veya `tcknSchema.safeParse` kullanın; hata mesajını kullanıcıya uygun dönün.
 
 ### 2.3 sync-odoo Authorization
 
@@ -132,26 +118,11 @@ It is intended as a **starting point for the new owning team** to plan hardening
 
 **Current State**
 
-- `app/admin/components/ApplicationTable.tsx`:
-  - UI for bulk approve/reject/delete is present.
-  - `bulkDeleteApplications` is wired.
-  - `bulkUpdateStatus` is partially wired; comments in code indicate missing imports / incomplete implementation.
-
-**Risks / Impact**
-
-- Admins may believe bulk status changes are fully supported while they are not.
-- Inconsistent UX: some bulk actions work, some silently no-op or partially fail.
+- `app/admin/components/ApplicationTable.tsx` wires `bulkUpdateApplicationStatus` (from admin actions) for bulk approve/reject/review and `bulkDeleteApplications` for bulk delete. Bulk status updates are implemented and hooked.
 
 **Actions**
 
-- **Short-Term**
-  - [ ] Document in `FRONTEND.md` Admin Dashboard section that bulk status updates are **partially implemented** and must be verified before production use.
-- **Medium-Term**
-  - [ ] Complete implementation of `bulkUpdateStatus` server action and hook it properly into `ApplicationTable.tsx`.
-  - [ ] Add E2E tests covering:
-    - Bulk approve
-    - Bulk reject
-    - Bulk delete
+- [ ] Add E2E tests covering bulk approve, bulk reject, and bulk delete.
 
 ### 3.2 DynamicForm Validation Strength
 
@@ -191,9 +162,7 @@ It is intended as a **starting point for the new owning team** to plan hardening
 - **Short-Term**
   - [ ] Extend `FRONTEND.md` with a **“Credit Application Flow”** section detailing all differences from the main application flow.
 - **Medium-Term**
-  - [ ] Decide whether credit campaigns should:
-    - Reuse the same backend RPC (`submit_application_secure`), or
-    - Have a dedicated RPC with clearly documented differences.
+  - [ ] Credit campaigns reuse `submit_dynamic_application_secure`; document any campaign-specific differences in FRONTEND.md or BACKEND.md.
 
 ---
 
@@ -216,24 +185,22 @@ It is intended as a **starting point for the new owning team** to plan hardening
     - `npm run lint`
     - `npm run type-check`
 
-### 4.2 Legacy Documentation vs New `/docs` Wiki
+### 4.2 Legacy Documentation vs Implementation
 
 **Current State**
 
-- Root-level documentation (`BACKEND.md`, `FRONTEND.md`, etc.) predates the new `/docs` technical wiki.
-- Some statements (e.g. hash/encrypt design) are outdated or partially conflicting with the current schema.
+- **BACKEND.md vs implementation:** BACKEND.md has been updated (Feb 2026) to match the current schema: `applications` (active columns: id, campaign_id, tckn, phone, full_name, email, status, form_data, client_ip); `member_whitelist` PK = tckn; `submit_application_secure` removed; only `submit_dynamic_application_secure` is the active submission RPC. Legacy/deprecated fields are in a dedicated subsection.
+- Root-level or duplicate docs may still contain outdated references. Authoritative technical documentation lives under `/docs`; CONVENTIONS.md and TECHNICAL_HEALTH_AND_ARCHITECTURE_MAP.md are the single source for migration and RPC references.
 
 **Risks / Impact**
 
-- New team might read conflicting sources and implement against the wrong assumptions.
+- Any doc that still claims TCKN is encrypted or references dropped RPCs can cause wrong assumptions. State plaintext storage and submit_dynamic_application_secure as the only submission path.
 
 **Actions**
 
-- **Short-Term**
-  - [ ] In root `README.md` and/or `HANDOVER.md`, add a note:
+- [ ] In root README.md and/or HANDOVER.md, add a note:
     - “**Authoritative technical documentation lives under `/docs`. Root-level docs may contain legacy design notes.**”
-- **Medium-Term**
-  - [ ] Optionally move legacy docs into a `/legacy_docs` folder and mark them as historical reference only.
+- [ ] When adding or editing docs, cross-check BACKEND.md and CONVENTIONS.md for schema/RPC accuracy.
 
 ---
 
@@ -309,15 +276,16 @@ To take over the project efficiently, the new team should follow this sequence:
 **Functional**
 
 - [x] **Campaign Management**: Full CRUD implemented (List, Create, Edit, Status transitions).
-- [x] **Bulk Operations**: Implemented bulk status updates (Approve/Reject/Review) in admin panel.
+- [x] **Bulk Operations**: Implemented bulk status updates (Approve/Reject/Review) in admin panel via `bulkUpdateApplicationStatus`.
 - [ ] **Reporting**: Basic export to Excel implemented. Advanced reporting still needed.
 - [x] Align `/kredi` flow behavior with `/basvuru` where required by business rules (Unified via `submit_dynamic_application_secure`).
 - [ ] Strengthen `DynamicForm` validation using schema-derived Zod.
+- [ ] **Sorgula TCKN**: Use `validateTckn` or `tcknSchema` in `queryApplicationStatus` (currently only `length === 11`).
 
 **Quality & Tooling**
 
 - [x] Remove `ignoreBuildErrors` and `ignoreDuringBuilds` after fixing underlying issues.
-- [ ] Consolidate documentation around `/docs` as the single source of truth.
+- [ ] Consolidate documentation around `/docs` as the single source of truth (BACKEND.md and CONVENTIONS.md updated to match implementation).
 - [ ] Increase E2E coverage for dynamic campaigns, admin operations, and Edge Functions.
 
 This list should be kept **alive**: update items as they are completed, add new gaps as they are discovered, and use it as input for sprint and release planning.

@@ -6,6 +6,7 @@ import { headers } from 'next/headers';
 import { tcknSchema, fullNameSchema } from '@/lib/schemas';
 import { resolveCampaignId } from '../basvuru/campaign';
 import { getSupabaseClient } from '@/lib/supabase-client';
+import { logger } from '@/lib/logger';
 
 const interestSchema = z.object({
     tckn: tcknSchema,
@@ -71,7 +72,7 @@ export async function submitInterest(prevState: InterestState, formData: FormDat
         });
 
         if (rateError) {
-            console.error('Rate Limit Error:', rateError);
+            logger.error('Rate Limit Error', rateError instanceof Error ? rateError : new Error(String(rateError)));
             return { success: false, message: 'İşlem sınırı kontrolü yapılamadı.' };
         }
 
@@ -96,14 +97,14 @@ export async function submitInterest(prevState: InterestState, formData: FormDat
             if (insertError.code === '23505') { // unique_violation
                 return { success: false, message: 'Bu e-posta adresi ile zaten bir talebiniz bulunmaktadır.' };
             }
-            console.error('Insert Error:', insertError);
+            logger.error('Insert Interest Error', new Error(insertError.message), { code: insertError.code });
             return { success: false, message: 'Kayıt sırasında bir hata oluştu.' };
         }
 
         return { success: true, message: 'Talebiniz başarıyla alınmıştır. Teşekkür ederiz.' };
 
     } catch (error) {
-        console.error('Submit Interest Panic:', error);
+        logger.error('Submit Interest Panic', error instanceof Error ? error : new Error(String(error)));
         return { success: false, message: 'Beklenmedik bir hata oluştu.' };
     }
 }

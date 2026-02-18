@@ -11,6 +11,7 @@ import { sendEmail } from '@/lib/smtp';
 
 import { getSupabaseUrl } from '@/lib/supabase-url';
 import { getSupabaseClient } from '@/lib/supabase-client';
+import type { Database, Tables, TablesUpdate, TablesInsert } from '@/types/supabase';
 
 // Helper to get authenticated client
 export async function getAdminClient() {
@@ -57,7 +58,7 @@ export async function adminLogin(prevState: unknown, formData: FormData) {
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
 
-    console.log(`[DEBUG] adminLogin: email="${email}", passwordLength=${password?.length || 0}`);
+    logger.debug('Admin login attempt', { email: '[REDACTED]', passwordLength: password?.length || 0 });
 
     const supabase = getSupabaseClient();
 
@@ -116,7 +117,7 @@ export async function adminLogout() {
 
 // Helper to decrypt applications
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-async function decryptApplications(apps: Record<string, any>[], _adminSupabase?: SupabaseClient) {
+async function decryptApplications(apps: Tables<'applications'>[], _adminSupabase?: SupabaseClient) {
     // We now store plain 'tckn' in the applications table (migration 20260204210041)
     // So we don't need to decrypt. We just pass the data through.
     return apps.map((app) => {
@@ -151,7 +152,7 @@ export async function getApplications(campaignId?: string, page: number = 1, lim
     const { data: apps, error, count } = await query.range(from, to);
 
     if (error) {
-        console.error("Fetch Apps Error:", error);
+        logger.error("Fetch Apps Error", error instanceof Error ? error : new Error(String(error)));
         return { data: [], count: 0 };
     }
 
@@ -216,7 +217,7 @@ export async function getAllApplicationsForExport(
             });
         }
     } catch (logError) {
-        console.error('Audit Log Failed:', logError);
+        logger.error('Audit Log Failed', logError instanceof Error ? logError : new Error(String(logError)));
         // Fail open? Or fail closed? Prompt says "Export is constrained and auditable".
         // But failing export due to log failure might be UX issue. 
         // We'll log error but allow export for now, or strict?
@@ -258,8 +259,7 @@ export async function getAllApplicationsForExport(
 export async function deleteApplication(id: string) {
     const adminSupabase = await getAdminClient();
     if (!adminSupabase) return { success: false, message: 'Auth required' };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { error } = await (adminSupabase as any).from('applications').delete().eq('id', id);
+    const { error } = await adminSupabase.from('applications').delete().eq('id', id);
     if (error) return { success: false, message: error.message };
     return { success: true };
 }
@@ -357,9 +357,10 @@ export async function uploadWhitelist(prevState: unknown, formData: FormData) {
         logger.adminAction('WHITELIST_UPLOAD', 'system', { count: members.length });
         return { success: true, message: `${members.length} kayıt yüklendi.` };
 
-    } catch (error: any) {
-        console.error('Upload Error:', error);
-        return { success: false, message: 'Hata: ' + error.message };
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        logger.error('Upload Error', error instanceof Error ? error : new Error(errorMessage));
+        return { success: false, message: 'Hata: ' + errorMessage };
     }
 }
 
@@ -430,7 +431,7 @@ export async function uploadDebtorList(prevState: unknown, formData: FormData) {
                 is_debtor: true,
                 synced_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
-            } as any);
+            });
         }
 
         if (members.length === 0) return { success: false, message: 'Geçerli kayıt bulunamadı.' };
@@ -449,9 +450,10 @@ export async function uploadDebtorList(prevState: unknown, formData: FormData) {
         logger.adminAction('DEBTOR_UPLOAD', 'system', { count: members.length });
         return { success: true, message: `${members.length} borçlu kayıt güncellendi/eklendi.` };
 
-    } catch (error: any) {
-        console.error('Debtor Upload Error:', error);
-        return { success: false, message: 'Hata: ' + error.message };
+    } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        logger.error('Debtor Upload Error', error instanceof Error ? error : new Error(errorMessage));
+        return { success: false, message: 'Hata: ' + errorMessage };
     }
 }
 
@@ -593,8 +595,7 @@ export async function saveEmailConfig(prevState: unknown, formData: FormData) {
 
     let error;
     if (id) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { error: updateError } = await (adminSupabase as any)
+        const { error: updateError } = await adminSupabase
             .from('email_configurations')
             .update(payload)
             .eq('id', id);
@@ -716,7 +717,7 @@ export async function createCampaign(prevState: unknown, formData: FormData) {
     }
 
     const campaignCode = codeFromForm || toCampaignCode(name) || `CAMPAIGN_${Date.now()}`;
-    const payload: Record<string, any> = {
+    const payload: Partial<TablesInsert<'campaigns'>> = {
         campaign_code: campaignCode,
         is_active: isActive,
     };
@@ -795,38 +796,48 @@ export async function getCampaignsWithDetails() {
     const adminSupabase = await getAdminClient();
     if (!adminSupabase) return [];
 
-    const { data } = await adminSupabase
-        .from('campaigns')
-        .select(`
-            id, campaign_code, name, slug, description,
-            status, is_active, max_quota,
-            start_date, end_date,
-            institution_id,
-            created_at, updated_at,
-            institutions ( id, name, code )
-        `)
-        .order('created_at', { ascending: false });
+    // Fetch campaign details and stats in parallel
+    const [campaignsResult, statsResult] = await Promise.all([
+        adminSupabase
+            .from('campaigns')
+            .select(`
+                id, campaign_code, name, slug, description,
+                status, is_active, max_quota,
+                start_date, end_date,
+                institution_id,
+                created_at, updated_at,
+                institutions ( id, name, code )
+            `)
+            .order('created_at', { ascending: false }),
+        adminSupabase.rpc('get_campaign_stats')
+    ]);
 
-    // Count applications per campaign
-    if (data && data.length > 0) {
-        const campaignIds = data.map((c: any) => c.id);
-        const { data: counts } = await adminSupabase
-            .from('applications')
-            .select('campaign_id')
-            .in('campaign_id', campaignIds);
+    const { data: campaigns } = campaignsResult;
+    const { data: stats } = statsResult;
 
-        const countMap: Record<string, number> = {};
-        counts?.forEach((row: any) => {
-            countMap[row.campaign_id] = (countMap[row.campaign_id] || 0) + 1;
-        });
-
-        return data.map((c: any) => ({
-            ...c,
-            application_count: countMap[c.id] || 0,
-        }));
+    if (!campaigns || campaigns.length === 0) {
+        return [];
     }
 
-    return data || [];
+    // Create a map of campaign stats by campaign ID
+    const statsMap = new Map<string, { total: number; approved: number; rejected: number; pending: number }>();
+    stats?.forEach((stat) => {
+        statsMap.set(stat.id, {
+            total: Number(stat.total) || 0,
+            approved: Number(stat.approved) || 0,
+            rejected: Number(stat.rejected) || 0,
+            pending: Number(stat.pending) || 0,
+        });
+    });
+
+    // Merge campaign details with stats
+    return campaigns.map((campaign) => {
+        const campaignStats = statsMap.get(campaign.id) || { total: 0, approved: 0, rejected: 0, pending: 0 };
+        return {
+            ...campaign,
+            application_count: campaignStats.total,
+        };
+    });
 }
 
 export async function getCampaignById(id: string) {
@@ -849,11 +860,11 @@ export async function getCampaignById(id: string) {
     return data;
 }
 
-export async function updateCampaignConfigAction(id: string, payload: any) {
+export async function updateCampaignConfigAction(id: string, payload: Partial<TablesUpdate<'campaigns'>>) {
     const adminSupabase = await getAdminClient();
     if (!adminSupabase) return { success: false, message: 'Auth error' };
 
-    const dbPayload: any = {};
+    const dbPayload: Partial<TablesUpdate<'campaigns'>> = {};
     if (payload?.title) dbPayload.name = payload.title;
     if (payload?.slug) dbPayload.slug = payload.slug;
     if (payload?.description !== undefined) dbPayload.description = payload.description || null;
@@ -908,7 +919,7 @@ export async function createCampaignEnhanced(prevState: unknown, formData: FormD
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '');
 
-    const payload: Record<string, any> = {
+    const payload: Partial<TablesUpdate<'campaigns'>> = {
         campaign_code: campaignCode,
         name,
         slug,
@@ -941,7 +952,7 @@ export async function updateCampaignEnhanced(id: string, prevState: unknown, for
 
     if (!name) return { success: false, message: 'Ad gerekli.' };
 
-    const payload: Record<string, any> = {
+    const payload: Partial<TablesInsert<'campaigns'>> = {
         name,
         campaign_code: codeFromForm || toCampaignCode(name),
         institution_id: institutionId,
@@ -985,8 +996,7 @@ export async function getInterests(campaignId?: string, page: number = 1, limit:
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data, error, count } = await (query as any).range(from, to);
+    const { data, error, count } = await query.range(from, to);
 
     if (error) {
         console.error("Fetch Interests Error:", error);

@@ -1,7 +1,7 @@
 # Talpa.org Kampanya Modülü – Teknik Sağlık ve Mimari Harita
 
-**Tarih:** 14 Şubat 2026  
-**Kapsam:** Veritabanı (Supabase), Backend (Server Actions), Frontend (Next.js)
+**Tarih:** 18 Şubat 2026  
+**Kapsam:** Veritabanı (Supabase), Backend (Server Actions), Frontend (Next.js 16)
 
 ---
 
@@ -24,6 +24,8 @@
 - **RPC (tek gerçek kaynak):** Kota, mükerrer, whitelist uygunluk ve INSERT `submit_dynamic_application_secure` içinde atomik. Üyelik durumu `verify_member`, mükerrer `check_existing_application`.
 - **Actions:** Akış orkestrasyonu (TCKN doğrula → verify_member → check_existing → session token → form submit → submit_dynamic_application_secure). İş kuralı “kota/whitelist/duplicate” DB’de.
 - **Utils:** `lib/tckn.ts` (validateTckn), `lib/schemas.ts` (Zod); şifreleme/hash yok, TCKN plain.
+- **Kurum markası (Institution Branding):** Kampanya/kurum teması `BrandProvider` (CSS değişkenleri: `--brand-primary`, `--brand-secondary`), admin tarafında `PartnerBranding` (logo/renk seçimi) ve kampanya sorgularında `institution:institutions(name, logo_url, primary_color, secondary_color)` join’i ile sağlanır. Migration: `20260217180000_add_institution_branding.sql`.
+- **Durum takibi:** `components/status/StatusTracker.tsx` (VerticalStepper) sorgula ve talep akışlarında başvuru adımlarını gösterir; client component.
 
 ---
 
@@ -33,11 +35,29 @@
 
 | Dosya | İçerik |
 |-------|--------|
-| `20260213000000_initial_schema.sql` | campaigns, applications, member_whitelist, verify_member, check_existing_application, RLS (anon) |
+| `20260213000001_initial_schema.sql` | campaigns, applications, member_whitelist, verify_member, check_existing_application, RLS (anon) |
+| `20260213000000_add_interests_table.sql` | interests tablosu + RLS (anon INSERT, admin SELECT/DELETE) |
+| `20260212220000_add_institutions_table.sql` | institutions tablosu + RLS (public active read, admin all) |
+| `20260212220200_campaign_status_transition_rpc.sql` | transition_campaign_status RPC (state machine) |
 | `20260214000000_get_application_status_by_tckn_phone.sql` | Sorgula RPC (id, created_at, status, campaign_name) |
 | `20260214000001_get_campaign_stats.sql` | Dashboard istatistik RPC |
 | `20260214000002_submit_dynamic_application_secure.sql` | Atomik başvuru RPC (FOR UPDATE, kota, whitelist, duplicate, INSERT) |
 | `20260214000003_create_admins.sql` | admins tablosu + RLS (kendi kaydı SELECT) |
+| `20260214000004_admin_rls_policies.sql` | is_admin() helper + applications/member_whitelist/campaigns için admin policy'leri |
+| `20260214000005_missing_schema_parity.sql` | interests (RLS güncellemesi), rate_limit_entries, check_rate_limit RPC, audit_logs |
+| `20260215134500_multi_campaign_schema.sql` | member_whitelist PK değişikliği (tckn), field_templates, email_rules, campaigns enhancement, admin policy'leri |
+| `20260215135000_check_member_status_rpc.sql` | check_member_status RPC (OTP için e-posta) |
+| `20260213160000_audit_logs_insert_policy.sql` | audit_logs INSERT policy |
+| `20260213170000_agreement_entity.sql` | agreement ile ilgili şema |
+| `20260213180000_add_slug_to_campaigns.sql` | campaigns.slug |
+| `20260215134400_drop_applications_member_id_fk.sql` | applications.member_id FK kaldırma |
+| `20260215134550_verify_member_after_whitelist_pk.sql` | verify_member / check_existing_application (PK tckn sonrası) |
+| `20260215135100_remove_applications_anon_insert.sql` | applications anon INSERT kaldırma; sadece RPC ile insert |
+| `20260215135200_trigger_url_config.sql` | trigger/URL config |
+| `20260217180000_add_institution_branding.sql` | institutions: primary_color, secondary_color |
+| `20260218140000_fix_lint_errors.sql` | submit_dynamic_application_secure enum fix; submit_application_secure drop |
+| `20260218141500_fix_lint_errors_v2.sql` | applications.client_ip (yoksa ekle); submit_application_secure tüm imzalar drop |
+| `20260203030000_email_configs.sql` | email_configurations tablosu |
 
 ### 2.2 Atomiklik Değerlendirmesi
 
@@ -47,12 +67,12 @@
 - **applications:**  
   `UNIQUE (campaign_id, tckn)` var; RPC içinde duplicate kontrolü + INSERT sonrası `EXCEPTION WHEN unique_violation` ile ikinci savunma hattı mevcut.
 
-### 2.3 Eksik / Tutarsız Noktalar
+### 2.3 Şema Paritesi Durumu (Güncellendi: 18 Şubat 2026)
 
 - **talep/actions.ts:**  
-  `check_rate_limit` RPC ve `interests` tablosu kullanılıyor; **migrations içinde bu tablo ve RPC yok.** CONVENTIONS.md’de “Supabase tarafında mevcut olmalı” deniyor; repoda migration eksik → talep akışı taze kurulumda hata verir.
+  `check_rate_limit` RPC ve `interests` tablosu kullanılıyor; bu tablo ve RPC repoda mevcuttur. Migration: `20260214000005_missing_schema_parity.sql` (interests RLS güncellemesi, rate_limit_entries, check_rate_limit, audit_logs). Talep akışı taze kurulumda bu migration ile uyumludur.
 - **admin/actions.ts:**  
-  `transition_campaign_status`, `audit_logs`, `email_configurations`, `institutions`, `interests` kullanılıyor; bunların tamamı için migration bu repoda **yok**. Şema, dashboard veya başka repoda yönetiliyor olabilir; tek kaynak migration değil.
+  `transition_campaign_status` (20260212220200), `audit_logs`, `email_configurations`, `institutions`, `interests` için ilgili migration’lar bu repoda mevcuttur; tek kaynak `supabase/migrations/` dizinidir. CONVENTIONS.md’de tablo/RPC–migration eşlemesi listelenmiştir.
 
 ---
 
@@ -74,7 +94,7 @@
 - **campaigns:**  
   `campaigns_read_active`: SELECT için `is_active = true`. **INSERT/UPDATE/DELETE için policy yok.**
 - **applications:**  
-  `applications_no_anon`: SELECT için `false` (anon hiç satır göremez). **Authenticated/admin için policy yok.**
+  `applications_no_anon`: SELECT için `false` (anon hiç satır göremez). Anon INSERT kaldırıldı (20260215135100); insert yalnızca `submit_dynamic_application_secure` RPC ile. **Authenticated/admin için policy migration’da tanımlı olmalı.**
 - **member_whitelist:**  
   `member_whitelist_no_anon`: SELECT için `false`. **Admin için policy yok.**
 - **admins:**  
@@ -95,12 +115,14 @@ Admin istemcisi `getSupabaseClient()` (anon key) + `setSession(access_token, ref
 
 ## 4. Performance & Modern Patterns
 
+- **Stack:** Next.js **16**, React 19, Tailwind **4** (`app/globals.css`: `@import "tailwindcss";`). Server Actions ile `useActionState` (admin login), `revalidatePath`, `redirect` kullanılır; hata dönüşü genelde `{ success, message }` formundadır.
+
 ### 4.1 RSC vs Client Components
 
 - **RSC (Server):**  
   `app/admin/dashboard/page.tsx`, `app/kampanya/[slug]/page.tsx` (slug’dan kampanya çekme, form wrapper’a props). Veri `Promise.all` ile tek seferde alınıyor; gereksiz client bundle yok.
 - **Client:**  
-  Formlar, tablolar, filtreler: `CampaignFormWrapper`, `DynamicForm`, `ApplicationTable`, `InterestTable`, `DashboardStats`, `CampaignStats`, login/form sayfaları. Mantıklı ayrım: etkileşim client’ta, veri çekimi server’da.
+  Formlar, tablolar, filtreler: `CampaignFormWrapper`, `DynamicForm`, `ApplicationTable`, `InterestTable`, `DashboardStats`, `CampaignStats`, `StatusTracker` (VerticalStepper), login/form sayfaları. Mantıklı ayrım: etkileşim client’ta, veri çekimi server’da.
 
 ### 4.2 N+1 ve Sorgu Sayısı
 
@@ -156,10 +178,8 @@ Bu kullanımlar tip güvenliğini zayıflatıyor; Supabase üretilen tipleri ve 
    - `campaigns`: SELECT (tümü) + INSERT/UPDATE/DELETE için admin policy.  
    Böylece admin paneli, mevcut anon+setSession akışı ile çalışabilir; aksi halde boş/403 riski var.
 
-2. **Eksik migration’lar**  
-   `interests` tablosu, `check_rate_limit`, `transition_campaign_status`, `audit_logs`, `email_configurations`, `institutions` CONVENTIONS ve admin/talep koduna göre gerekli. Bunları tekilleştirin:  
-   - Ya hepsini `supabase/migrations/` altında SQL ile ekleyin,  
-   - Ya da CONVENTIONS’ı “bu şema başka yerde yönetiliyor” diye güncelleyip, tek ortamı (ör. Supabase branch) referans alın.
+2. **Migration’lar**  
+   `interests`, `check_rate_limit`, `rate_limit_entries`, `audit_logs`, `email_configurations`, `institutions`, `transition_campaign_status` bu repoda ilgili migration dosyalarında mevcuttur (örn. `20260214000005_missing_schema_parity.sql`, `20260212220000_add_institutions_table.sql`, `20260212220200_campaign_status_transition_rpc.sql`). CONVENTIONS.md ile çapraz kontrol edin; eksik RLS/policy varsa yeni migration ile ekleyin.
 
 3. **Debug / agent çağrıları**  
    `app/actions.ts` ve `app/basvuru/campaign.ts` içindeki `http://127.0.0.1:7248/ingest/...` isteklerini production’da devre dışı bırakın (env check veya tamamen kaldırma).
@@ -201,7 +221,7 @@ Aşağıdaki sıra, bağımlılıkları ve riski minimize edecek şekilde kurgul
 | Faz | Adım | Açıklama |
 |-----|------|----------|
 | **1** | RLS migration | Yeni migration: `applications`, `member_whitelist`, `campaigns` için admin (auth.uid() IN (SELECT id FROM admins)) policy’leri. Mevcut anon policy’lere dokunmadan ekleyin. |
-| **2** | Eksik şema migration | `interests`, `check_rate_limit` (ve talep için gerekli diğer nesneler), `audit_logs`, `email_configurations`, `institutions`, `transition_campaign_status` RPC’sini tek migration (veya mantıklı parçalara bölünmüş migration’lar) ile ekleyin. CONVENTIONS ile çapraz kontrol. |
+| **2** | Migration / CONVENTIONS çapraz kontrol | Tüm tablo ve RPC’ler repoda mevcut. CONVENTIONS.md ile migration listesini eşleyin; eksik RLS/policy varsa yeni migration ile ekleyin. |
 | **3** | Debug kodu kaldırma | `app/actions.ts` ve `app/basvuru/campaign.ts` içindeki 127.0.0.1:7248 ingest çağrılarını kaldırın veya `process.env.NODE_ENV === 'development'` ile sınırlayın. |
 | **4** | Sorgula TCKN | `sorgula/actions.ts`’de TCKN için `validateTckn` veya `tcknSchema.safeParse` kullanın; hata mesajını kullanıcıya uygun şekilde dönün. |
 | **5** | Tipler (kademeli) | Supabase `supabase gen types typescript` çıktısını projeye alın; `getApplications`, `getCampaigns`, admin action’larında `any` yerine bu tipleri kullanmaya başlayın. |

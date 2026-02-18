@@ -41,63 +41,47 @@ Stores configuration for active marketing campaigns with dynamic form schemas an
 Source of truth for eligible members. Stores TCKN in plaintext (per business requirement).
 
 **Columns**:
-- `id` (UUID, PK): Primary key
-- `tckn` (TEXT, UNIQUE, NOT NULL): Turkish Identity Number (plaintext). See [Historical Encryption Design](#historical-encryption-design-deprecated).
+- `tckn` (TEXT, PK, NOT NULL): Turkish Identity Number (plaintext). Primary key; `id` column was removed in multi-campaign schema. See [Historical Encryption Design](#historical-encryption-design-deprecated).
 - `masked_name` (TEXT): Partially masked name for display (e.g., "Ah*** Y***")
 - `is_active` (BOOLEAN, DEFAULT true): Member eligibility status
+- `is_debtor` (BOOLEAN, DEFAULT false): Debtor flag (blocks application)
 - `synced_at` (TIMESTAMPTZ, DEFAULT NOW()): Last Odoo sync timestamp
 - `updated_at` (TIMESTAMPTZ, DEFAULT NOW())
 
 **Indexes**:
-- `idx_whitelist_tckn`: On `tckn`
-- `idx_whitelist_active`: Partial index on `is_active` WHERE `is_active = true`
+- `idx_member_whitelist_tckn`: On `tckn` (PK)
+- Partial index on `is_active` WHERE `is_active = true` (if present)
 
 **RLS Policies**:
-- Public read access for verification: `is_active = true` (via RPC function)
-- Admin full access: Authenticated admins
+- Public read via RPC only (`verify_member`); no direct anon SELECT.
+- Admin full access: Authenticated admins (migration: `20260215134500_multi_campaign_schema.sql`).
 
 #### 3. `applications`
 
-Stores all campaign application submissions with form data and consent metadata.
+Stores all campaign application submissions. Inserts are **only** via the `submit_dynamic_application_secure` RPC (anon direct INSERT was removed in migration `20260215135100`).
 
-**Columns**:
+**Active schema (migrations)**:
 - `id` (UUID, PK): Primary key
 - `campaign_id` (UUID, FK → `campaigns.id`): Associated campaign
-- `member_id` (UUID, FK → `member_whitelist.id`): Verified member reference
-- `tckn` (TEXT, NOT NULL): TCKN (plaintext, primary identifier)
-- `encrypted_tckn` (TEXT, NOT NULL): **DEPRECATED**. Legacy field from initial encryption design. Currently stores plaintext or matches `tckn`.
-- `full_name` (TEXT, NOT NULL): Applicant full name
-- `email` (TEXT, NOT NULL): Applicant email
-- `phone` (TEXT, NOT NULL): Applicant phone number
-- `address` (TEXT): Delivery address (if applicable)
-- `city` (TEXT): City
-- `district` (TEXT): District
+- `tckn` (TEXT, NOT NULL): TCKN (plaintext)
+- `phone` (TEXT), `full_name` (TEXT), `email` (TEXT): From form
+- `status` (TEXT, DEFAULT 'PENDING'): e.g. PENDING, APPROVED, REJECTED, REVIEWING
 - `form_data` (JSONB, DEFAULT '{}'): Dynamic form field values
-- `dynamic_data` (JSONB, DEFAULT '{}'): Additional campaign-specific data
-- `status` (ENUM: `PENDING`, `APPROVED`, `REJECTED`, `REVIEWING`, DEFAULT `PENDING`)
-- `admin_notes` (TEXT): Internal admin notes
-- `address_sharing_consent` (BOOLEAN, DEFAULT false): Address sharing consent
-- `card_application_consent` (BOOLEAN, DEFAULT false): Card application consent
-- `tckn_phone_sharing_consent` (BOOLEAN, DEFAULT false): TCKN/phone sharing consent
-- `kvkk_consent` (BOOLEAN, DEFAULT false): KVKK (GDPR) consent
-- `open_consent` (BOOLEAN, DEFAULT false): Open banking consent
-- `communication_consent` (BOOLEAN, DEFAULT false): Communication consent
-- `consent_metadata` (JSONB, DEFAULT '{}'): IP, user agent, timestamp, consent version
+- `client_ip` (TEXT, nullable): Client IP at submission
 - `created_at` (TIMESTAMPTZ, DEFAULT NOW())
 
 **Constraints**:
-- Unique constraint: `(campaign_id, member_id)` - Prevents duplicate applications per campaign
-- Unique constraint: `(campaign_id, tckn)` - Additional TCKN-based duplicate prevention
+- Unique: `(campaign_id, tckn)` – duplicate prevention (enforced in RPC and DB).
 
 **Indexes**:
-- `idx_applications_campaign`: On `campaign_id`
-- `idx_applications_created`: On `created_at DESC`
-- `idx_applications_status`: On `status`
+- `idx_applications_campaign_id`, `idx_applications_tckn_phone` (migrations).
 
 **RLS Policies**:
-- Public insert: Anyone can submit applications
-- Admin read: Authenticated admins can view all applications
-- Admin update/delete: Admin role only (viewer role cannot modify)
+- Anon: No direct SELECT; no direct INSERT (insert only via `submit_dynamic_application_secure`).
+- Admin: Authenticated admins (policy in migrations) for SELECT/UPDATE/DELETE.
+
+**Legacy / deprecated (not in current migrations)**  
+Older documentation or generated types may reference: `member_id`, `encrypted_tckn`, consent columns (`address_sharing_consent`, `kvkk_consent`, etc.), `consent_metadata`, `admin_notes`. These are not part of the current migration-defined schema. The app’s `decryptApplications()` helper exists for backward compatibility where `encrypted_tckn` may still exist in existing databases; it returns plaintext when possible.
 
 #### 4. `email_configurations`
 
@@ -195,22 +179,22 @@ Logs for Odoo synchronization operations.
 
 Verifies if a TCKN exists in the member whitelist.
 
-**Security**: `SECURITY DEFINER` (executes with superuser privileges to bypass RLS)
+**Security**: `SECURITY DEFINER` (executes with elevated privileges to bypass RLS)
 
 **Parameters**:
 - `p_tckn` (TEXT): Plaintext TCKN
 
-**Returns**: `TABLE(id UUID, status TEXT)`
-- `id`: Member UUID if found
-- `status`: `'FOUND'` or `'NOT_FOUND'`
+**Returns**: `TABLE(tckn TEXT, status TEXT)`
+- `tckn`: TCKN if found (PK of `member_whitelist`)
+- `status`: `'ACTIVE'`, `'INACTIVE'`, or `'DEBTOR'`; empty result means not found.
 
 **Logic**:
-1. Query `member_whitelist` WHERE `tckn = p_tckn AND is_active = true`
-2. Return member ID and status
+1. Query `member_whitelist` WHERE `tckn = p_tckn`
+2. Return tckn and status (DEBTOR / ACTIVE / INACTIVE). Empty row = NOT_FOUND.
 
-**Usage**: Called from Server Actions after Mod10/Mod11 validation
+**Usage**: Called from Server Actions after Mod10/Mod11 validation. Updated in `20260215134550_verify_member_after_whitelist_pk.sql` after PK change to `tckn`.
 
-### `check_existing_application(p_tckn_plain TEXT, p_campaign_id UUID, p_member_id UUID)`
+### `check_existing_application(p_tckn_plain TEXT, p_campaign_id UUID, p_member_id UUID DEFAULT NULL)`
 
 Checks if an application already exists for a given TCKN and campaign.
 
@@ -219,51 +203,53 @@ Checks if an application already exists for a given TCKN and campaign.
 **Parameters**:
 - `p_tckn_plain` (TEXT): Plaintext TCKN
 - `p_campaign_id` (UUID): Campaign ID
-- `p_member_id` (UUID): Member ID
+- `p_member_id` (UUID, optional): Unused; kept for signature compatibility.
 
-**Returns**: `JSONB`
-```json
-{
-  "exists": boolean,
-  "application_id": UUID | null,
-  "found_by": "tckn" | "member_id" | null
-}
-```
+**Returns**: `TABLE(exists BOOLEAN)`
 
 **Logic**:
-1. Check by TCKN: `SELECT id FROM applications WHERE campaign_id = p_campaign_id AND tckn = p_tckn_plain`
-2. If not found, check by member_id (for legacy records)
-3. Return existence status
+1. `SELECT EXISTS(SELECT 1 FROM applications WHERE campaign_id = p_campaign_id AND tckn = p_tckn_plain)`
+2. Return single row with `exists` true/false.
 
-### `submit_application_secure(p_tckn_plain TEXT, p_campaign_id UUID, p_encrypted_tckn TEXT, p_form_data JSONB, p_consent_metadata JSONB)`
+**Migration**: `20260215134550_verify_member_after_whitelist_pk.sql`
 
-Securely submits an application with duplicate checking and validation.
+### `submit_dynamic_application_secure(p_campaign_id UUID, p_tckn TEXT, p_form_data JSONB, p_client_ip TEXT DEFAULT NULL)` **(aktif)**
+
+**Tek aktif başvuru RPC.** Tüm başvurular (basvuru, kredi, kampanya) bu RPC ile kaydedilir.
 
 **Security**: `SECURITY DEFINER`
 
 **Parameters**:
-- `p_tckn_plain` (TEXT): Plaintext TCKN
 - `p_campaign_id` (UUID): Campaign ID
-- `p_encrypted_tckn` (TEXT): Encrypted TCKN (currently stores plaintext)
-- `p_form_data` (JSONB): Form field values
-- `p_consent_metadata` (JSONB): IP, user agent, timestamp, consent version
+- `p_tckn` (TEXT): Plaintext TCKN
+- `p_form_data` (JSONB): Form field values (phone, fullName, email extracted inside RPC)
+- `p_client_ip` (TEXT, optional): Client IP for audit
 
 **Returns**: `JSONB`
 ```json
 {
   "success": boolean,
   "message": string,
+  "code": string | null,
   "application_id": UUID | null
 }
 ```
+Codes include: `CAMPAIGN_NOT_FOUND`, `CAMPAIGN_CLOSED`, `ELIGIBILITY_FAILED`, `QUOTA_EXCEEDED`, `DUPLICATE_ENTRY`.
 
-**Logic**:
-1. Verify member exists in whitelist: `SELECT id FROM member_whitelist WHERE tckn = p_tckn_plain AND is_active = true`
-2. Check duplicate: `SELECT id FROM applications WHERE campaign_id = p_campaign_id AND tckn = p_tckn_plain`
-3. Insert application with all fields
-4. Return success status and application ID
+**Logic** (atomic in one transaction):
+1. Lock campaign row `FOR UPDATE`
+2. Check campaign status = 'active' and dates
+3. Verify member in whitelist (is_active, !is_debtor)
+4. Quota check (max_quota)
+5. Duplicate check (campaign_id + tckn)
+6. INSERT into applications (tckn, phone, full_name, email, status, form_data, client_ip from form_data)
+7. Return success or error code
 
-**Triggers**: Fires `notify_application_submitted()` trigger on INSERT
+**Migrations**: `20260214000002_submit_dynamic_application_secure.sql`, `20260218140000_fix_lint_errors.sql` (status enum fix), `20260218141500_fix_lint_errors_v2.sql`.
+
+### `submit_application_secure(...)` **DEPRECATED / REMOVED**
+
+Eski başvuru RPC’si. Migration’larda kaldırıldı (`20260218140000_fix_lint_errors.sql`, `20260218141500_fix_lint_errors_v2.sql`). Yerine **yalnızca** `submit_dynamic_application_secure` kullanılır.
 
 ### `check_rate_limit(p_tckn TEXT, p_action TEXT)` (aktif)
 
@@ -286,6 +272,29 @@ TCKN ve aksiyon bazlı rate limiting. Talep ve TCKN doğrulama akışında kulla
 
 **Deprecated**: Eski `rate_limit` tablosu ve `check_rate_limit(p_ip_address INET, p_endpoint TEXT, ...)` imzası (002_rate_limiting.sql) artık kullanılmıyor; dokümantasyonla uyum için bırakılmıştır.
 
+### `get_application_status_by_tckn_phone(p_tckn TEXT, p_phone TEXT)`
+
+Returns application status information for a given TCKN and phone number. Used by the "sorgula" (query) flow.
+
+**Security**: `SECURITY DEFINER` - **Must be called with service role** to bypass RLS
+
+**Parameters**:
+- `p_tckn` (TEXT): Plaintext TCKN (11 digits)
+- `p_phone` (TEXT): Phone number
+
+**Returns**: `TABLE(id UUID, created_at TIMESTAMPTZ, status TEXT, campaign_name TEXT)`
+- Returns limited fields only (no PII exposure beyond what's necessary)
+- Ordered by `created_at DESC`
+
+**Logic**:
+1. Query `applications` table WHERE `tckn = p_tckn AND phone = p_phone`
+2. LEFT JOIN with `campaigns` to get campaign name
+3. Return id, created_at, status, campaign_name
+
+**Usage**: Called from `queryApplicationStatus()` server action via `getServiceRoleClient()`. This RPC is the **only** way end-users can query their application status; direct table access is blocked by RLS.
+
+**Migration**: `20260214000000_get_application_status_by_tckn_phone.sql`
+
 ### `get_active_campaigns()`
 
 Returns all active campaigns with valid date ranges.
@@ -298,26 +307,9 @@ Returns all active campaigns with valid date ranges.
 - Select from `campaigns` WHERE `is_active = true AND end_date >= CURRENT_DATE`
 - Ordered by `start_date`
 
-### `decrypt_tckn(p_encrypted_tckn TEXT, p_key TEXT)`
+### `decrypt_tckn(p_encrypted_tckn TEXT, p_key TEXT)` **DEPRECATED**
 
-Decrypts TCKN for admin viewing (restricted to admin role, not viewer).
-
-**Security**: `SECURITY DEFINER` with role checking
-
-**Parameters**:
-- `p_encrypted_tckn` (TEXT): Encrypted TCKN (hex-encoded)
-- `p_key` (TEXT): Decryption key
-
-**Returns**: `TEXT` - Decrypted TCKN or `NULL` on error
-
-**Logic**:
-1. Check authentication: `auth.role() = 'authenticated'` or `'service_role'`
-2. Check admin role: Query `admins` table, ensure role != 'viewer'
-3. Decrypt using `pgp_sym_decrypt()` with `pgcrypto` extension
-4. Log to `audit_logs` table
-5. Return decrypted value
-
-**Audit**: All decryption attempts logged to `audit_logs` with action `'DECRYPT_TCKN'`
+Eski şifreleme tasarımına ait. TCKN artık düz metin saklandığı için bu RPC aktif akışta kullanılmıyor. Uygulama tarafında admin paneli `decryptApplications()` ile sadece legacy `encrypted_tckn` kolonu varsa (eski veriler) değeri döndürür; yeni şemada `applications` tablosunda `encrypted_tckn` kolonu yoktur.
 
 ### `cleanup_rate_limits()`
 
@@ -482,18 +474,25 @@ TCKN + action rate limiting at the database level.
 
 All tables have RLS enabled with policies:
 
-**Public Policies**:
+**Public Policies (Anon Key)**:
 - `campaigns`: Read access to active campaigns (`is_active = true AND end_date >= CURRENT_DATE`)
-- `member_whitelist`: Read access via RPC function only (no direct table access)
-- `applications`: Insert only (public can submit, cannot read)
+- `member_whitelist`: **No direct table access** - Anon SELECT blocked (`member_whitelist_no_anon` policy). Access only via `verify_member()` RPC.
+- `applications`: **No direct table access** - Anon SELECT blocked (`applications_no_anon` policy). Insert allowed via RPC (`applications_anon_insert`). Status queries must use `get_application_status_by_tckn_phone()` RPC with service role.
 
-**Admin Policies**:
-- Full access to `campaigns`, `applications`, `email_configurations`, `admins`
-- Read access to `audit_logs`, `sync_logs`
+**Admin Policies (Authenticated + Admin Check)**:
+- Uses `is_admin(auth.uid())` helper function to check `admins` table membership
+- Full access to `campaigns` (`campaigns_admin_all`), `applications` (`applications_admin_all`), `member_whitelist` (`member_whitelist_admin_all`), `email_configurations`, `admins`
+- Read access to `audit_logs` (`audit_logs_admin_all`), `sync_logs`
 - Role-based restrictions: `viewer` role cannot decrypt TCKN or modify data
 
 **Service Role**:
-- Bypasses all RLS policies (used by Edge Functions and migrations)
+- Bypasses all RLS policies (used by Edge Functions, migrations, and secure RPC calls)
+- **Required for**: `get_application_status_by_tckn_phone()` RPC calls (queryApplicationStatus flow)
+- **Usage**: Server-side only, never exposed to client. Created via `getServiceRoleClient()` helper.
+
+**End-User Query Pattern**:
+- **Status Queries**: `queryApplicationStatus()` → Uses `getServiceRoleClient()` → Calls `get_application_status_by_tckn_phone()` RPC
+- **Rationale**: RPC returns limited fields (id, created_at, status, campaign_name) and bypasses RLS safely. Direct table access is blocked for anon users.
 
 ## Database Triggers
 

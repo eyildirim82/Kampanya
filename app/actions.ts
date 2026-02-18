@@ -6,9 +6,21 @@ import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 import { verifySessionToken } from '@/lib/session-token';
 import { getSupabaseUrl } from '@/lib/supabase-url';
-import { getSupabaseClient } from '@/lib/supabase-client';
+import { getSupabaseClient, getServiceRoleClient } from '@/lib/supabase-client';
 import { sendTransactionalEmail } from '@/lib/mail-service';
 import { logger } from '@/lib/logger';
+import type { Database, TablesUpdate } from '@/types/supabase';
+
+// Campaign form field schema interface
+export interface CampaignFormField {
+    name: string;
+    label: string;
+    type: string;
+    required?: boolean;
+    placeholder?: string;
+    options?: Array<{ label: string; value: string }>;
+    validation?: Record<string, unknown>;
+}
 
 async function getAdminClient() {
     const cookieStore = await cookies();
@@ -56,7 +68,7 @@ export async function getCampaignBySlug(slug: string) {
     return data;
 }
 
-export async function updateCampaignConfig(id: string, updates: any, previousSlug?: string | null) {
+export async function updateCampaignConfig(id: string, updates: TablesUpdate<'campaigns'>, previousSlug?: string | null) {
     const adminSupabase = await getAdminClient();
     if (!adminSupabase) return { success: false, message: 'Yetkisiz işlem.' };
 
@@ -66,7 +78,7 @@ export async function updateCampaignConfig(id: string, updates: any, previousSlu
         .eq('id', id);
 
     if (error) {
-        console.error('Update Campaign Error:', error);
+        logger.error('Update Campaign Error', error instanceof Error ? error : new Error(String(error)));
         return { success: false, message: error.message };
     }
 
@@ -99,7 +111,8 @@ export async function getActiveCampaigns() {
     return data || [];
 }
 
-export async function createCampaign(prevState: any, formData: FormData) {
+type CampaignActionResult = { success: boolean; message: string };
+export async function createCampaign(prevState: CampaignActionResult | undefined, formData: FormData) {
     const adminSupabase = await getAdminClient();
     if (!adminSupabase) return { success: false, message: 'Yetkisiz.' };
 
@@ -165,7 +178,7 @@ export async function submitDynamicApplication(
     }
 
     // --- Server-Side Validation Start ---
-    const formSchemaDef = (campaign.form_schema as any[]) || [];
+    const formSchemaDef = (campaign.form_schema as CampaignFormField[]) || [];
     const shape: Record<string, z.ZodTypeAny> = {};
 
     formSchemaDef.forEach((field) => {
@@ -274,8 +287,6 @@ export async function submitDynamicApplication(
 }
 
 export async function queryApplicationStatus(tckn: string, phone: string) {
-    const client = getSupabaseClient();
-
     // 1. Validate inputs
     if (!tckn || tckn.length !== 11) {
         return { success: false, message: 'Geçersiz T.C. Kimlik Numarası.' };
@@ -284,30 +295,17 @@ export async function queryApplicationStatus(tckn: string, phone: string) {
         return { success: false, message: 'Telefon numarası gerekli.' };
     }
 
-    // 2. Query application matching both TCKN and Phone
-    // We search the 'applications' table where form_data->>'tckn' == tckn AND form_data->>'phone' == phone
-    // Note: This relies on applications storing tckn and phone in form_data or specific columns.
-    // Based on submitDynamicApplication, tckn is passed separately to RPC, likely stored in 'tckn' column?
-    // Let's check if 'tckn' column exists or if it's in form_data.
-    // The RPC submit_dynamic_application_secure puts p_tckn into 'tckn' column usually.
-    // Let's assume 'tckn' column exists (it's standard).
-    // Phone is usually in form_data ->> 'phone'.
+    // 2. Use service role client to call RPC (bypasses RLS, secure RPC call)
+    // RPC returns only: id, created_at, status, campaign_name (limited PII exposure)
+    const serviceClient = getServiceRoleClient();
 
-    const { data, error } = await client
-        .from('applications')
-        .select(`
-            id,
-            status,
-            created_at,
-            campaigns ( name, institution_id )
-        `)
-        .eq('tckn', tckn)
-        .eq('form_data->>phone', phone)
-        .order('created_at', { ascending: false })
-        .limit(5); // Return last 5 applications
+    const { data, error } = await serviceClient.rpc('get_application_status_by_tckn_phone', {
+        p_tckn: tckn,
+        p_phone: phone
+    });
 
     if (error) {
-        console.error("Query Status Error:", error);
+        logger.error('Query application status error', { error: error.message, tckn: '[REDACTED]', phone: '[REDACTED]' });
         return { success: false, message: 'Sorgulama sırasında bir hata oluştu.' };
     }
 
@@ -315,12 +313,15 @@ export async function queryApplicationStatus(tckn: string, phone: string) {
         return { success: false, message: 'T.C. Kimlik Numarası ve Telefon bilgisine ait kayıt bulunamadı.' };
     }
 
+    // Limit to last 5 applications
+    const limitedData = data.slice(0, 5);
+
     return {
         success: true,
-        applications: data.map((app: any) => ({
+        applications: limitedData.map((app) => ({
             id: app.id,
             status: app.status,
-            campaignName: app.campaigns?.name || 'Bilinmeyen Kampanya',
+            campaignName: app.campaign_name || 'Bilinmeyen Kampanya',
             createdAt: app.created_at
         }))
     };

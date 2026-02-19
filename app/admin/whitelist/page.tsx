@@ -304,7 +304,7 @@ export default function WhitelistPage() {
                                 type="text"
                                 name="search"
                                 id="search"
-                                className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-4 pr-12 sm:text-sm border-gray-300 rounded-md py-2 border"
+                                className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-4 pr-12 sm:text-sm border-gray-300 rounded-md py-2 border text-gray-900"
                                 placeholder="TCKN veya İsim ile ara..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}

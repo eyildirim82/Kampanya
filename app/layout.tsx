@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { Fraunces, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
 import "./globals.css";
 import { ensureConfigValid } from "@/lib/config-validation";
 import { Toaster } from "sonner";
@@ -7,25 +8,8 @@ import { PerformanceMeasurePatch } from "@/components/PerformanceMeasurePatch";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
 import { AppShell } from "@/components/layout/AppShell";
 
-const plusJakarta = Plus_Jakarta_Sans({
-  variable: "--font-plus-jakarta",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
-
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-  title: "TALPA | Kampanya Portalı",
+  title: "TALPA",
   description: "TALPA ve DenizBank işbirliği ile sunulan Private Kart avantajları.",
   icons: {
     icon: [
@@ -69,7 +53,7 @@ export default function RootLayout({
         `}} />
       </head>
       <body
-        className={`${plusJakarta.variable} ${fraunces.variable} ${jetbrainsMono.variable} antialiased selection:bg-primary selection:text-white min-h-screen flex flex-col`}
+        className={`${GeistSans.variable} ${GeistMono.variable} font-sans antialiased selection:bg-primary selection:text-white min-h-screen flex flex-col`}
       >
         <ThemeProvider>
           <PerformanceMeasurePatch />

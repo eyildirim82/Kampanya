@@ -7,10 +7,16 @@
    DESIGN TOKENS - Color System
    =================================== */
 :root {
-  /* Primary Brand Colors */
-  --primary: #1d3557;
-  --primary-dark: #10213a;
-  --primary-light: #4c6d9b;
+  /* Primary Brand Colors - TALPA Navy Blue */
+  --primary: #002D72;
+  --primary-dark: #001E3F;
+  --primary-light: #004A9E;
+
+  /* Secondary - Slate-800 */
+  --secondary: #1E293B;
+
+  /* Accent - Aviation Gold (minimal / critical use only) */
+  --accent-gold: #D4AF37;
 
   --talpa-navy-50: #e6eef5;
   --talpa-navy-100: #ccdde8;
@@ -18,7 +24,7 @@
   --talpa-navy-300: #6699bb;
   --talpa-navy-400: #3377a4;
   --talpa-navy-500: #00558d;
-  --talpa-navy-600: #002855;
+  --talpa-navy-600: #002D72;
   --talpa-navy-700: #001e3f;
   --talpa-navy-800: #00142a;
   --talpa-navy-900: #000a15;
@@ -80,23 +86,23 @@
   --info: #3b82f6;
 
   /* Background Colors */
-  --background: #fafaf4;
+  --background: #F8FAFC;
   --foreground: #1c1917;
   --surface: #ffffff;
-  --surface-overlay: rgba(254, 252, 247, 0.92);
+  --surface-overlay: rgba(248, 250, 252, 0.92);
 
-  /* Dynamic Brand Colors (defaults to primary) */
-  --brand-primary: #1d3557;
-  --brand-secondary: #10213a;
-  --brand-primary-rgb: 29 53 87;
-  --brand-secondary-rgb: 16 33 58;
+  /* Dynamic Brand Colors (TALPA Navy Blue) */
+  --brand-primary: #002D72;
+  --brand-secondary: #1E293B;
+  --brand-primary-rgb: 0 45 114;
+  --brand-secondary-rgb: 30 41 59;
 
   /* ===================================
-     DESIGN TOKENS - Typography
+     DESIGN TOKENS - Typography (Geist)
      =================================== */
-  --font-sans: var(--font-plus-jakarta), -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-  --font-display: var(--font-fraunces), var(--font-plus-jakarta), sans-serif;
-  --font-heading: var(--font-fraunces), 'Georgia', 'Times New Roman', serif;
+  --font-sans: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  --font-display: var(--font-geist-sans), sans-serif;
+  --font-heading: var(--font-geist-sans), sans-serif;
   --font-mono: var(--font-geist-mono), 'Courier New', monospace;
 
   /* Font Sizes - Type Scale */
@@ -144,12 +150,12 @@
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
 
-  /* Colored Shadows */
-  --shadow-primary: 0 18px 45px -12px rgba(29, 53, 87, 0.35);
-  --shadow-primary-lg: 0 22px 60px -18px rgba(29, 53, 87, 0.45);
-  --shadow-talpa: 0 18px 45px -12px rgba(15, 23, 42, 0.4);
+  /* Colored Shadows (TALPA Navy Blue rgb 0, 45, 114) */
+  --shadow-primary: 0 18px 45px -12px rgba(0, 45, 114, 0.35);
+  --shadow-primary-lg: 0 22px 60px -18px rgba(0, 45, 114, 0.45);
+  --shadow-talpa: 0 18px 45px -12px rgba(0, 45, 114, 0.4);
   --shadow-denizbank: 0 18px 45px -12px rgba(227, 6, 19, 0.35);
-  --shadow-glow: 0 0 25px rgba(250, 204, 21, 0.4);
+  --shadow-glow: 0 0 25px rgba(212, 175, 55, 0.4);
   --shadow-glow-red: 0 0 22px rgba(227, 6, 19, 0.4);
 
   /* ===================================
@@ -188,6 +194,8 @@
   --color-primary: var(--primary);
   --color-primary-dark: var(--primary-dark);
   --color-primary-light: var(--primary-light);
+  --color-secondary: var(--secondary);
+  --color-accent-gold: var(--accent-gold);
 
   /* Stitch Design System Colors */
   --color-background-light: var(--background-light);
@@ -263,8 +271,8 @@
   }
 
   @keyframes pulseGlow {
-    0%, 100% { box-shadow: 0 0 5px rgba(17, 82, 212, 0.1), inset 0 0 0 rgba(17, 82, 212, 0); }
-    50% { box-shadow: 0 0 20px rgba(17, 82, 212, 0.4), inset 0 0 10px rgba(17, 82, 212, 0.1); }
+    0%, 100% { box-shadow: 0 0 5px rgba(0, 45, 114, 0.1), inset 0 0 0 rgba(0, 45, 114, 0); }
+    50% { box-shadow: 0 0 20px rgba(0, 45, 114, 0.4), inset 0 0 10px rgba(0, 45, 114, 0.1); }
   }
 
   @keyframes radarSweep {
@@ -284,7 +292,7 @@
 
   /* Background Images */
   --image-grid-pattern: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03' fill-rule='evenodd'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E");
-  --image-gradient-radar: linear-gradient(90deg, transparent 0%, rgba(17, 82, 212, 0.1) 50%, transparent 100%);
+  --image-gradient-radar: linear-gradient(90deg, transparent 0%, rgba(0, 45, 114, 0.1) 50%, transparent 100%);
 }
 
 /* Dark Mode Support (system preference fallback) */
@@ -419,40 +427,50 @@ body::before {
 }
 
 /* ===================================
-   GLASSMORPHISM UTILITIES
+   GLASSMORPHISM UTILITIES (Aviation Elite - High Precision)
    =================================== */
+.glass-effect {
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 45, 114, 0.1);
+  border-radius: 8px;
+}
+
 .glass {
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 45, 114, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.08);
 }
 
 .glass-dark {
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 45, 114, 0.08);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(0, 45, 114, 0.1);
+  border-radius: 8px;
 }
 
 .glass-panel {
   background: rgba(25, 34, 51, 0.7);
   backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  border: 1px solid rgba(0, 45, 114, 0.1);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.25);
 }
 
 .glass-card {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 45, 114, 0.1);
+  border-radius: 8px;
   transition: all 0.3s ease;
 }
 
 .glass-card:hover {
   background: rgba(255, 255, 255, 0.08);
-  border-color: var(--primary);
+  border-color: rgba(0, 45, 114, 0.25);
   transform: translateY(-4px);
-  box-shadow: 0 8px 30px rgba(17, 82, 212, 0.15);
+  box-shadow: 0 8px 30px rgba(0, 45, 114, 0.15);
 }
 
 /* Premium surface utilities */
@@ -481,20 +499,21 @@ body::before {
 }
 
 .glass-header {
-  background: rgba(16, 22, 34, 0.8);
+  background: rgba(0, 45, 114, 0.08);
   backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(0, 45, 114, 0.1);
 }
 
 /* ===================================
    BACKGROUND PATTERNS
    =================================== */
 .bg-dot-grid {
-  background-image: radial-gradient(circle at 2px 2px, rgba(17, 82, 212, 0.15) 1px, transparent 0);
+  background-image: radial-gradient(circle at 2px 2px, rgba(0, 45, 114, 0.12) 1px, transparent 0);
   background-size: 40px 40px;
 }
 
 .bg-flight-path {
-  background-image: url("data:image/svg+xml,%3Csvg width='400' height='400' viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 200 Q100 100 200 200 T400 200' fill='none' stroke='rgba(17,82,212,0.1)' stroke-width='1' stroke-dasharray='8 4'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg width='400' height='400' viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 200 Q100 100 200 200 T400 200' fill='none' stroke='rgba(0,45,114,0.1)' stroke-width='1' stroke-dasharray='8 4'/%3E%3C/svg%3E");
 }
 
 .bg-grid-lines {
@@ -513,7 +532,7 @@ body::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: conic-gradient(from 0deg, transparent 0%, rgba(17, 82, 212, 0.06) 10%, transparent 20%);
+  background: conic-gradient(from 0deg, transparent 0%, rgba(0, 45, 114, 0.06) 10%, transparent 20%);
   animation: radar-spin 8s linear infinite;
   pointer-events: none;
 }
@@ -526,7 +545,7 @@ body::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 50% 50%, transparent 0%, transparent 40%, rgba(17, 82, 212, 0.03) 60%, transparent 70%);
+  background: radial-gradient(circle at 50% 50%, transparent 0%, transparent 40%, rgba(0, 45, 114, 0.03) 60%, transparent 70%);
   pointer-events: none;
 }
 
@@ -572,10 +591,10 @@ body::before {
   box-shadow: var(--shadow-xl);
 }
 
-/* Pulse Animation */
+/* Pulse Animation (TALPA Navy Blue) */
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(17, 82, 212, 0.4); }
-  50% { box-shadow: 0 0 0 12px rgba(17, 82, 212, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(0, 45, 114, 0.4); }
+  50% { box-shadow: 0 0 0 12px rgba(0, 45, 114, 0); }
 }
 
 .pulse-badge {
@@ -730,7 +749,7 @@ body::before {
    ADMIN SIDEBAR ACTIVE STATE
    =================================== */
 .sidebar-active {
-  background-color: rgba(17, 82, 212, 0.15);
+  background-color: rgba(0, 45, 114, 0.12);
   border-left: 4px solid var(--primary);
 }
 

@@ -5,18 +5,11 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 
-type Institution = {
-    id: string;
-    name: string;
-    code: string;
-};
-
 type CampaignData = {
     id?: string;
     name?: string;
     campaign_code?: string;
     description?: string;
-    institution_id?: string | null;
     start_date?: string | null;
     end_date?: string | null;
     max_quota?: number | null;
@@ -25,13 +18,12 @@ type CampaignData = {
 };
 
 type Props = {
-    institutions: Institution[];
     defaultValues?: CampaignData;
     mode: 'create' | 'edit';
     submitAction: (formData: FormData) => Promise<{ success: boolean; message: string }>;
 };
 
-export default function CampaignForm({ institutions, defaultValues, mode, submitAction }: Props) {
+export default function CampaignForm({ defaultValues, mode, submitAction }: Props) {
     const [isPending, startTransition] = useTransition();
     const [error, setError] = useState<string | null>(null);
     const router = useRouter();
@@ -93,26 +85,6 @@ export default function CampaignForm({ institutions, defaultValues, mode, submit
                     placeholder="Boş bırakılırsa addan otomatik üretilir"
                 />
                 <p className="mt-1 text-xs text-gray-500">ör. PRIVATE_CARD_2026</p>
-            </div>
-
-            {/* Institution */}
-            <div>
-                <label htmlFor="institutionId" className="block text-sm font-medium text-gray-700">
-                    Kurum
-                </label>
-                <select
-                    name="institutionId"
-                    id="institutionId"
-                    defaultValue={defaultValues?.institution_id || ''}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm px-3 py-2 border"
-                >
-                    <option value="">— Kurum seçin —</option>
-                    {institutions.map((inst) => (
-                        <option key={inst.id} value={inst.id}>
-                            {inst.name} ({inst.code})
-                        </option>
-                    ))}
-                </select>
             </div>
 
             {/* Description */}

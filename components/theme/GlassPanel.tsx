@@ -19,15 +19,15 @@ const GlassPanel: React.FC<GlassPanelProps> = ({
     rounded = 'xl',
 }) => {
     const variants = {
-        default: 'bg-[rgba(25,34,51,0.7)] border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)]',
-        card: 'bg-[rgba(255,255,255,0.03)] border border-white/8 hover:bg-[rgba(255,255,255,0.08)] hover:border-primary transition-all duration-300',
-        light: 'bg-white/70 border border-white/30 shadow-[0_8px_32px_0_rgba(0,0,0,0.1)]',
-        header: 'bg-[rgba(16,22,34,0.8)] border-b border-white/10',
+        default: 'bg-[rgba(25,34,51,0.7)] border border-[rgba(0,45,114,0.1)] shadow-[0_8px_32px_rgba(0,0,0,0.25)]',
+        card: 'bg-[rgba(255,255,255,0.04)] border border-[rgba(0,45,114,0.1)] hover:bg-[rgba(255,255,255,0.08)] hover:border-[rgba(0,45,114,0.2)] transition-all duration-300',
+        light: 'bg-white/70 border border-[rgba(0,45,114,0.1)] shadow-[0_8px_32px_rgba(0,0,0,0.08)]',
+        header: 'bg-[rgba(0,45,114,0.08)] border-b border-[rgba(0,45,114,0.1)]',
     };
 
     const blurs = {
-        sm: 'backdrop-blur-sm',
-        md: 'backdrop-blur-md',
+        sm: 'backdrop-blur-[8px]',
+        md: 'backdrop-blur-[12px]',
         lg: 'backdrop-blur-xl',
     };
 

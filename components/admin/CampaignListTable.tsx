@@ -116,7 +116,6 @@ const CampaignListTable: React.FC<CampaignListTableProps> = ({ initialCampaigns 
                         <thead className="bg-slate-50/50">
                             <tr>
                                 <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Kampanya Bilgisi</th>
-                                <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Kurum</th>
                                 <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Durum</th>
                                 <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Başvuru / Kota</th>
                                 <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Tarih Aralığı</th>
@@ -125,9 +124,9 @@ const CampaignListTable: React.FC<CampaignListTableProps> = ({ initialCampaigns 
                         </thead>
                         <tbody className="bg-white divide-y divide-slate-100">
                             {loading ? (
-                                <tr><td colSpan={6} className="px-6 py-12 text-center text-slate-500">Yükleniyor...</td></tr>
+                                <tr><td colSpan={5} className="px-6 py-12 text-center text-slate-500">Yükleniyor...</td></tr>
                             ) : campaigns.length === 0 ? (
-                                <tr><td colSpan={6} className="px-6 py-12 text-center text-slate-500">Kayıt bulunamadı.</td></tr>
+                                <tr><td colSpan={5} className="px-6 py-12 text-center text-slate-500">Kayıt bulunamadı.</td></tr>
                             ) : (
                                 campaigns.map((campaign) => (
                                     <tr key={campaign.id} className="hover:bg-slate-50/80 transition-colors group">
@@ -136,9 +135,6 @@ const CampaignListTable: React.FC<CampaignListTableProps> = ({ initialCampaigns 
                                                 <span className="text-sm font-bold text-slate-900 group-hover:text-talpa-navy transition-colors">{campaign.title || campaign.name}</span>
                                                 <span className="text-xs text-slate-500 font-mono mt-0.5">{campaign.campaignCode}</span>
                                             </div>
-                                        </td>
-                                        <td className="px-6 py-4 text-sm text-slate-600 font-medium">
-                                            {campaign.institutionName || '-'}
                                         </td>
                                         <td className="px-6 py-4">
                                             {getStatusBadge(campaign.status)}

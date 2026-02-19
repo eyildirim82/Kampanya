@@ -40,10 +40,7 @@ const Footer: React.FC<FooterProps> = ({ variant = 'full' }) => {
                             <div className="size-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center">
                                 <Icon name="flight_takeoff" className="text-white" />
                             </div>
-                            <div>
-                                <span className="font-bold text-lg tracking-tight font-display block">TALPA</span>
-                                <span className="text-[10px] text-slate-500 uppercase tracking-widest">Kampanya Portalı</span>
-                            </div>
+                            <span className="font-bold text-lg tracking-tight font-display">TALPA</span>
                         </div>
                         <p className="text-sm text-slate-500 leading-relaxed max-w-xs">
                             Türkiye Havayolu Pilotları Derneği üyeleri için hazırlanan özel kampanya ve ayrıcalıklar portalı.
@@ -92,10 +89,6 @@ const Footer: React.FC<FooterProps> = ({ variant = 'full' }) => {
                 {/* Bottom Bar */}
                 <div className="border-t border-white/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
                     <p className="text-xs text-slate-400">&copy; 2026 TALPA. Tüm hakları saklıdır.</p>
-                    <div className="flex items-center gap-2">
-                        <span className="size-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        <span className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Sistem Aktif</span>
-                    </div>
                     {/* Social */}
                     <div className="flex items-center gap-3">
                         {['mail', 'public', 'share'].map((iconName) => (

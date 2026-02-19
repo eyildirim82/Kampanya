@@ -24,7 +24,6 @@ const mainNavItems: NavItem[] = [
 
 const systemNavItems: NavItem[] = [
     { to: '/admin/whitelist', icon: 'verified_user', label: 'Üye Listesi' },
-    { to: '/admin/institutions', icon: 'account_balance', label: 'Kurumlar' },
     { to: '/admin/fields', icon: 'dynamic_form', label: 'Alan Kütüphanesi' },
     { to: '/admin/settings', icon: 'settings', label: 'Genel Ayarlar' },
 ];

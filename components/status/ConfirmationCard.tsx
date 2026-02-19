@@ -25,10 +25,7 @@ export const ProgressTracker: React.FC<{ steps: { label: string; active: boolean
 );
 
 export const SystemStatusDot: React.FC = () => (
-    <div className="flex items-center gap-2">
-        <span className="size-2 rounded-full bg-green-500 animate-pulse" />
-        <span className="text-[10px] text-slate-500 font-medium">Sistem Aktif</span>
-    </div>
+    <span className="size-2 rounded-full bg-green-500 animate-pulse" aria-hidden />
 );
 
 const ConfirmationCard: React.FC<ConfirmationCardProps> = ({

@@ -5,6 +5,7 @@ const nextConfig: any = {
   typescript: {
     ignoreBuildErrors: false,
   },
+  transpilePackages: ['geist'],
 };
 
 export default nextConfig;

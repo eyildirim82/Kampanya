@@ -35,34 +35,28 @@ const PublicHeader: React.FC<PublicHeaderProps> = ({ variant = 'glass' }) => {
                 "fixed top-0 left-0 right-0 z-header transition-all duration-500 border-b",
                 variant === 'glass'
                     ? scrolled
-                        ? 'bg-background-dark/80 backdrop-blur-xl border-white/10 py-2'
-                        : 'bg-transparent border-transparent py-4'
+                        ? 'bg-[rgba(0,45,114,0.06)] backdrop-blur-md border-b border-[rgba(0,45,114,0.1)] py-2'
+                        : 'bg-transparent border-transparent py-3'
                     : scrolled
-                        ? 'bg-white/90 backdrop-blur-xl border-slate-200 py-2'
-                        : 'bg-white border-slate-100 py-3'
+                        ? 'bg-white/95 backdrop-blur-md border-[rgba(0,45,114,0.08)] py-2'
+                        : 'bg-white border-slate-100/80 py-2.5'
             )}
         >
-            <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
+            <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
                 {/* Logo */}
                 <Link href="/" className="flex items-center gap-3 group">
                     <div className={twMerge(
-                        "relative flex size-10 items-center justify-center rounded-xl transition-all duration-300",
+                        "relative flex size-9 items-center justify-center rounded-lg transition-all duration-300",
                         variant === 'glass'
-                            ? 'bg-white/5 border border-white/10 shadow-[0_0_15px_rgba(17,82,212,0.3)] group-hover:border-primary/50 group-hover:shadow-[0_0_20px_rgba(17,82,212,0.5)]'
+                            ? 'bg-white/5 border border-[rgba(0,45,114,0.15)] shadow-[0_0_12px_rgba(0,45,114,0.2)] group-hover:border-primary/40 group-hover:shadow-[0_0_16px_rgba(0,45,114,0.3)]'
                             : 'bg-primary/10 border border-primary/20 group-hover:bg-primary/20'
                     )}>
                         <Icon name="flight_takeoff" className={variant === 'glass' ? 'text-white' : 'text-primary'} />
                     </div>
-                    <div className="flex flex-col">
-                        <span className={twMerge(
-                            "text-xl font-bold leading-none tracking-tighter font-display",
-                            variant === 'glass' ? 'text-white' : 'text-slate-900'
-                        )}>TALPA</span>
-                        <span className={twMerge(
-                            "text-[10px] font-mono uppercase tracking-[0.2em]",
-                            variant === 'glass' ? 'text-primary-light/70' : 'text-primary/60'
-                        )}>Kampanya Portalı</span>
-                    </div>
+                    <span className={twMerge(
+                        "text-lg font-bold leading-none tracking-tight font-display",
+                        variant === 'glass' ? 'text-white' : 'text-slate-900'
+                    )}>TALPA</span>
                 </Link>
 
                 {/* Desktop Nav */}
@@ -78,8 +72,8 @@ const PublicHeader: React.FC<PublicHeaderProps> = ({ variant = 'glass' }) => {
                                 "relative px-4 py-2 text-sm font-medium transition-all rounded-lg",
                                 variant === 'glass'
                                     ? isActive(link.href)
-                                        ? 'text-white bg-white/10 border border-white/5'
-                                        : 'text-slate-400 hover:text-white hover:bg-white/5'
+                                        ? 'text-white bg-[rgba(0,45,114,0.15)] border border-[rgba(0,45,114,0.2)]'
+                                        : 'text-slate-400 hover:text-white hover:bg-[rgba(0,45,114,0.08)]'
                                     : isActive(link.href)
                                         ? 'text-primary bg-primary/5'
                                         : 'text-slate-600 hover:text-primary hover:bg-slate-50'
@@ -127,10 +121,10 @@ const PublicHeader: React.FC<PublicHeaderProps> = ({ variant = 'glass' }) => {
             {
                 isOpen && (
                     <div className={twMerge(
-                        "md:hidden border-t px-4 py-6 space-y-2",
+                        "md:hidden border-t px-4 py-5 space-y-2",
                         variant === 'glass'
-                            ? 'border-white/10 bg-background-dark/95 backdrop-blur-xl'
-                            : 'border-slate-200 bg-white/95 backdrop-blur-xl'
+                            ? 'border-[rgba(0,45,114,0.1)] bg-[rgba(5,8,22,0.97)] backdrop-blur-md'
+                            : 'border-[rgba(0,45,114,0.08)] bg-white/98 backdrop-blur-md'
                     )}>
                         <Link
                             href="/"

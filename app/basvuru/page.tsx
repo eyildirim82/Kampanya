@@ -25,10 +25,8 @@ export default async function ApplicationPage() {
 
     return (
         <BrandProvider brand={{
-            primaryColor: campaign.institution?.primary_color || '#00558d',
-            secondaryColor: campaign.institution?.secondary_color || '#002855',
-            logoUrl: campaign.institution?.logo_url,
-            institutionName: campaign.institution?.name
+            primaryColor: '#00558d',
+            secondaryColor: '#002855',
         }}>
             <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 py-6 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-6xl mx-auto">

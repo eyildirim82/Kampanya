@@ -33,7 +33,6 @@ export default async function CampaignDetailPage(props: PageProps) {
         endDate: row.end_date ?? null,
         formSchema: row.form_schema || [],
         pageContent: row.page_content || {},
-        institutionId: row.institution_id ?? null,
         createdAt: row.created_at ?? undefined,
     };
 

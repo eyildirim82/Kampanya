@@ -42,16 +42,6 @@ export interface FieldTemplate {
     createdAt?: string;
 }
 
-export interface Institution {
-    id: string;
-    name: string;
-    code: string;
-    contactEmail?: string;
-    logoUrl?: string;
-    isActive: boolean;
-    createdAt?: string;
-}
-
 export interface Campaign {
     id: string;
     slug?: string;
@@ -69,8 +59,6 @@ export interface Campaign {
     startDate?: string;
     endDate?: string;
     maxQuota?: number;
-    institutionId?: string;
-    institutionName?: string;
     applicationCount?: number;
     formSchema?: FormField[];
     longDescription?: string; // HTML content

@@ -26,11 +26,11 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(({
     };
 
     const variants = {
-        default: 'bg-surface text-foreground rounded-3xl border border-white/40 dark:border-white/10 shadow-[0_18px_45px_rgba(15,23,42,0.08)] backdrop-blur-md',
-        glass: 'bg-white/10 dark:bg-white/5 rounded-3xl border border-white/30 dark:border-white/10 backdrop-blur-xl shadow-[0_18px_55px_rgba(15,23,42,0.25)]',
-        stat: 'bg-surface rounded-3xl border border-white/40 dark:border-white/10 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300',
-        interactive: 'bg-surface rounded-3xl border border-white/40 dark:border-white/10 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer backdrop-blur-md',
-        dark: 'bg-navy-card/90 border border-white/10 rounded-3xl shadow-2xl backdrop-blur-md',
+        default: 'bg-surface text-foreground rounded-xl border border-[rgba(0,45,114,0.1)] shadow-[0_8px_30px_rgba(0,45,114,0.08)] backdrop-blur-md',
+        glass: 'bg-white/10 dark:bg-white/5 rounded-xl border border-[rgba(0,45,114,0.1)] backdrop-blur-[12px] shadow-[0_8px_32px_rgba(0,45,114,0.12)]',
+        stat: 'bg-surface rounded-xl border border-[rgba(0,45,114,0.1)] shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300',
+        interactive: 'bg-surface rounded-xl border border-[rgba(0,45,114,0.1)] shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer backdrop-blur-md',
+        dark: 'bg-navy-card/90 border border-[rgba(0,45,114,0.15)] rounded-xl shadow-2xl backdrop-blur-md',
     };
 
     const interactiveClasses = interactive
@@ -105,7 +105,7 @@ export const CardFooter: React.FC<CardFooterProps> = ({
     ...props
 }) => {
     return (
-        <div className={twMerge('mt-6 pt-4 border-t border-white/40 dark:border-white/10', className)} {...props}>
+        <div className={twMerge('mt-6 pt-4 border-t border-[rgba(0,45,114,0.1)]', className)} {...props}>
             {children}
         </div>
     );

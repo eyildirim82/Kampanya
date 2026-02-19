@@ -27,17 +27,6 @@ const DashboardFilter: React.FC<DashboardFilterProps> = ({ campaigns }) => {
     return (
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div className="flex flex-wrap gap-2">
-                <button
-                    onClick={() => handleFilter(null)}
-                    className={twMerge(
-                        'px-5 py-2.5 rounded-xl text-sm font-bold transition-all whitespace-nowrap',
-                        !selectedCampaignId
-                            ? 'bg-primary text-white shadow-lg shadow-primary/20'
-                            : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
-                    )}
-                >
-                    Tüm Başvurular
-                </button>
                 {campaigns.map(c => (
                     <button
                         key={c.id}

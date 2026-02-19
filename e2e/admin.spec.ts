@@ -34,10 +34,6 @@ test.describe('Admin & Kampanya E2E Testi', () => {
     // The admin form generates 'campaign_code', not necessarily URL slug directly (though logic might use it).
     // Let's rely on the list to find it later if we can't predict slug.
 
-    // Select Institution
-    // Wait for options to load
-    await page.locator('select[name="institutionId"]').selectOption({ index: 1 }); // Select first available
-
     // Start/End Dates
     await page.getByLabel(/Başlangıç Tarihi/i).fill('2024-01-01');
     await page.getByLabel(/Bitiş Tarihi/i).fill('2030-12-31');

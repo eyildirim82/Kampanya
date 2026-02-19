@@ -781,17 +781,6 @@ export async function deleteCampaign(id: string) {
 // ENHANCED CAMPAIGN MANAGEMENT (ADU-04/05/06)
 // ----------------------------------------------------------------------
 
-export async function getActiveInstitutions() {
-    const adminSupabase = await getAdminClient();
-    if (!adminSupabase) return [];
-    const { data } = await adminSupabase
-        .from('institutions')
-        .select('id, name, code, is_active')
-        .eq('is_active', true)
-        .order('name');
-    return data || [];
-}
-
 export async function getCampaignsWithDetails() {
     const adminSupabase = await getAdminClient();
     if (!adminSupabase) return [];
@@ -804,9 +793,7 @@ export async function getCampaignsWithDetails() {
                 id, campaign_code, name, slug, description,
                 status, is_active, max_quota,
                 start_date, end_date,
-                institution_id,
-                created_at, updated_at,
-                institutions ( id, name, code )
+                created_at, updated_at
             `)
             .order('created_at', { ascending: false }),
         adminSupabase.rpc('get_campaign_stats')
@@ -850,7 +837,7 @@ export async function getCampaignById(id: string) {
             id, campaign_code, name, slug, description,
             status, is_active, max_quota,
             start_date, end_date,
-            institution_id, form_schema, page_content,
+            form_schema, page_content,
             created_at, updated_at
         `)
         .eq('id', id)
@@ -898,7 +885,6 @@ export async function createCampaignEnhanced(prevState: unknown, formData: FormD
 
     const name = String(formData.get('name') || '').trim();
     const codeFromForm = String(formData.get('campaignCode') || '').trim();
-    const institutionId = String(formData.get('institutionId') || '').trim() || null;
     const description = String(formData.get('description') || '').trim() || null;
     const startDate = String(formData.get('startDate') || '').trim() || null;
     const endDate = String(formData.get('endDate') || '').trim() || null;
@@ -924,7 +910,6 @@ export async function createCampaignEnhanced(prevState: unknown, formData: FormD
         name,
         slug,
         description,
-        institution_id: institutionId,
         start_date: startDate,
         end_date: endDate,
         max_quota: maxQuota,
@@ -942,7 +927,6 @@ export async function updateCampaignEnhanced(id: string, prevState: unknown, for
 
     const name = String(formData.get('name') || '').trim();
     const codeFromForm = String(formData.get('campaignCode') || '').trim();
-    const institutionId = String(formData.get('institutionId') || '').trim() || null;
     const description = String(formData.get('description') || '').trim() || null;
     const startDate = String(formData.get('startDate') || '').trim() || null;
     const endDate = String(formData.get('endDate') || '').trim() || null;
@@ -955,7 +939,6 @@ export async function updateCampaignEnhanced(id: string, prevState: unknown, for
     const payload: Partial<TablesInsert<'campaigns'>> = {
         name,
         campaign_code: codeFromForm || toCampaignCode(name),
-        institution_id: institutionId,
         description,
         start_date: startDate,
         end_date: endDate,
@@ -1167,90 +1150,6 @@ export async function bulkUpdateApplicationStatus(
     }
 
     return { success: true, message: `${count || applicationIds.length} başvuru güncellendi.`, updated: count || applicationIds.length };
-}
-
-// ----------------------------------------------------------------------
-// INSTITUTION MANAGEMENT (Kurumlar)
-// ----------------------------------------------------------------------
-
-export async function getInstitutions() {
-    const adminSupabase = await getAdminClient();
-    if (!adminSupabase) return [];
-
-    const { data } = await adminSupabase
-        .from('institutions')
-        .select('*')
-        .order('name', { ascending: true });
-
-    return data || [];
-}
-
-export async function upsertInstitution(prevState: unknown, formData: FormData) {
-    const adminSupabase = await getAdminClient();
-    if (!adminSupabase) return { success: false, message: 'Auth required' };
-
-    const id = formData.get('id') as string;
-    const name = formData.get('name') as string;
-    const code = formData.get('code') as string;
-    const contactEmail = formData.get('contactEmail') as string;
-    const logoUrl = formData.get('logoUrl') as string;
-    const isActive = formData.get('isActive') === 'on';
-
-    if (!name || !code) {
-        return { success: false, message: 'İsim ve Kod zorunludur.' };
-    }
-
-    const payload = {
-        name,
-        code: code.toUpperCase(),
-        contact_email: contactEmail || null,
-        logo_url: logoUrl || null,
-        is_active: isActive,
-        updated_at: new Date().toISOString()
-    };
-
-    let error;
-
-    if (id) {
-        // Update
-        const result = await adminSupabase.from('institutions').update(payload).eq('id', id);
-        error = result.error;
-    } else {
-        // Insert
-        const result = await adminSupabase.from('institutions').insert(payload);
-        error = result.error;
-    }
-
-    if (error) {
-        if (error.code === '23505') return { success: false, message: 'Bu kurum kodu zaten kullanılıyor.' };
-        return { success: false, message: error.message };
-    }
-
-    return { success: true, message: id ? 'Kurum güncellendi.' : 'Kurum eklendi.' };
-}
-
-export async function deleteInstitution(id: string) {
-    const adminSupabase = await getAdminClient();
-    if (!adminSupabase) return { success: false, message: 'Auth required' };
-
-    // Soft delete or Hard delete? 
-    // Plan says "Soft delete or hard delete". Let's try hard delete first, but check for foreign keys?
-    // campaigns table references institutions. If we hard delete, campaigns might cascade or fail.
-    // Migration said: campaign table has "institution_id uuid REFERENCES public.institutions(id)".
-    // Usually standard behavior is RESTRICT.
-    // Let's safe delete (set active = false) if hard delete fails, or just try hard delete and catch error.
-
-    const { error } = await adminSupabase.from('institutions').delete().eq('id', id);
-
-    if (error) {
-        // ForeignKeyViolation
-        if (error.code === '23503') {
-            return { success: false, message: 'Bu kuruma bağlı kampanyalar var. Önce onları silmelisiniz veya kurumu pasife alınız.' };
-        }
-        return { success: false, message: error.message };
-    }
-
-    return { success: true, message: 'Kurum silindi.' };
 }
 
 // ----------------------------------------------------------------------

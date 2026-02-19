@@ -18,11 +18,10 @@ export default async function CampaignsPage() {
     const campaigns: Campaign[] = campaignsData.map((c: any) => ({
         ...c,
         id: c.id,
-        title: c.name, // Mapping 'name' to 'title' as per UI expectation or vice versa
+        title: c.name,
         campaignCode: c.campaign_code,
-        institutionName: c.institutions?.name,
-        applicationCount: 0, // Need to join count? `getCampaignsWithDetails` might need improvement to get counts
-        status: c.status || (c.is_active ? 'active' : 'draft'), // Fallback status logic
+        applicationCount: 0,
+        status: c.status || (c.is_active ? 'active' : 'draft'),
         startDate: c.start_date,
         endDate: c.end_date,
         maxQuota: c.max_quota,

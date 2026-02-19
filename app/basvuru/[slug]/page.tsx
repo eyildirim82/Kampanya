@@ -23,10 +23,8 @@ export default async function CampaignApplicationPage({
 
     return (
         <BrandProvider brand={{
-            primaryColor: campaign.institution?.primary_color || '#00558d',
-            secondaryColor: campaign.institution?.secondary_color || '#002855',
-            logoUrl: campaign.institution?.logo_url,
-            institutionName: campaign.institution?.name
+            primaryColor: '#00558d',
+            secondaryColor: '#002855',
         }}>
             <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 py-6 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-6xl mx-auto">
@@ -43,7 +41,7 @@ export default async function CampaignApplicationPage({
 
                     <div className="text-center mb-4 fade-in">
                         <h1 className="text-2xl md:text-3xl font-extrabold mb-2 leading-tight">
-                            <span className="gradient-text-hero">{campaign.institution?.name || 'Private Kart'}</span>
+                            <span className="gradient-text-hero">{campaign.name || 'Private Kart'}</span>
                             <br />
                             <span className="text-lg md:text-xl text-gray-700 font-normal">
                                 Özel Avantajlar Sizi Bekliyor

@@ -15,8 +15,6 @@ interface CampaignCardProps {
         title: string;
         description?: string;
         imageUrl?: string;
-        institutionName?: string;
-        institutionLogo?: string;
         brandColor?: string;
         status?: string;
         endDate?: string;
@@ -51,43 +49,17 @@ const CampaignImage: React.FC<{
     );
 };
 
-const InstitutionLogoImage: React.FC<{
-    src: string;
-    alt?: string;
-    className?: string;
-}> = ({ src, alt = '', className }) => {
-    const [error, setError] = useState(false);
-    if (error) {
-        return (
-            <span className="flex items-center justify-center">
-                <Icon name="account_balance" className="text-slate-400" size="sm" />
-            </span>
-        );
-    }
-    return (
-        <Image
-            src={src}
-            alt={alt}
-            width={48}
-            height={48}
-            className={className}
-            unoptimized
-            onError={() => setError(true)}
-        />
-    );
-};
-
 const CampaignCard: React.FC<CampaignCardProps> = ({
     campaign,
     variant = 'glass',
     className,
 }) => {
     const href = campaign.slug ? `/kampanya/${campaign.slug}` : `/kampanya/${campaign.id}`;
-    const brandColor = campaign.brandColor || '#1152d4';
+    const brandColor = campaign.brandColor || '#002D72';
 
     if (variant === 'compact') {
         return (
-            <Link href={href} className={twMerge("glass-card rounded-2xl p-6 relative overflow-hidden group", className)}>
+            <Link href={href} className={twMerge("glass-card rounded-xl p-8 relative overflow-hidden group transition-all duration-300", className)}>
                 <div className="flex items-start gap-4">
                     <div className="size-12 rounded-xl bg-white/10 flex items-center justify-center shrink-0" style={{ backgroundColor: `${brandColor}20` }}>
                         <Icon name="campaign" style={{ color: brandColor }} />
@@ -102,10 +74,7 @@ const CampaignCard: React.FC<CampaignCardProps> = ({
                         )}
                     </div>
                 </div>
-                <div className="mt-4 flex items-center justify-between">
-                    {campaign.institutionName && (
-                        <span className="text-xs text-slate-500">{campaign.institutionName}</span>
-                    )}
+                <div className="mt-4 flex items-center justify-end">
                     <Button variant="secondary" size="xs" icon="arrow_forward" iconPosition="right">
                         Detay
                     </Button>
@@ -118,7 +87,7 @@ const CampaignCard: React.FC<CampaignCardProps> = ({
         return (
             <div
                 className={twMerge(
-                    "bg-white dark:bg-surface-dark rounded-xl overflow-hidden hover:shadow-2xl transition-all group flex flex-col border-t-4",
+                    "bg-white dark:bg-surface-dark rounded-xl overflow-hidden border border-[rgba(0,45,114,0.1)] shadow-[0_8px_30px_rgba(0,45,114,0.08)] hover:shadow-[0_12px_40px_rgba(0,45,114,0.12)] transition-all duration-300 group flex flex-col border-t-4",
                     className
                 )}
                 style={{ borderTopColor: brandColor }}
@@ -138,16 +107,11 @@ const CampaignCard: React.FC<CampaignCardProps> = ({
                             <Icon name="campaign" size="xl" style={{ color: brandColor }} className="opacity-30" />
                         </div>
                     )}
-                    {campaign.institutionLogo && (
-                        <div className="absolute top-3 left-3 size-10 rounded-lg bg-white shadow-md p-1.5 flex items-center justify-center">
-                            <InstitutionLogoImage src={campaign.institutionLogo} alt="" className="w-full h-full object-contain" />
-                        </div>
-                    )}
                 </div>
 
                 {/* Content */}
-                <div className="p-6 flex-1 flex flex-col">
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2 group-hover:transition-colors" style={{ ['--hover-color' as string]: brandColor }}>
+                <div className="p-8 flex-1 flex flex-col">
+                    <h3 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white mb-2" style={{ ['--hover-color' as string]: brandColor }}>
                         {campaign.title}
                     </h3>
                     {campaign.description && (
@@ -171,9 +135,9 @@ const CampaignCard: React.FC<CampaignCardProps> = ({
         );
     }
 
-    // Glass variant (default)
+    // Glass variant (default) - premium spacing and soft hover
     return (
-        <div className={twMerge("glass-card rounded-xl overflow-hidden flex flex-col group", className)}>
+        <div className={twMerge("glass-card rounded-xl overflow-hidden flex flex-col group transition-all duration-300", className)}>
             {/* Image */}
             <div className="h-48 relative overflow-hidden">
                 {campaign.imageUrl ? (
@@ -181,7 +145,7 @@ const CampaignCard: React.FC<CampaignCardProps> = ({
                         <CampaignImage
                             src={campaign.imageUrl}
                             alt={campaign.title}
-                            className="object-cover group-hover:scale-110 transition-transform duration-700"
+                            className="object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                     </div>
                 ) : (
@@ -190,26 +154,17 @@ const CampaignCard: React.FC<CampaignCardProps> = ({
                     </div>
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-
-                {campaign.institutionLogo && (
-                    <div className="absolute bottom-3 left-3 size-12 rounded-lg bg-white p-2 shadow-lg flex items-center justify-center">
-                        <InstitutionLogoImage src={campaign.institutionLogo} alt="" className="w-full h-full object-contain" />
-                    </div>
-                )}
             </div>
 
             {/* Content */}
-            <div className="p-6 flex-1 flex flex-col">
-                <h3 className="text-lg font-bold text-white mb-2 group-hover:text-primary transition-colors">{campaign.title}</h3>
+            <div className="p-8 flex-1 flex flex-col">
+                <h3 className="text-lg font-bold tracking-tight text-white mb-2 group-hover:text-primary/90 transition-colors">{campaign.title}</h3>
                 {campaign.description && (
                     <p className="text-slate-400 text-sm leading-relaxed mb-4 line-clamp-2">{campaign.description}</p>
                 )}
-                {campaign.institutionName && (
-                    <span className="text-xs text-slate-500 mb-4">{campaign.institutionName}</span>
-                )}
                 <Link href={href} className="mt-auto">
                     <button
-                        className="w-full py-3 rounded-lg font-bold text-white transition-all hover:opacity-90"
+                        className="w-full py-3 rounded-lg font-bold text-white transition-all duration-300 hover:opacity-90"
                         style={{ backgroundColor: brandColor }}
                     >
                         Detayları İncele

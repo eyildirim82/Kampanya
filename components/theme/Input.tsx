@@ -21,9 +21,9 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
         const displayError = error || errorMessage;
 
         const variantStyles = {
-            default: 'bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-primary focus-visible:ring-primary/20',
-            glass: 'bg-slate-900/50 border-white/10 text-white placeholder:text-gray-500 focus:border-primary focus-visible:ring-primary/30',
-            rounded: 'bg-slate-100 dark:bg-slate-800 border-transparent text-slate-900 dark:text-white placeholder:text-slate-400 rounded-full focus:border-primary focus-visible:ring-primary/20',
+            default: 'bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:border-[#002D72] focus-visible:ring-2 focus-visible:ring-[#002D72]/25',
+            glass: 'bg-slate-900/50 border-white/10 text-white placeholder:text-gray-500 focus:border-[#002D72] focus-visible:ring-2 focus-visible:ring-[#002D72]/30',
+            rounded: 'bg-slate-100 dark:bg-slate-800 border-transparent text-slate-900 dark:text-white placeholder:text-slate-400 rounded-full focus:border-[#002D72] focus-visible:ring-2 focus-visible:ring-[#002D72]/25',
         };
 
         const sizeStyles = {
@@ -60,7 +60,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
                         ref={ref}
                         id={inputId}
                         className={twMerge(
-                            "flex w-full rounded-xl border ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+                            "flex w-full rounded-lg border ring-offset-white transition-all focus-visible:outline-none focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
                             variantStyles[variant],
                             sizeStyles[inputSize],
                             leftIcon ? 'pl-11' : '',

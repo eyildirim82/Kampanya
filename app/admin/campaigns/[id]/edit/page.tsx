@@ -1,4 +1,4 @@
-import { getCampaignById, getActiveInstitutions, updateCampaignEnhanced } from '../../../actions';
+import { getCampaignById, updateCampaignEnhanced } from '../../../actions';
 import { cookies } from 'next/headers';
 import { redirect, notFound } from 'next/navigation';
 import CampaignForm from '../../campaign-form';
@@ -16,10 +16,7 @@ export default async function EditCampaignPage({
 
     const { id } = await params;
 
-    const [campaign, institutions] = await Promise.all([
-        getCampaignById(id),
-        getActiveInstitutions(),
-    ]);
+    const campaign = await getCampaignById(id);
 
     if (!campaign) notFound();
 
@@ -52,7 +49,6 @@ export default async function EditCampaignPage({
             <main>
                 <div className="max-w-3xl mx-auto py-6 sm:px-6 lg:px-8">
                     <CampaignForm
-                        institutions={institutions}
                         defaultValues={campaign}
                         mode="edit"
                         submitAction={handleUpdate}

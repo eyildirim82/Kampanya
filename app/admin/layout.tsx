@@ -25,8 +25,8 @@ export default function AdminLayout({
 
             <main className="flex-1 flex flex-col min-h-screen overflow-y-auto">
                 <Header
-                    title="Dashboard"
-                    subtitle="Hoşgeldiniz, sistem durum özeti aşağıdadır."
+                    title="Admin"
+                    subtitle="Başvurular ve kampanyalar"
                     onMenuClick={() => setSidebarOpen(true)}
                 />
 

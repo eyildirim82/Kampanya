@@ -30,7 +30,6 @@ export async function getCampaignById(id: string): Promise<Campaign | null> {
         endDate: data.end_date,
         formSchema: data.form_schema || [], // Assuming column passed as JSON
         pageContent: data.page_content || {}, // Assuming JSON column
-        institutionId: data.institution_id
     };
 }
 

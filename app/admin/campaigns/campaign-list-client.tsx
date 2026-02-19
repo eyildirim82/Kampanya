@@ -17,10 +17,8 @@ type Campaign = {
     max_quota?: number | null;
     start_date?: string | null;
     end_date?: string | null;
-    institution_id?: string | null;
     created_at: string;
     application_count?: number;
-    institutions?: { id: string; name: string; code: string } | null;
 };
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
@@ -98,9 +96,6 @@ export default function CampaignListClient({ campaigns }: { campaigns: Campaign[
                             Kampanya
                         </th>
                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Kurum
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                             Durum
                         </th>
                         <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -127,11 +122,6 @@ export default function CampaignListClient({ campaigns }: { campaigns: Campaign[
                                 <td className="px-6 py-4">
                                     <div className="text-sm font-medium text-gray-900">{campaign.name}</div>
                                     <div className="text-sm text-gray-500">{campaign.campaign_code}</div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                    <div className="text-sm text-gray-900">
-                                        {campaign.institutions?.name || '—'}
-                                    </div>
                                 </td>
                                 <td className="px-6 py-4 whitespace-nowrap">
                                     <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${statusConf.bg} ${statusConf.color}`}>

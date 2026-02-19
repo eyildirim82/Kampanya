@@ -20,17 +20,38 @@ export default function WhitelistPage() {
     const debtorFileInputRef = useRef<HTMLInputElement>(null);
     const addFormRef = useRef<HTMLFormElement>(null);
 
+    // Search & Pagination States
+    const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalCount, setTotalCount] = useState(0);
+    const limit = 50;
+
+    // Debounce search input
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchTerm);
+            setCurrentPage(1); // Reset to page 1 on search change
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+
     const fetchMembers = () => {
         setLoading(true);
-        getWhitelistMembers()
-            .then(data => setMembers(data))
+        // Updated to use search and pagination
+        getWhitelistMembers(debouncedSearch, currentPage, limit)
+            .then(res => {
+                setMembers(res.data);
+                setTotalCount(res.count);
+            })
             .catch(err => console.error(err))
             .finally(() => setLoading(false));
     };
 
     useEffect(() => {
         fetchMembers();
-    }, []);
+        // eslint-disable-next-line
+    }, [debouncedSearch, currentPage]);
 
     const handleLogout = async () => {
         await adminLogout();
@@ -106,10 +127,11 @@ export default function WhitelistPage() {
         }
     };
 
-    const handleToggleStatus = async (id: string, currentStatus: boolean) => {
-        const result = await updateWhitelistMember(id, !currentStatus);
+    const handleUpdateStatus = async (id: string, updates: { is_active?: boolean; is_debtor?: boolean }) => {
+        const result = await updateWhitelistMember(id, updates);
         if (result.success) {
-            fetchMembers(); // Refresh list
+            // Optimistic update or refresh
+            fetchMembers();
         } else {
             setMessage({ text: result.message || 'Durum güncellenemedi.', type: 'error' });
         }
@@ -273,10 +295,38 @@ export default function WhitelistPage() {
                     </div>
                 </div>
 
+                {/* Search & Stats */}
+                <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
+                    <div className="w-full sm:w-1/2">
+                        <label htmlFor="search" className="sr-only">Ara</label>
+                        <div className="relative rounded-md shadow-sm">
+                            <input
+                                type="text"
+                                name="search"
+                                id="search"
+                                className="focus:ring-indigo-500 focus:border-indigo-500 block w-full pl-4 pr-12 sm:text-sm border-gray-300 rounded-md py-2 border"
+                                placeholder="TCKN veya İsim ile ara..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                            />
+                            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                                <span className="text-gray-500 sm:text-sm">
+                                    🔍
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 {/* Whitelist Members Section */}
                 <div className="bg-white px-4 py-5 shadow sm:rounded-lg sm:p-6">
                     <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-lg font-medium leading-6 text-gray-900">Mevcut Üye Listesi (Son 100)</h3>
+                        <h3 className="text-lg font-medium leading-6 text-gray-900">
+                            Mevcut Üye Listesi &nbsp;
+                            <span className="text-sm font-normal text-gray-500">
+                                ({totalCount} kayıt bulundu)
+                            </span>
+                        </h3>
                         <div className="flex gap-2">
                             {!showAddForm && (
                                 <button
@@ -298,7 +348,7 @@ export default function WhitelistPage() {
                                         <thead className="bg-gray-50">
                                             <tr>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">TCKN</th>
-                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Güncellenme Tarihi</th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">İsim</th>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Durum</th>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">İşlemler</th>
                                             </tr>
@@ -306,11 +356,11 @@ export default function WhitelistPage() {
                                         <tbody className="bg-white divide-y divide-gray-200">
                                             {loading ? (
                                                 <tr>
-                                                    <td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-500">Yükleniyor...</td>
+                                                    <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">Yükleniyor...</td>
                                                 </tr>
                                             ) : members.length === 0 ? (
                                                 <tr>
-                                                    <td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-500">Üye verisi bulunamadı.</td>
+                                                    <td colSpan={5} className="px-6 py-4 text-center text-sm text-gray-500">Üye verisi bulunamadı.</td>
                                                 </tr>
                                             ) : (
                                                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -318,27 +368,47 @@ export default function WhitelistPage() {
                                                     <tr key={m.id} className={m.is_debtor ? 'bg-red-50' : ''}>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono text-xs">
                                                             {m.tckn}
-                                                            {m.is_debtor && <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">BORÇLU</span>}
+                                                        </td>
+                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                            {m.masked_name || '-'}
+                                                            <div className="text-xs text-gray-500">
+                                                                {new Date(m.synced_at || m.updated_at).toLocaleString('tr-TR')}
+                                                            </div>
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                            {new Date(m.synced_at || m.updated_at).toLocaleString('tr-TR')}
+                                                            <div className="flex flex-col gap-1">
+                                                                <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${m.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                                                    {m.is_active ? 'Aktif' : 'Pasif'}
+                                                                </span>
+                                                                {m.is_debtor && (
+                                                                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                                                        BORÇLU
+                                                                    </span>
+                                                                )}
+                                                            </div>
                                                         </td>
                                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${m.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                                                {m.is_active ? 'Aktif' : 'Pasif'}
-                                                            </span>
-                                                        </td>
-                                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                            <div className="flex gap-2">
+                                                            <div className="flex gap-2 flex-wrap max-w-xs">
+                                                                {/* Active Toggle */}
                                                                 <button
-                                                                    onClick={() => handleToggleStatus(m.id, m.is_active)}
-                                                                    className={`px-2 py-1 text-xs rounded ${m.is_active ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' : 'bg-green-100 text-green-800 hover:bg-green-200'}`}
+                                                                    onClick={() => handleUpdateStatus(m.id, { is_active: !m.is_active })}
+                                                                    className={`px-2 py-1 text-xs rounded border ${m.is_active ? 'border-red-300 text-red-700 hover:bg-red-50' : 'border-green-300 text-green-700 hover:bg-green-50'}`}
                                                                 >
                                                                     {m.is_active ? 'Pasif Yap' : 'Aktif Yap'}
                                                                 </button>
+
+                                                                {/* Debtor Toggle */}
+                                                                <button
+                                                                    onClick={() => handleUpdateStatus(m.id, { is_debtor: !m.is_debtor })}
+                                                                    className={`px-2 py-1 text-xs rounded border ${m.is_debtor ? 'border-green-300 text-green-700 hover:bg-green-50' : 'border-red-300 text-red-700 hover:bg-red-50'}`}
+                                                                >
+                                                                    {m.is_debtor ? 'Borcu Yok' : 'Borçlu Yap'}
+                                                                </button>
+
+                                                                {/* Delete */}
                                                                 <button
                                                                     onClick={() => handleDelete(m.id)}
-                                                                    className="px-2 py-1 text-xs rounded bg-red-100 text-red-800 hover:bg-red-200"
+                                                                    className="px-2 py-1 text-xs rounded bg-gray-100 text-gray-600 hover:bg-gray-200"
                                                                 >
                                                                     Sil
                                                                 </button>
@@ -349,6 +419,28 @@ export default function WhitelistPage() {
                                             )}
                                         </tbody>
                                     </table>
+                                </div>
+                                {/* Pagination Controls */}
+                                <div className="mt-4 flex justify-between items-center">
+                                    <div className="text-sm text-gray-700">
+                                        Sayfa {currentPage} / {Math.ceil(totalCount / limit) || 1}
+                                    </div>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                            disabled={currentPage === 1}
+                                            className="px-3 py-1 border rounded text-sm disabled:opacity-50"
+                                        >
+                                            Önceki
+                                        </button>
+                                        <button
+                                            onClick={() => setCurrentPage(prev => prev + 1)}
+                                            disabled={currentPage * limit >= totalCount}
+                                            className="px-3 py-1 border rounded text-sm disabled:opacity-50"
+                                        >
+                                            Sonraki
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>

@@ -198,23 +198,32 @@ export async function deleteApplication(id: string) {
 // WHITELIST (Updated for plain TCKN)
 // ----------------------------------------------------------------------
 
-export async function getWhitelistMembers() {
+// Updated to support search and pagination
+export async function getWhitelistMembers(search: string = '', page: number = 1, limit: number = 50) {
     const adminSupabase = await getAdminClient();
-    if (!adminSupabase) return [];
+    if (!adminSupabase) return { data: [], count: 0 };
 
-    const { data, error } = await adminSupabase
+    let query = adminSupabase
         .from('member_whitelist')
-        .select('*') // Now selects 'tckn' instead of hash logic
-        .order('synced_at', { ascending: false })
-        .limit(100);
+        .select('*', { count: 'exact' })
+        .order('synced_at', { ascending: false });
 
-    if (error) return [];
+    if (search) {
+        // Search by TCKN or Name
+        query = query.or(`tckn.ilike.%${search}%,masked_name.ilike.%${search}%`);
+    }
 
-    // Mask TCKNs for display in UI? Or show full?
-    // Admin likely usually wants to see it, but let's standard mask 
-    // to match "Masked Name" idea for privacy unless clicked.
-    // For now returning raw data, frontend can formatting.
-    return data;
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    const { data, error, count } = await query.range(from, to);
+
+    if (error) {
+        console.error('Whitelist Fetch Error:', error);
+        return { data: [], count: 0 };
+    }
+
+    return { data, count: count || 0 };
 }
 
 export async function uploadWhitelist(prevState: unknown, formData: FormData) {
@@ -356,9 +365,7 @@ export async function uploadDebtorList(prevState: unknown, formData: FormData) {
                 // BUT we need to handle "Insert new debtor" case too.
                 // If inserting new, we need masked_name.
                 masked_name: name || 'Borçlu Üye',
-                // @ts-expect-error: is_debtor missing in types (added manually via migration)
                 is_active: true,
-                // @ts-expect-error: is_debtor is a custom field added via migration
                 is_debtor: true,
                 synced_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
@@ -387,13 +394,13 @@ export async function uploadDebtorList(prevState: unknown, formData: FormData) {
     }
 }
 
-export async function updateWhitelistMember(id: string, isActive: boolean) {
+export async function updateWhitelistMember(id: string, updates: { is_active?: boolean; is_debtor?: boolean }) {
     const adminSupabase = await getAdminClient();
     if (!adminSupabase) return { success: false, message: 'Auth error' };
 
     const { error } = await adminSupabase
         .from('member_whitelist')
-        .update({ is_active: isActive })
+        .update(updates)
         .eq('id', id);
 
     if (error) return { success: false, message: error.message };
